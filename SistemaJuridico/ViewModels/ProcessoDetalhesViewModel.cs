@@ -14,9 +14,10 @@ namespace SistemaJuridico.ViewModels
         private readonly ContaService _contaService;
         private readonly ItemSaudeService _itemSaudeService;
         private readonly VerificacaoService _verificacaoService;
-        private readonly PermissaoService _permissaoService = new();
 
         private readonly string _processoId;
+
+        private System.Windows.Threading.DispatcherTimer? _lockTimer;
 
         public Processo Processo { get; private set; }
 
@@ -75,7 +76,40 @@ namespace SistemaJuridico.ViewModels
             else
             {
                 _processService.TentarLock(_processoId);
+                IniciarHeartbeat();
             }
+        }
+
+        private void IniciarHeartbeat()
+        {
+            _lockTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromMinutes(5)
+            };
+
+            _lockTimer.Tick += (_, _) =>
+            {
+                try
+                {
+                    _processService.RenovarLock(_processoId);
+                }
+                catch
+                {
+                    // evita crash se rede cair
+                }
+            };
+
+            _lockTimer.Start();
+        }
+
+        public void LiberarLock()
+        {
+            try
+            {
+                _lockTimer?.Stop();
+                _processService.LiberarLock(_processoId);
+            }
+            catch { }
         }
 
         // ========================
@@ -128,9 +162,6 @@ namespace SistemaJuridico.ViewModels
         [RelayCommand]
         private void SalvarRascunho()
         {
-            if (!_permissaoService.PodeEditarProcesso())
-                return;
-
             var motivo = Microsoft.VisualBasic.Interaction.InputBox(
                 "Informe o motivo do rascunho:");
 
@@ -145,9 +176,6 @@ namespace SistemaJuridico.ViewModels
         [RelayCommand]
         private void ConcluirEdicao()
         {
-            if (!_permissaoService.PodeEditarProcesso())
-                return;
-
             _processService.MarcarConcluido(_processoId);
 
             MessageBox.Show("Edição concluída.");
@@ -160,7 +188,7 @@ namespace SistemaJuridico.ViewModels
         [RelayCommand]
         private void NovaVerificacao()
         {
-            if (ModoSomenteLeitura || !_permissaoService.PodeEditarProcesso())
+            if (ModoSomenteLeitura)
                 return;
 
             var facade = new VerificacaoFacadeService();
@@ -196,7 +224,7 @@ namespace SistemaJuridico.ViewModels
         [RelayCommand]
         private void NovaDiligencia()
         {
-            if (ModoSomenteLeitura || !_permissaoService.PodeCriarDiligencia())
+            if (ModoSomenteLeitura)
                 return;
 
             var facade = CriarFacade();
@@ -220,9 +248,6 @@ namespace SistemaJuridico.ViewModels
         {
             if (d == null) return;
 
-            if (!_permissaoService.PodeCriarDiligencia())
-                return;
-
             var facade = CriarFacade();
 
             facade.ConcluirDiligencia(d.Id, _processoId);
@@ -234,9 +259,6 @@ namespace SistemaJuridico.ViewModels
         private void ReabrirDiligencia(Diligencia d)
         {
             if (d == null) return;
-
-            if (!_permissaoService.PodeCriarDiligencia())
-                return;
 
             var facade = CriarFacade();
 
@@ -252,9 +274,6 @@ namespace SistemaJuridico.ViewModels
         [RelayCommand]
         private void GerarRelatorio()
         {
-            if (!_permissaoService.PodeGerarPdf())
-                return;
-
             try
             {
                 var db = new DatabaseService();
