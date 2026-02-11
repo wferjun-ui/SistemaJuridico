@@ -14,7 +14,6 @@ namespace SistemaJuridico.ViewModels
         private readonly ContaService _contaService;
         private readonly ItemSaudeService _itemSaudeService;
         private readonly VerificacaoService _verificacaoService;
-        private readonly VerificacaoFacadeService _verificacaoFacade;
 
         private readonly string _processoId;
 
@@ -23,6 +22,7 @@ namespace SistemaJuridico.ViewModels
         public ObservableCollection<Conta> Contas { get; } = new();
         public ObservableCollection<ItemSaude> ItensSaude { get; } = new();
         public ObservableCollection<Verificacao> Verificacoes { get; } = new();
+        public ObservableCollection<Diligencia> Diligencias { get; } = new();
 
         [ObservableProperty]
         private bool _modoSomenteLeitura;
@@ -41,7 +41,6 @@ namespace SistemaJuridico.ViewModels
             _contaService = new ContaService(db);
             _itemSaudeService = new ItemSaudeService(db);
             _verificacaoService = new VerificacaoService(db);
-            _verificacaoFacade = new VerificacaoFacadeService();
 
             _processoId = processoId;
 
@@ -54,6 +53,7 @@ namespace SistemaJuridico.ViewModels
             CarregarContas();
             CarregarItensSaude();
             CarregarVerificacoes();
+            CarregarDiligencias();
         }
 
         // ========================
@@ -109,61 +109,19 @@ namespace SistemaJuridico.ViewModels
             }
         }
 
-        // ========================
-        // ITENS SAÚDE
-        // ========================
-
-        [RelayCommand]
-        private void EditarItensSaude()
+        private void CarregarDiligencias()
         {
-            if (ModoSomenteLeitura)
-                return;
+            Diligencias.Clear();
 
-            var vm = new ItensSaudeEditorViewModel(
-                _processoId,
-                _itemSaudeService);
+            var lista = new DiligenciaService(new DatabaseService())
+                .ListarPorProcesso(_processoId);
 
-            var tela = new ItensSaudeEditorWindow(vm)
-            {
-                Owner = Application.Current.MainWindow
-            };
-
-            tela.ShowDialog();
-
-            CarregarItensSaude();
+            foreach (var d in lista)
+                Diligencias.Add(d);
         }
 
         // ========================
-        // VERIFICAÇÕES
-        // ========================
-
-        [RelayCommand]
-        private void NovaVerificacao()
-        {
-            if (ModoSomenteLeitura)
-                return;
-
-            var vm = new VerificacaoEditorViewModel(
-                _processoId,
-                _verificacaoFacade,
-                ItensSaude.ToList());
-
-            var tela = new VerificacaoEditorWindow(vm)
-            {
-                Owner = Application.Current.MainWindow
-            };
-
-            var result = tela.ShowDialog();
-
-            if (result == true)
-            {
-                CarregarVerificacoes();
-                CarregarItensSaude();
-            }
-        }
-
-        // ========================
-        // RASCUNHO
+        // COMANDOS
         // ========================
 
         [RelayCommand]
@@ -189,7 +147,108 @@ namespace SistemaJuridico.ViewModels
         }
 
         // ========================
-        // CONTROLE DE FECHAMENTO
+        // VERIFICAÇÕES
+        // ========================
+
+        [RelayCommand]
+        private void NovaVerificacao()
+        {
+            if (ModoSomenteLeitura)
+                return;
+
+            var facade = new VerificacaoFacadeService();
+
+            var status = Microsoft.VisualBasic.Interaction.InputBox(
+                "Informe o status do processo:");
+
+            if (string.IsNullOrWhiteSpace(status))
+                return;
+
+            var descricao = Microsoft.VisualBasic.Interaction.InputBox(
+                "Descrição da verificação:");
+
+            var responsavel = App.Session.UsuarioAtual?.Nome ?? "Sistema";
+
+            facade.CriarVerificacao(
+                _processoId,
+                status,
+                responsavel,
+                descricao,
+                ItensSaude.ToList());
+
+            MessageBox.Show("Verificação registrada.");
+
+            CarregarVerificacoes();
+            CarregarItensSaude();
+        }
+
+        // ========================
+        // DILIGÊNCIAS
+        // ========================
+
+        [RelayCommand]
+        private void NovaDiligencia()
+        {
+            if (ModoSomenteLeitura)
+                return;
+
+            var facade = CriarFacade();
+
+            var vm = new DiligenciaEditorViewModel(
+                _processoId,
+                facade);
+
+            var tela = new DiligenciaEditorWindow(vm)
+            {
+                Owner = Application.Current.MainWindow
+            };
+
+            tela.ShowDialog();
+
+            CarregarDiligencias();
+        }
+
+        [RelayCommand]
+        private void ConcluirDiligencia(Diligencia d)
+        {
+            if (d == null) return;
+
+            var facade = CriarFacade();
+
+            facade.ConcluirDiligencia(d.Id, _processoId);
+
+            CarregarDiligencias();
+        }
+
+        [RelayCommand]
+        private void ReabrirDiligencia(Diligencia d)
+        {
+            if (d == null) return;
+
+            var facade = CriarFacade();
+
+            facade.ReabrirDiligencia(d.Id, _processoId);
+
+            CarregarDiligencias();
+        }
+
+        // ========================
+        // FACADE
+        // ========================
+
+        private ProcessoFacadeService CriarFacade()
+        {
+            var db = new DatabaseService();
+
+            return new ProcessoFacadeService(
+                _processService,
+                new ContaService(db),
+                new DiligenciaService(db),
+                new HistoricoService(db));
+        }
+
+        // ========================
+        // CONTROLE FECHAMENTO
         // ========================
 
         public bool PodeFechar()
