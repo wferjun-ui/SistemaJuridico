@@ -1,62 +1,49 @@
 using Dapper;
+using Microsoft.Data.Sqlite;
+using SistemaJuridico.Infrastructure;
 using SistemaJuridico.Models;
 
 namespace SistemaJuridico.Services
 {
     public class AuthService
     {
-        private readonly DatabaseService _db;
+        private readonly string _connectionString;
+        private readonly LoggerService _logger = new();
 
-        public AuthService(DatabaseService db)
+        public AuthService(string connectionString)
         {
-            _db = db;
+            _connectionString = connectionString;
         }
 
-        public Usuario? Login(string login, string senha)
+        public Usuario? Login(string email)
         {
-            using var conn = _db.GetConnection();
+            using var conn = new SqliteConnection(_connectionString);
 
-            var u = conn.QueryFirstOrDefault<dynamic>(
-                "SELECT * FROM usuarios WHERE lower(username)=lower(@l) OR lower(email)=lower(@l)",
-                new { l = login });
+            var usuario = conn.QueryFirstOrDefault<Usuario>(
+                "SELECT * FROM usuarios WHERE email = @email",
+                new { email });
 
-            if (u == null)
-                return null;
-
-            string hash = _db.HashSenha(senha, u.salt ?? "");
-
-            if (hash != u.password_hash)
-                return null;
-
-            return new Usuario
+            if (usuario != null)
             {
-                Id = u.id,
-                Username = u.username,
-                Email = u.email,
-                Perfil = u.perfil
-            };
+                SessaoUsuarioService.Instance.IniciarSessao(usuario);
+
+                _logger.Audit($"Login realizado");
+            }
+            else
+            {
+                _logger.Warn($"Tentativa de login inválida: {email}");
+            }
+
+            return usuario;
         }
 
-        public void CriarUsuario(string username, string email, string senha, string perfil)
+        public void Logout()
         {
-            using var conn = _db.GetConnection();
+            var nome = SessaoUsuarioService.Instance.NomeUsuario;
 
-            string salt = _db.GerarSalt();
-            string hash = _db.HashSenha(senha, salt);
+            SessaoUsuarioService.Instance.EncerrarSessao();
 
-            conn.Execute(@"
-INSERT INTO usuarios(id,username,password_hash,salt,perfil,email)
-VALUES(@id,@u,@h,@s,@p,@e)",
-                new
-                {
-                    id = System.Guid.NewGuid().ToString(),
-                    u = username,
-                    h = hash,
-                    s = salt,
-                    p = perfil,
-                    e = email
-                });
+            _logger.Audit($"Logout realizado por {nome}");
         }
     }
 }
-
