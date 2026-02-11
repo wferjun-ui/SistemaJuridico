@@ -1,14 +1,37 @@
 using SistemaJuridico.ViewModels;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace SistemaJuridico.Views
 {
     public partial class ContasView : UserControl
     {
-        public ContasView(string processoId)
+        public static readonly DependencyProperty ProcessoIdProperty =
+            DependencyProperty.Register(
+                "ProcessoId",
+                typeof(string),
+                typeof(ContasView),
+                new PropertyMetadata(OnProcessoIdChanged));
+
+        public string ProcessoId
+        {
+            get => (string)GetValue(ProcessoIdProperty);
+            set => SetValue(ProcessoIdProperty, value);
+        }
+
+        public ContasView()
         {
             InitializeComponent();
-            DataContext = new ContasViewModel(processoId);
+        }
+
+        private static void OnProcessoIdChanged(
+            DependencyObject d,
+            DependencyPropertyChangedEventArgs e)
+        {
+            if (d is ContasView view && e.NewValue is string id)
+            {
+                view.DataContext = new ContasViewModel(id);
+            }
         }
     }
 }
