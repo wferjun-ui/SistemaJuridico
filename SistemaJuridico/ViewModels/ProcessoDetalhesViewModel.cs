@@ -130,12 +130,40 @@ namespace SistemaJuridico.ViewModels
 
             tela.ShowDialog();
 
-            // Recarrega após edição
             CarregarItensSaude();
         }
 
         // ========================
-        // COMANDOS
+        // VERIFICAÇÕES
+        // ========================
+
+        [RelayCommand]
+        private void NovaVerificacao()
+        {
+            if (ModoSomenteLeitura)
+                return;
+
+            var vm = new VerificacaoEditorViewModel(
+                _processoId,
+                _verificacaoFacade,
+                ItensSaude.ToList());
+
+            var tela = new VerificacaoEditorWindow(vm)
+            {
+                Owner = Application.Current.MainWindow
+            };
+
+            var result = tela.ShowDialog();
+
+            if (result == true)
+            {
+                CarregarVerificacoes();
+                CarregarItensSaude();
+            }
+        }
+
+        // ========================
+        // RASCUNHO
         // ========================
 
         [RelayCommand]
@@ -158,36 +186,6 @@ namespace SistemaJuridico.ViewModels
             _processService.MarcarConcluido(_processoId);
 
             MessageBox.Show("Edição concluída.");
-        }
-
-        [RelayCommand]
-        private void NovaVerificacao()
-        {
-            if (ModoSomenteLeitura)
-                return;
-
-            var status = Microsoft.VisualBasic.Interaction.InputBox(
-                "Informe o status do processo:");
-
-            if (string.IsNullOrWhiteSpace(status))
-                return;
-
-            var descricao = Microsoft.VisualBasic.Interaction.InputBox(
-                "Descrição da verificação:");
-
-            var responsavel = App.Session.UsuarioAtual?.Nome ?? "Sistema";
-
-            _verificacaoFacade.CriarVerificacao(
-                _processoId,
-                status,
-                responsavel,
-                descricao,
-                ItensSaude.ToList());
-
-            MessageBox.Show("Verificação registrada.");
-
-            CarregarVerificacoes();
-            CarregarItensSaude();
         }
 
         // ========================
