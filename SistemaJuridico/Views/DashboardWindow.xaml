@@ -33,6 +33,10 @@
                 <Button Content="Admin"
                         Margin="5"
                         Click="AbrirEmails"/>
+
+                <Button Content="Novo Processo"
+                        Margin="5"
+                        Click="NovoProcesso_Click"/>
             </StackPanel>
 
         </DockPanel>
