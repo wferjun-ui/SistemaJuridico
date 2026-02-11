@@ -1,0 +1,48 @@
+<UserControl x:Class="SistemaJuridico.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:SistemaJuridico.ViewModels">
+
+    <UserControl.DataContext>
+        <vm:DashboardViewModel/>
+    </UserControl.DataContext>
+
+    <ScrollViewer>
+        <StackPanel Margin="20">
+
+            <TextBlock Text="Dashboard"
+                       FontSize="26"
+                       FontWeight="Bold"
+                       Margin="0 0 0 20"/>
+
+            <!-- Financeiro -->
+            <GroupBox Header="Financeiro">
+                <StackPanel>
+                    <TextBlock Text="{Binding SaldoPendenteTotal,
+                        StringFormat=Saldo pendente total: R$ {0:N2}}"/>
+
+                    <TextBlock Text="{Binding UltimaMovimentacaoTexto,
+                        StringFormat=Última movimentação: {0}}"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- Rascunhos -->
+            <GroupBox Header="Processos em Rascunho" Margin="0 15 0 0">
+                <ListBox ItemsSource="{Binding ProcessosRascunho}"
+                         DisplayMemberPath="Numero"/>
+            </GroupBox>
+
+            <!-- Pendências -->
+            <GroupBox Header="Diligências Pendentes" Margin="0 15 0 0">
+                <ListBox ItemsSource="{Binding ProcessosPendentes}"
+                         DisplayMemberPath="Numero"/>
+            </GroupBox>
+
+            <!-- Locks -->
+            <GroupBox Header="Processos Bloqueados" Margin="0 15 0 0">
+                <ListBox ItemsSource="{Binding ProcessosBloqueados}"/>
+            </GroupBox>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
