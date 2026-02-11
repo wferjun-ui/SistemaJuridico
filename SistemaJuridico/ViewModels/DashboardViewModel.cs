@@ -22,6 +22,9 @@ namespace SistemaJuridico.ViewModels
 
         [ObservableProperty]
         private string _rascunho = "";
+
+        [ObservableProperty]
+        private string _usuarioEditando = "";
     }
 
     public partial class DashboardViewModel : ObservableObject
@@ -50,14 +53,11 @@ namespace SistemaJuridico.ViewModels
                     SaldoPendente = saldo > 0 ? $"R$ {saldo:N2}" : "-",
                     Diligencia = dilig ? "Pendente" : "OK",
                     UltimaMov = data ?? "-",
-                    Rascunho = p.SituacaoRascunho
+                    Rascunho = p.SituacaoRascunho,
+                    UsuarioEditando = p.UsuarioEditando ?? ""
                 });
             }
         }
-
-        // =========================
-        // ABRIR PROCESSO
-        // =========================
 
         [RelayCommand]
         private void AbrirProcesso(ProcessoResumoDto dto)
@@ -78,7 +78,9 @@ namespace SistemaJuridico.ViewModels
                 return;
             }
 
-            MessageBox.Show("Aqui abrirá tela de detalhes futuramente.");
+            new Views.ProcessoDetalhesWindow(dto.Processo.Id).ShowDialog();
+
+            Carregar();
         }
     }
 }
