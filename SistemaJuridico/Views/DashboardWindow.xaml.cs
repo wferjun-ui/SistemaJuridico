@@ -28,6 +28,14 @@ namespace SistemaJuridico.Views
             }
         }
 
+        private void NovoProcesso_Click(object sender, RoutedEventArgs e)
+            {
+        new CadastroProcessoWindow().ShowDialog();
+
+            ((DashboardViewModel)DataContext).CarregarCommand.Execute(null);
+        }
+
+
         private void AbrirEmails(object sender, RoutedEventArgs e)
         {
             if (!App.Session.IsAdmin())
