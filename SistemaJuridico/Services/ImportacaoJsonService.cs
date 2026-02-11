@@ -1,194 +1,181 @@
 using Dapper;
 using Newtonsoft.Json;
 using SistemaJuridico.Models;
-using System.Data;
+using System.Data.SQLite;
 
 namespace SistemaJuridico.Services
 {
     public class ImportacaoJsonService
     {
-        private readonly DatabaseService _db;
+        private readonly DatabaseService _databaseService;
 
-        public ImportacaoJsonService(DatabaseService db)
+        public ImportacaoJsonService(DatabaseService databaseService)
         {
-            _db = db;
+            _databaseService = databaseService;
         }
 
-        public void ImportarArquivo(string caminhoJson)
+        public void Importar(string caminhoJson)
         {
             var json = File.ReadAllText(caminhoJson);
+            var root = JsonConvert.DeserializeObject<MigracaoRoot>(json);
 
-            var dados = JsonConvert.DeserializeObject<MigrationRoot>(json);
-
-            using var conn = _db.GetConnection();
-            conn.Open();
-
-            using var trx = conn.BeginTransaction();
+            using var conn = _databaseService.GetConnection();
+            using var trans = conn.BeginTransaction();
 
             try
             {
-                ImportarUsuarios(conn, trx, dados.usuarios);
-                ImportarProcessos(conn, trx, dados.processos);
-                ImportarContas(conn, trx, dados.contas);
-                ImportarVerificacoes(conn, trx, dados.verificacoes);
-                ImportarItensSaude(conn, trx, dados.itens_saude);
-                ImportarReus(conn, trx, dados.reus);
+                ImportarUsuarios(conn, root.usuarios);
+                ImportarProcessos(conn, root.processos);
+                ImportarItensSaude(conn, root.itens_saude);
+                ImportarVerificacoes(conn, root.verificacoes);
+                ImportarContas(conn, root.contas);
 
-                trx.Commit();
+                trans.Commit();
             }
             catch
             {
-                trx.Rollback();
+                trans.Rollback();
                 throw;
             }
         }
 
-        // =========================
-        // USUÁRIOS
-        // =========================
-
-        private void ImportarUsuarios(IDbConnection conn, IDbTransaction trx, List<UsuarioMigration>? lista)
+        private void ImportarUsuarios(SQLiteConnection conn, List<MigracaoUsuario> lista)
         {
-            if (lista == null) return;
-
             foreach (var u in lista)
             {
-                string salt = _db.GerarSalt();
-                string hash = _db.HashSenha("123456", salt);
+                var username = string.IsNullOrWhiteSpace(u.username)
+                    ? u.email.Split('@')[0]
+                    : u.username;
 
                 conn.Execute(@"
-INSERT OR IGNORE INTO usuarios
-(id, email, username, password_hash, salt, perfil)
-VALUES
-(@id, @email, @username, @hash, @salt, @perfil)
-",
-                new
-                {
-                    u.id,
-                    u.email,
-                    u.username,
-                    hash,
-                    salt,
-                    perfil = u.is_admin == 1 ? "Admin" : "Operador"
-                }, trx);
+                    INSERT OR IGNORE INTO usuarios
+                    (id, username, email, password_hash, salt, is_admin)
+                    VALUES (@id, @username, @email, @password_hash, @salt, @is_admin)",
+                    new
+                    {
+                        u.id,
+                        username,
+                        u.email,
+                        u.password_hash,
+                        u.salt,
+                        is_admin = u.is_admin == 1 ? 1 : 0
+                    });
             }
         }
 
-        // =========================
-        // PROCESSOS
-        // =========================
-
-        private void ImportarProcessos(IDbConnection conn, IDbTransaction trx, List<ProcessoMigration>? lista)
+        private void ImportarProcessos(SQLiteConnection conn, List<MigracaoProcesso> lista)
         {
-            if (lista == null) return;
-
             foreach (var p in lista)
             {
                 conn.Execute(@"
-INSERT OR IGNORE INTO processos
-(id, numero, paciente, juiz, classificacao,
- status_fase, ultima_atualizacao, observacao_fixa,
- situacao_rascunho)
-VALUES
-(@id, @numero, @paciente, @juiz, @classificacao,
- @status_fase, @ultima_atualizacao, @observacao_fixa,
- 'Concluído')
-",
-                p, trx);
+                    INSERT OR IGNORE INTO processos
+                    (id, numero, paciente, is_antigo, juiz, genitor_rep_nome,
+                     genitor_rep_tipo, classificacao, status_fase,
+                     ultima_atualizacao, observacao_fixa)
+                    VALUES (@id, @numero, @paciente, @is_antigo, @juiz,
+                            @genitor_rep_nome, 'Genitor', @classificacao,
+                            @status_fase, @ultima_atualizacao, @observacao_fixa)",
+                    p);
             }
         }
 
-        // =========================
-        // CONTAS
-        // =========================
-
-        private void ImportarContas(IDbConnection conn, IDbTransaction trx, List<ContaMigration>? lista)
+        private void ImportarItensSaude(SQLiteConnection conn, List<MigracaoItemSaude> lista)
         {
-            if (lista == null) return;
-
-            foreach (var c in lista)
-            {
-                conn.Execute(@"
-INSERT OR IGNORE INTO contas
-(id, processo_id, data_movimentacao, tipo_lancamento,
- historico, mov_processo, num_nf_alvara,
- valor_alvara, valor_conta, observacoes,
- responsavel, status_conta)
-VALUES
-(@id, @processo_id, @data_movimentacao, @tipo_lancamento,
- @historico, @mov_processo, @num_nf_alvara,
- @valor_alvara, @valor_conta, @observacoes,
- @responsavel, @status_conta)
-",
-                c, trx);
-            }
-        }
-
-        // =========================
-        // VERIFICAÇÕES
-        // =========================
-
-        private void ImportarVerificacoes(IDbConnection conn, IDbTransaction trx, List<VerificacaoMigration>? lista)
-        {
-            if (lista == null) return;
-
-            foreach (var v in lista)
-            {
-                conn.Execute(@"
-INSERT OR IGNORE INTO verificacoes
-(id, processo_id, data_hora, status_processo,
- responsavel, diligencia_pendente,
- pendencias_descricao)
-VALUES
-(@id, @processo_id, @data_hora, @status_processo,
- @responsavel, @diligencia_pendente,
- @pendencias_descricao)
-",
-                v, trx);
-            }
-        }
-
-        // =========================
-        // ITENS DE SAÚDE
-        // =========================
-
-        private void ImportarItensSaude(IDbConnection conn, IDbTransaction trx, List<ItemSaudeMigration>? lista)
-        {
-            if (lista == null) return;
-
             foreach (var i in lista)
             {
                 conn.Execute(@"
-INSERT OR IGNORE INTO itens_saude
-(id, processo_id, tipo, nome, qtd,
- frequencia, local, data_prescricao,
- is_desnecessario, tem_bloqueio)
-VALUES
-(@id, @processo_id, @tipo, @nome, @qtd,
- @frequencia, @local, @data_prescricao,
- @is_desnecessario, @tem_bloqueio)
-",
-                i, trx);
+                    INSERT OR IGNORE INTO itens_saude
+                    (id, processo_id, tipo, nome, qtd, frequencia, local,
+                     data_prescricao, is_desnecessario, tem_bloqueio)
+                    VALUES (@id, @processo_id, @tipo, @nome, @qtd,
+                            @frequencia, @local, @data_prescricao,
+                            @is_desnecessario, @tem_bloqueio)", i);
             }
         }
 
-        // =========================
-        // RÉUS
-        // =========================
-
-        private void ImportarReus(IDbConnection conn, IDbTransaction trx, List<ReuMigration>? lista)
+        private void ImportarVerificacoes(SQLiteConnection conn, List<MigracaoVerificacao> lista)
         {
-            if (lista == null) return;
-
-            foreach (var r in lista)
+            foreach (var v in lista)
             {
+                var diligenciaRealizada = v.diligencia_realizada == 1 ? 1 : 0;
+                var diligenciaPendente = v.diligencia_pendente == 1 ? 1 : 0;
+
+                var alteracoes = string.IsNullOrWhiteSpace(v.alteracoes_texto)
+                    ? "Registro de histórico."
+                    : v.alteracoes_texto;
+
                 conn.Execute(@"
-INSERT OR IGNORE INTO reus
-(id, processo_id, nome)
-VALUES
-(@id, @processo_id, @nome)
-",
-                r, trx);
+                    INSERT OR IGNORE INTO verificacoes
+                    (id, processo_id, data_hora, status_processo,
+                     responsavel, diligencia_realizada,
+                     diligencia_descricao, diligencia_pendente,
+                     pendencias_descricao, prazo_diligencia,
+                     proximo_prazo_padrao, data_notificacao,
+                     alteracoes_texto, itens_snapshot_json)
+                    VALUES (@id, @processo_id, @data_hora, @status_processo,
+                            @responsavel, @diligencia_realizada,
+                            @diligencia_descricao, @diligencia_pendente,
+                            @pendencias_descricao, @prazo_diligencia,
+                            @proximo_prazo_padrao, @data_notificacao,
+                            @alteracoes_texto, @itens_snapshot_json)",
+                    new
+                    {
+                        v.id,
+                        v.processo_id,
+                        v.data_hora,
+                        v.status_processo,
+                        v.responsavel,
+                        diligencia_realizada = diligenciaRealizada,
+                        v.diligencia_descricao,
+                        diligencia_pendente = diligenciaPendente,
+                        v.pendencias_descricao,
+                        v.prazo_diligencia,
+                        v.proximo_prazo_padrao,
+                        v.data_notificacao,
+                        alteracoes_texto = alteracoes,
+                        v.itens_snapshot_json
+                    });
+            }
+        }
+
+        private void ImportarContas(SQLiteConnection conn, List<MigracaoConta> lista)
+        {
+            foreach (var c in lista)
+            {
+                var movProcesso = (c.mov_processo ?? "").Replace("'", "");
+                var numAlvara = (c.num_nf_alvara ?? "").Replace("'", "");
+
+                conn.Execute(@"
+                    INSERT OR IGNORE INTO contas
+                    (id, processo_id, data_movimentacao, tipo_lancamento,
+                     historico, mov_processo, num_nf_alvara,
+                     valor_alvara, valor_conta, terapia_medicamento_nome,
+                     quantidade, mes_referencia, ano_referencia,
+                     observacoes, responsavel, status_conta)
+                    VALUES (@id, @processo_id, @data_movimentacao,
+                            @tipo_lancamento, @historico, @mov_processo,
+                            @num_nf_alvara, @valor_alvara, @valor_conta,
+                            @terapia_medicamento_nome, @quantidade,
+                            @mes_referencia, @ano_referencia,
+                            @observacoes, @responsavel, 'lancado')",
+                    new
+                    {
+                        c.id,
+                        c.processo_id,
+                        c.data_movimentacao,
+                        c.tipo_lancamento,
+                        c.historico,
+                        mov_processo = movProcesso,
+                        num_nf_alvara = numAlvara,
+                        c.valor_alvara,
+                        c.valor_conta,
+                        c.terapia_medicamento_nome,
+                        c.quantidade,
+                        c.mes_referencia,
+                        c.ano_referencia,
+                        c.observacoes,
+                        c.responsavel
+                    });
             }
         }
     }
