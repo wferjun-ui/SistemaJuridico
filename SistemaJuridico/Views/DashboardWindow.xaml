@@ -25,6 +25,9 @@
 
             <DataGrid.Columns>
 
+                <DataGridTextColumn Header="Editando"
+                                    Binding="{Binding UsuarioEditando}"/>
+
                 <DataGridTextColumn Header="Processo"
                                     Binding="{Binding Processo.Numero}"/>
 
