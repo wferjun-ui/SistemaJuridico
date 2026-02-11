@@ -1,31 +1,31 @@
-using System.Windows.Forms;
-
-namespace SistemaJuridico.Services
+public string Inicializar()
 {
-    public class InicializacaoSistemaService
+    var caminhoDb = ConfigService.ObterCaminhoBanco();
+
+    if (string.IsNullOrEmpty(caminhoDb))
     {
-        public string Inicializar()
-        {
-            var caminhoDb = ConfigService.ObterCaminhoBanco();
+        caminhoDb = SelecionarPastaBanco();
 
-            if (string.IsNullOrEmpty(caminhoDb))
-            {
-                caminhoDb = SelecionarPastaBanco();
+        if (string.IsNullOrEmpty(caminhoDb))
+            throw new Exception("Banco não configurado.");
 
-                if (string.IsNullOrEmpty(caminhoDb))
-                    throw new Exception("Banco não configurado.");
+        ConfigService.SalvarCaminhoBanco(caminhoDb);
+    }
 
-                ConfigService.SalvarCaminhoBanco(caminhoDb);
-            }
+    // Inicializa banco base
+    var db = new DatabaseService(Path.GetDirectoryName(caminhoDb)!);
+    db.Initialize();
 
-            // Inicializa banco completo
-            var db = new DatabaseService(Path.GetDirectoryName(caminhoDb)!);
-            db.Initialize();
+    // ⭐ AQUI entra o versionamento
+    var versionador = new DatabaseVersionService(db);
+    versionador.GarantirAtualizacao();
 
-            ImportarSeExistirJson(db);
+    // Importação automática
+    ImportarSeExistirJson(db);
 
-            return caminhoDb;
-        }
+    return caminhoDb;
+}
+
 
         // =========================
         // SELECIONAR PASTA
