@@ -24,11 +24,13 @@ namespace SistemaJuridico.Infrastructure
             return Path.Combine(_pastaLogs, nome);
         }
 
-        public void Log(LogLevel nivel, string mensagem, string? usuario = null)
+        public void Log(LogLevel nivel, string mensagem)
         {
             try
             {
-                var linha = MontarLinha(nivel, mensagem, usuario);
+                var usuario = SessaoUsuarioService.Instance.NomeUsuario;
+
+                var linha = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} | {nivel} | {usuario} | {mensagem}{Environment.NewLine}";
 
                 lock (_lock)
                 {
@@ -37,25 +39,17 @@ namespace SistemaJuridico.Infrastructure
             }
             catch
             {
-                // Nunca deixar log quebrar o sistema
+                // Logger nunca pode derrubar o sistema
             }
         }
 
-        private string MontarLinha(LogLevel nivel, string mensagem, string? usuario)
-        {
-            return $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} | {nivel} | {usuario ?? "Sistema"} | {mensagem}{Environment.NewLine}";
-        }
+        public void Info(string msg) => Log(LogLevel.INFO, msg);
 
-        public void Info(string msg, string? usuario = null)
-            => Log(LogLevel.INFO, msg, usuario);
+        public void Warn(string msg) => Log(LogLevel.WARN, msg);
 
-        public void Warn(string msg, string? usuario = null)
-            => Log(LogLevel.WARN, msg, usuario);
+        public void Audit(string msg) => Log(LogLevel.AUDIT, msg);
 
-        public void Error(string msg, Exception ex, string? usuario = null)
-            => Log(LogLevel.ERROR, $"{msg} | {ex}", usuario);
-
-        public void Audit(string msg, string? usuario = null)
-            => Log(LogLevel.AUDIT, msg, usuario);
+        public void Error(string msg, Exception ex)
+            => Log(LogLevel.ERROR, $"{msg} | {ex}");
     }
 }
