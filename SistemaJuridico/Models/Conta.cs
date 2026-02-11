@@ -6,14 +6,14 @@ namespace SistemaJuridico.Models
 
         public string ProcessoId { get; set; } = "";
 
-        public string DataMovimentacao { get; set; } = "";
-        DateTime.Now.ToString("dd/MM/yyyy");
-
         public string TipoLancamento { get; set; } = "";
 
         public string Historico { get; set; } = "";
 
-        public string MovProcesso { get; set; } = "";
+        public string DataMovimentacao { get; set; } =
+            DateTime.Now.ToString("dd/MM/yyyy");
+
+        public string? MovProcesso { get; set; }
 
         public string? NumNfAlvara { get; set; }
 
@@ -24,5 +24,9 @@ namespace SistemaJuridico.Models
         public string StatusConta { get; set; } = "rascunho";
 
         public string Responsavel { get; set; } = "";
+
+        public string? Observacoes { get; set; }
+
+        public bool PodeEditar => StatusConta == "rascunho";
     }
 }
