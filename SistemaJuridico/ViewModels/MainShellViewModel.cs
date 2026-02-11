@@ -1,31 +1,41 @@
 using SistemaJuridico.Infrastructure;
 using SistemaJuridico.Services;
+using System.Windows.Controls;
 
 namespace SistemaJuridico.ViewModels
 {
     public class MainShellViewModel : ViewModelBase
     {
         private readonly NavigationService _navigation;
+        private readonly ViewFactoryService _factory;
+        private readonly ViewRegistryService _registry;
 
         public RelayCommand OpenDashboardCommand { get; }
-        public RelayCommand OpenNovoProcessoCommand { get; }
 
-        public MainShellViewModel(NavigationService navigation)
+        public MainShellViewModel(
+            NavigationService navigation,
+            ViewFactoryService factory,
+            ViewRegistryService registry)
         {
             _navigation = navigation;
+            _factory = factory;
+            _registry = registry;
 
             OpenDashboardCommand = new RelayCommand(OpenDashboard);
-            OpenNovoProcessoCommand = new RelayCommand(OpenNovoProcesso);
+        }
+
+        public void LoadInitialView()
+        {
+            OpenDashboard();
         }
 
         private void OpenDashboard()
         {
-            // Ainda não vamos conectar View real
-        }
+            var (viewType, vmType) = _registry.Resolve("Dashboard");
 
-        private void OpenNovoProcesso()
-        {
-            // Será conectado depois
+            var view = _factory.CreateView(viewType, vmType);
+
+            _navigation.Navigate(view);
         }
     }
 }
