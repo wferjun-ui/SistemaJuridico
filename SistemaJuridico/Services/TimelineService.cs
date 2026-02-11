@@ -28,30 +28,23 @@ namespace SistemaJuridico.Services
         {
             var eventos = new List<TimelineEventoDTO>();
 
-            // =========================
-            // HISTÓRICO
-            // =========================
-
-            var historico = _historicoService.ListarPorProcesso(processoId);
-
-            eventos.AddRange(
-                historico.Select(h => new TimelineEventoDTO
+            // Histórico
+            foreach (var h in _historicoService.ListarPorProcesso(processoId))
+            {
+                eventos.Add(new TimelineEventoDTO
                 {
                     Tipo = "Histórico",
                     Titulo = h.Acao,
                     Descricao = h.Detalhes,
                     DataHora = DateTime.Parse(h.DataHora),
                     Usuario = h.Usuario
-                }));
+                });
+            }
 
-            // =========================
-            // VERIFICAÇÕES
-            // =========================
-
-            var verificacoes = _verificacaoService.ListarPorProcesso(processoId);
-
-            eventos.AddRange(
-                verificacoes.Select(v => new TimelineEventoDTO
+            // Verificações
+            foreach (var v in _verificacaoService.ListarPorProcesso(processoId))
+            {
+                eventos.Add(new TimelineEventoDTO
                 {
                     Tipo = "Verificação",
                     Titulo = v.Status,
@@ -59,55 +52,47 @@ namespace SistemaJuridico.Services
                     DataHora = DateTime.Parse(v.DataHora),
                     Usuario = v.Responsavel,
                     ReferenciaId = v.Id
-                }));
+                });
+            }
 
-            // =========================
-            // DILIGÊNCIAS
-            // =========================
-
-            var diligencias = _diligenciaService.ListarPorProcesso(processoId);
-
-            eventos.AddRange(
-                diligencias.Select(d => new TimelineEventoDTO
+            // Diligências
+            foreach (var d in _diligenciaService.ListarPorProcesso(processoId))
+            {
+                eventos.Add(new TimelineEventoDTO
                 {
                     Tipo = "Diligência",
                     Titulo = d.Descricao,
                     Descricao = d.Concluida ? "Concluída" : "Pendente",
                     DataHora = DateTime.Parse(d.DataCriacao),
                     ReferenciaId = d.Id
-                }));
+                });
+            }
 
-            // =========================
-            // CONTAS
-            // =========================
-
-            var contas = _contaService.ListarPorProcesso(processoId);
-
-            eventos.AddRange(
-                contas.Select(c => new TimelineEventoDTO
+            // Contas
+            foreach (var c in _contaService.ListarPorProcesso(processoId))
+            {
+                eventos.Add(new TimelineEventoDTO
                 {
                     Tipo = "Conta",
                     Titulo = $"Conta: {c.ValorConta:C}",
                     Descricao = c.Status,
                     DataHora = DateTime.Parse(c.DataLancamento),
                     ReferenciaId = c.Id
-                }));
+                });
+            }
 
-            // =========================
-            // AUDITORIA
-            // =========================
-
-            var audit = _auditService.ListarPorProcesso(processoId);
-
-            eventos.AddRange(
-                audit.Select(a => new TimelineEventoDTO
+            // Auditoria
+            foreach (var a in _auditService.ListarPorProcesso(processoId))
+            {
+                eventos.Add(new TimelineEventoDTO
                 {
                     Tipo = "Auditoria",
                     Titulo = a.Acao,
                     Descricao = a.Detalhes,
                     DataHora = DateTime.Parse(a.DataHora),
                     Usuario = a.Usuario
-                }));
+                });
+            }
 
             return eventos
                 .OrderByDescending(x => x.DataHora)
