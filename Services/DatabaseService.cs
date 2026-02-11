@@ -88,6 +88,12 @@ CREATE TABLE IF NOT EXISTS diligencias(
     pendente INTEGER
 );
 
+CREATE TABLE IF NOT EXISTS emails_autorizados(
+    id TEXT PRIMARY KEY,
+    email TEXT UNIQUE
+);
+
+
 ");
         }
 
