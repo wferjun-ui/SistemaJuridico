@@ -2,85 +2,96 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SistemaJuridico.Models;
 using SistemaJuridico.Services;
+using SistemaJuridico.Views;
 using System.Collections.ObjectModel;
 using System.Windows;
 
 namespace SistemaJuridico.ViewModels
 {
-    public partial class ProcessoResumoDto : ObservableObject
-    {
-        public Processo Processo { get; set; } = new();
-
-        [ObservableProperty]
-        private string _saldoPendente = "";
-
-        [ObservableProperty]
-        private string _diligencia = "";
-
-        [ObservableProperty]
-        private string _ultimaMov = "";
-
-        [ObservableProperty]
-        private string _rascunho = "";
-
-        [ObservableProperty]
-        private string _usuarioEditando = "";
-    }
-
     public partial class DashboardViewModel : ObservableObject
     {
         private readonly ProcessService _service;
 
-        public ObservableCollection<ProcessoResumoDto> Processos { get; set; } = new();
+        public ObservableCollection<ProcessoResumoVM> Processos { get; } = new();
 
         public DashboardViewModel()
         {
-            _service = new ProcessService(App.DB!);
+            var db = new DatabaseService();
+            _service = new ProcessService(db);
+
             Carregar();
         }
 
-        public void Carregar()
+        // =========================
+        // CARREGAR DASHBOARD
+        // =========================
+
+        [RelayCommand]
+        private void Carregar()
         {
             Processos.Clear();
 
             foreach (var p in _service.ListarProcessos())
             {
-                var (saldo, dilig, data) = _service.ObterResumo(p.Id);
+                var resumo = _service.ObterResumo(p.Id);
 
-                Processos.Add(new ProcessoResumoDto
+                Processos.Add(new ProcessoResumoVM
                 {
                     Processo = p,
-                    SaldoPendente = saldo > 0 ? $"R$ {saldo:N2}" : "-",
-                    Diligencia = dilig ? "Pendente" : "OK",
-                    UltimaMov = data ?? "-",
-                    Rascunho = p.SituacaoRascunho,
-                    UsuarioEditando = p.UsuarioEditando ?? ""
+                    SaldoPendente = resumo.saldoPendente,
+                    DiligenciaPendente = resumo.diligenciaPendente,
+                    DataUltimoLancamento = resumo.dataUltLanc
                 });
             }
         }
 
+        // =========================
+        // ABRIR PROCESSO
+        // =========================
+
         [RelayCommand]
-        private void AbrirProcesso(ProcessoResumoDto dto)
+        private void AbrirProcesso(ProcessoResumoVM processo)
         {
-            var usuarioEditando = _service.UsuarioEditando(dto.Processo.Id);
-
-            if (usuarioEditando != null &&
-                usuarioEditando != App.Session.UsuarioAtual?.Email)
-            {
-                MessageBox.Show(
-                    $"Processo em edição por {usuarioEditando}");
+            if (processo == null)
                 return;
-            }
 
-            if (!_service.TentarLock(dto.Processo.Id))
-            {
-                MessageBox.Show("Não foi possível obter lock.");
-                return;
-            }
-
-            new Views.ProcessoDetalhesWindow(dto.Processo.Id).ShowDialog();
+            var tela = new ProcessoDetalhesWindow(processo.Processo.Id);
+            tela.ShowDialog();
 
             Carregar();
         }
+    }
+
+    // =========================
+    // VM AUXILIAR
+    // =========================
+
+    public class ProcessoResumoVM
+    {
+        public Processo Processo { get; set; } = new();
+
+        public decimal SaldoPendente { get; set; }
+
+        public bool DiligenciaPendente { get; set; }
+
+        public string? DataUltimoLancamento { get; set; }
+
+        public string StatusVisual =>
+            Processo.SituacaoRascunho switch
+            {
+                "Rascunho" => "📝 Rascunho",
+                "Em edição" => $"🔒 Editado por {Processo.UsuarioRascunho}",
+                _ => "✔ Concluído"
+            };
+
+        public string ResumoFinanceiro =>
+            SaldoPendente > 0
+                ? $"Saldo pendente: {SaldoPendente:C}"
+                : "Sem pendências financeiras";
+
+        public string DiligenciaTexto =>
+            DiligenciaPendente
+                ? "⚠ Diligência pendente"
+                : "";
     }
 }
