@@ -23,22 +23,50 @@ namespace SistemaJuridico.Services
             ", new { id = processoId }).ToList();
         }
 
-        public void SalvarConta(Conta conta)
+        public void Inserir(Conta conta)
         {
             using var conn = _db.GetConnection();
 
             conn.Execute(@"
                 INSERT INTO contas
-                (id, processo_id, tipo, valor_alvara,
-                 valor_conta, status_conta,
-                 data_movimentacao, observacao)
-
                 VALUES
-                (@Id, @ProcessoId, @Tipo, @ValorAlvara,
-                 @ValorConta, @StatusConta,
-                 @DataMovimentacao, @Observacao)
+                (@Id,@ProcessoId,@Tipo,@ValorAlvara,
+                 @ValorConta,@StatusConta,
+                 @DataMovimentacao,@Observacao)
             ", conta);
+        }
+
+        public void Atualizar(Conta conta)
+        {
+            using var conn = _db.GetConnection();
+
+            conn.Execute(@"
+                UPDATE contas SET
+                    tipo=@Tipo,
+                    valor_alvara=@ValorAlvara,
+                    valor_conta=@ValorConta,
+                    observacao=@Observacao
+                WHERE id=@Id
+            ", conta);
+        }
+
+        public void Excluir(string id)
+        {
+            using var conn = _db.GetConnection();
+
+            conn.Execute("DELETE FROM contas WHERE id=@id",
+                new { id });
+        }
+
+        public void FecharConta(string id)
+        {
+            using var conn = _db.GetConnection();
+
+            conn.Execute(@"
+                UPDATE contas
+                SET status_conta='fechada'
+                WHERE id=@id
+            ", new { id });
         }
     }
 }
-
