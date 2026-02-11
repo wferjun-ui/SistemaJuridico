@@ -7,8 +7,12 @@
         Height="800"
         WindowStartupLocation="CenterScreen">
 
-    <Grid>
-        <views:DashboardView/>
-    </Grid>
+   <Grid>
+    <views:DashboardView>
+        <views:DashboardView.DataContext>
+            <viewModels:DashboardViewModel/>
+        </views:DashboardView.DataContext>
+    </views:DashboardView>
+</Grid>
 
 </Window>
