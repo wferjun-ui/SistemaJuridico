@@ -14,11 +14,14 @@ namespace SistemaJuridico.Services
                 typeof(DashboardViewModel));
 
             registry.Register(
+                NavigationKey.Processos,
+                typeof(ProcessoListView),
+                typeof(ProcessoListViewModel));
+
+            registry.Register(
                 NavigationKey.Contas,
                 typeof(ContasView),
                 typeof(ContasViewModel));
-
-            // Processos será conectado depois
         }
     }
 }
