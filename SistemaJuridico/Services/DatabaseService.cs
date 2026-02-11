@@ -28,6 +28,10 @@ namespace SistemaJuridico.Services
         public SqliteConnection GetConnection()
             => new SqliteConnection(_connectionString);
 
+        // =====================================================
+        // INICIALIZAÇÃO
+        // =====================================================
+
         public void Initialize()
         {
             using var conn = GetConnection();
@@ -39,6 +43,10 @@ namespace SistemaJuridico.Services
             CriarTabelas(conn);
             CriarAdminPadrao(conn);
         }
+
+        // =====================================================
+        // CRIAÇÃO DE TABELAS
+        // =====================================================
 
         private void CriarTabelas(SqliteConnection conn)
         {
@@ -53,6 +61,11 @@ CREATE TABLE IF NOT EXISTS usuarios(
     email TEXT UNIQUE
 );
 
+CREATE TABLE IF NOT EXISTS emails_autorizados(
+    id TEXT PRIMARY KEY,
+    email TEXT UNIQUE
+);
+
 CREATE TABLE IF NOT EXISTS processos(
     id TEXT PRIMARY KEY,
     numero TEXT,
@@ -60,8 +73,13 @@ CREATE TABLE IF NOT EXISTS processos(
     juiz TEXT,
     classificacao TEXT,
     status_fase TEXT,
-    ultima_atualizacao TEXT
-    UsuarioEditando TEXT
+    ultima_atualizacao TEXT,
+    observacao_fixa TEXT,
+    cache_proximo_prazo TEXT,
+    situacao_rascunho TEXT,
+    motivo_rascunho TEXT,
+    usuario_rascunho TEXT,
+    usuario_editando TEXT
 );
 
 CREATE TABLE IF NOT EXISTS processo_edicao_status(
@@ -74,29 +92,82 @@ CREATE TABLE IF NOT EXISTS processo_edicao_status(
     data_atualizacao TEXT
 );
 
+CREATE TABLE IF NOT EXISTS reus(
+    id TEXT PRIMARY KEY,
+    processo_id TEXT,
+    nome TEXT
+);
+
+CREATE TABLE IF NOT EXISTS itens_saude(
+    id TEXT PRIMARY KEY,
+    processo_id TEXT,
+    tipo TEXT,
+    nome TEXT,
+    qtd TEXT,
+    frequencia TEXT,
+    local TEXT,
+    data_prescricao TEXT,
+    is_desnecessario INTEGER DEFAULT 0,
+    tem_bloqueio INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS verificacoes(
+    id TEXT PRIMARY KEY,
+    processo_id TEXT,
+    data_hora TEXT,
+    status_processo TEXT,
+    responsavel TEXT,
+    diligencia_realizada INTEGER,
+    diligencia_descricao TEXT,
+    diligencia_pendente INTEGER,
+    pendencias_descricao TEXT,
+    prazo_diligencia TEXT,
+    proximo_prazo_padrao TEXT,
+    data_notificacao TEXT,
+    alteracoes_texto TEXT,
+    itens_snapshot_json TEXT
+);
+
 CREATE TABLE IF NOT EXISTS contas(
     id TEXT PRIMARY KEY,
     processo_id TEXT,
-    descricao TEXT,
-    valor REAL,
-    data_lancamento TEXT
+    tipo_lancamento TEXT,
+    historico TEXT,
+    data_movimentacao TEXT,
+    mov_processo TEXT,
+    num_nf_alvara TEXT,
+    valor_alvara REAL,
+    valor_conta REAL,
+    status_conta TEXT,
+    responsavel TEXT,
+    observacoes TEXT
 );
 
 CREATE TABLE IF NOT EXISTS diligencias(
     id TEXT PRIMARY KEY,
     processo_id TEXT,
     descricao TEXT,
-    pendente INTEGER
+    data_criacao TEXT,
+    data_conclusao TEXT,
+    concluida INTEGER,
+    responsavel TEXT
 );
 
-CREATE TABLE IF NOT EXISTS emails_autorizados(
+CREATE TABLE IF NOT EXISTS historico(
     id TEXT PRIMARY KEY,
-    email TEXT UNIQUE
+    processo_id TEXT,
+    acao TEXT,
+    usuario TEXT,
+    data_hora TEXT,
+    detalhes TEXT
 );
-
 
 ");
         }
+
+        // =====================================================
+        // ADMIN PADRÃO
+        // =====================================================
 
         private void CriarAdminPadrao(SqliteConnection conn)
         {
@@ -122,6 +193,10 @@ VALUES
                 });
         }
 
+        // =====================================================
+        // SEGURANÇA
+        // =====================================================
+
         public string GerarSalt()
             => Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
 
@@ -131,6 +206,34 @@ VALUES
             return Convert.ToHexString(
                 sha.ComputeHash(Encoding.UTF8.GetBytes(senha + salt)));
         }
+
+        // =====================================================
+        // BACKUP AUTOMÁTICO
+        // =====================================================
+
+        public void PerformBackup()
+        {
+            try
+            {
+                if (!Directory.Exists(_backupFolder))
+                    Directory.CreateDirectory(_backupFolder);
+
+                var file = Path.Combine(
+                    _backupFolder,
+                    $"backup_{DateTime.Now:yyyyMMdd_HHmmss}.db");
+
+                using var source = GetConnection();
+                using var dest = new SqliteConnection($"Data Source={file}");
+
+                source.Open();
+                dest.Open();
+
+                source.BackupDatabase(dest);
+            }
+            catch
+            {
+                // evita crash em produção
+            }
+        }
     }
 }
-
