@@ -1,4 +1,5 @@
 using SistemaJuridico.Infrastructure;
+using System.Threading.Tasks;
 
 namespace SistemaJuridico.Services
 {
@@ -25,6 +26,22 @@ namespace SistemaJuridico.Services
             var view = _factory.CreateView(viewType, vmType);
 
             _navigation.Navigate(view);
+        }
+
+        public async Task NavigateWithParameterAsync(
+            NavigationKey key,
+            int id)
+        {
+            var (viewType, vmType) = _registry.Resolve(key);
+
+            var view = _factory.CreateView(viewType, vmType);
+
+            _navigation.Navigate(view);
+
+            if (view.DataContext is ProcessoDetalhesHostViewModel hostVm)
+            {
+                await hostVm.CarregarProcessoAsync(id);
+            }
         }
     }
 }
