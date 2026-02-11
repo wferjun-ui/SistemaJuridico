@@ -1,4 +1,5 @@
 using Dapper;
+using SistemaJuridico.Models;
 
 namespace SistemaJuridico.Services
 {
@@ -55,6 +56,19 @@ VALUES (
             {
                 // auditoria nunca pode quebrar sistema
             }
+        }
+
+        // ⭐ NOVO MÉTODO — BLOCO 9
+        public List<AuditLog> ListarPorProcesso(string processoId)
+        {
+            using var conn = _db.GetConnection();
+
+            return conn.Query<AuditLog>(@"
+SELECT *
+FROM audit_log
+WHERE entidade_id = @processoId
+ORDER BY data_hora DESC
+", new { processoId }).ToList();
         }
     }
 }
