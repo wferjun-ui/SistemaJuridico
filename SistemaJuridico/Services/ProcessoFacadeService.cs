@@ -47,7 +47,8 @@ namespace SistemaJuridico.Services
         {
             return _processService
                 .ListarProcessos()
-                .First(x => x.Id == id);
+                .FirstOrDefault(x => x.Id == id)
+                ?? new Processo();
         }
 
         public List<Processo> ListarProcessos()
@@ -64,10 +65,10 @@ namespace SistemaJuridico.Services
             return new ProcessoCompletoDTO
             {
                 Processo = ObterProcesso(processoId),
-                ItensSaude = _itemSaudeService.ListarPorProcesso(processoId),
-                Verificacoes = _verificacaoService.ListarPorProcesso(processoId),
-                Contas = ObterContas(processoId),
-                Diligencias = ObterDiligencias(processoId)
+                ItensSaude = _itemSaudeService.ListarPorProcesso(processoId) ?? new(),
+                Verificacoes = _verificacaoService.ListarPorProcesso(processoId) ?? new(),
+                Contas = ObterContas(processoId) ?? new(),
+                Diligencias = ObterDiligencias(processoId) ?? new()
             };
         }
 
