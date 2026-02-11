@@ -1,28 +1,56 @@
 using SistemaJuridico.Services;
-using System;
-using System.IO;
+using SistemaJuridico.ViewModels;
+using SistemaJuridico.Views;
 using System.Windows;
 
 namespace SistemaJuridico
 {
     public partial class App : Application
     {
-        public static DatabaseService DB { get; private set; } = null!;
-        public static SessionService Session { get; private set; } = null!;
-
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
-            string baseFolder = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "SistemaJuridico");
+            var databaseService = new DatabaseService();
+            databaseService.Inicializar();
 
-            DB = new DatabaseService(baseFolder);
-            DB.Initialize();
+            var estadoService = new EstadoSistemaService(databaseService);
 
-            Session = new SessionService();
+            if (!estadoService.SistemaPossuiDados())
+            {
+                AbrirTelaMigracao(databaseService);
+            }
+            else
+            {
+                AbrirSistemaPrincipal();
+            }
+        }
+
+        private void AbrirTelaMigracao(DatabaseService db)
+        {
+            var workflow = new WorkflowMigracaoService(
+                new ImportacaoJsonService(db),
+                new ValidacaoMigracaoService(db)
+            );
+
+            var vm = new MigracaoViewModel(workflow);
+            var view = new MigracaoView { DataContext = vm };
+
+            var window = new Window
+            {
+                Title = "Migração Inicial",
+                Content = view,
+                Width = 800,
+                Height = 600
+            };
+
+            window.Show();
+        }
+
+        private void AbrirSistemaPrincipal()
+        {
+            var mainWindow = new MainWindow();
+            mainWindow.Show();
         }
     }
 }
-
