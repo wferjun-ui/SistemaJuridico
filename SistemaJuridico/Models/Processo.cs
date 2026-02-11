@@ -24,7 +24,7 @@ namespace SistemaJuridico.Models
 
 
         // =========================
-        // CONTROLE MULTIUSUÁRIO
+        // CONTROLE MULTIUSUÁRIO - RASCUNHO
         // =========================
 
         /// <summary>
@@ -44,6 +44,22 @@ namespace SistemaJuridico.Models
         /// Usuário que está editando ou criou o rascunho
         /// </summary>
         public string? UsuarioRascunho { get; set; }
+
+
+        // =========================
+        // CONTROLE MULTIUSUÁRIO - LOCK TÉCNICO
+        // =========================
+
+        /// <summary>
+        /// Usuário que possui o lock ativo
+        /// </summary>
+        public string? LockUsuario { get; set; }
+
+
+        /// <summary>
+        /// Timestamp do último heartbeat do lock
+        /// </summary>
+        public string? LockTimestamp { get; set; }
 
 
         // =========================
@@ -70,5 +86,12 @@ namespace SistemaJuridico.Models
         /// </summary>
         public bool EmEdicao =>
             SituacaoRascunho == "Em edição";
+
+
+        /// <summary>
+        /// Indica se existe lock técnico ativo
+        /// </summary>
+        public bool PossuiLock =>
+            !string.IsNullOrEmpty(LockUsuario);
     }
 }
