@@ -13,7 +13,13 @@ namespace SistemaJuridico.Views
             InitializeComponent();
 
             navigationService.Configure(MainRegion);
+
             DataContext = vm;
+
+            Loaded += (s, e) =>
+            {
+                vm.LoadInitialView();
+            };
         }
     }
 }
