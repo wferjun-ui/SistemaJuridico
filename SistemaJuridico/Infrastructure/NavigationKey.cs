@@ -4,6 +4,7 @@ namespace SistemaJuridico.Infrastructure
     {
         Dashboard,
         Processos,
+        ProcessoDetalhes,
         Contas,
         ItensSaude,
         Verificacoes,
