@@ -9,33 +9,54 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- NOVA CONTA -->
+        <!-- FORMULÁRIO -->
 
         <StackPanel Orientation="Horizontal">
 
             <TextBox Width="120"
                      Margin="5"
-                     Text="{Binding NovaConta.Tipo}" />
+                     Text="{Binding EdicaoConta.Tipo}" />
 
             <TextBox Width="120"
                      Margin="5"
-                     Text="{Binding NovaConta.ValorAlvara}" />
+                     Text="{Binding EdicaoConta.ValorAlvara}" />
 
             <TextBox Width="120"
                      Margin="5"
-                     Text="{Binding NovaConta.ValorConta}" />
+                     Text="{Binding EdicaoConta.ValorConta}" />
 
-            <Button Content="Adicionar"
+            <Button Content="Salvar"
                     Margin="5"
-                    Command="{Binding AdicionarContaCommand}" />
+                    Command="{Binding SalvarContaCommand}" />
 
         </StackPanel>
 
-        <!-- LISTA -->
+        <!-- GRID -->
 
         <DataGrid Grid.Row="1"
                   ItemsSource="{Binding Contas}"
+                  SelectedItem="{Binding ContaSelecionada}"
                   AutoGenerateColumns="True"/>
+
+        <!-- AÇÕES -->
+
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    VerticalAlignment="Bottom">
+
+            <Button Content="Nova"
+                    Command="{Binding NovaContaCommand}"/>
+
+            <Button Content="Editar"
+                    Command="{Binding EditarContaCommand}"/>
+
+            <Button Content="Excluir"
+                    Command="{Binding ExcluirContaCommand}"/>
+
+            <Button Content="Fechar Conta"
+                    Command="{Binding FecharContaCommand}"/>
+
+        </StackPanel>
 
     </Grid>
 </UserControl>
