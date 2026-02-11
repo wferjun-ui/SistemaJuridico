@@ -1,1 +1,42 @@
+<Window x:Class="SistemaJuridico.Views.CadastroUsuarioWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Cadastro usuário"
+        Height="400"
+        Width="350"
+        WindowStartupLocation="CenterScreen">
+
+    <Grid Margin="20">
+
+        <StackPanel>
+
+            <TextBox Text="{Binding Username}"
+                     materialDesign:HintAssist.Hint="Usuário"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+            <TextBox Text="{Binding Email}"
+                     materialDesign:HintAssist.Hint="E-mail"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                     Margin="0,10,0,0"/>
+
+            <PasswordBox x:Name="PwdBox"
+                         materialDesign:HintAssist.Hint="Senha"
+                         Margin="0,10,0,0"/>
+
+            <ComboBox SelectedItem="{Binding Perfil}"
+                      Margin="0,10,0,0">
+                <ComboBoxItem Content="Admin"/>
+                <ComboBoxItem Content="Operador"/>
+                <ComboBoxItem Content="Leitura"/>
+            </ComboBox>
+
+            <Button Content="Cadastrar"
+                    Command="{Binding CadastrarCommand}"
+                    Margin="0,20,0,0"/>
+
+        </StackPanel>
+
+    </Grid>
+</Window>
 
