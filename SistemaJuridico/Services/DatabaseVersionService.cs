@@ -1,4 +1,5 @@
 using Dapper;
+using Microsoft.Data.Sqlite;
 
 namespace SistemaJuridico.Services
 {
@@ -25,6 +26,9 @@ namespace SistemaJuridico.Services
 
             if (versaoAtual < 2)
                 AtualizarParaV2(conn);
+
+            if (versaoAtual < 3)
+                AtualizarParaV3_LockMultiusuario(conn);
         }
 
         private void CriarTabelaControle(SqliteConnection conn)
@@ -56,7 +60,7 @@ CREATE TABLE IF NOT EXISTS schema_version (
         }
 
         // =========================
-        // VERSÃO 1
+        // VERSÃO 1 — RASCUNHO
         // =========================
 
         private void AtualizarParaV1(SqliteConnection conn)
@@ -77,7 +81,7 @@ ALTER TABLE processos ADD COLUMN usuario_rascunho TEXT;
         }
 
         // =========================
-        // VERSÃO 2
+        // VERSÃO 2 — ITENS SAÚDE
         // =========================
 
         private void AtualizarParaV2(SqliteConnection conn)
@@ -98,6 +102,34 @@ CREATE TABLE IF NOT EXISTS itens_saude (
 ");
 
             DefinirVersao(conn, 2);
+        }
+
+        // =========================
+        // VERSÃO 3 — LOCK MULTIUSUÁRIO
+        // =========================
+
+        private void AtualizarParaV3_LockMultiusuario(SqliteConnection conn)
+        {
+            // SQLite não tem IF NOT EXISTS para coluna
+            // então usamos try/catch silencioso
+
+            try
+            {
+                conn.Execute(@"
+ALTER TABLE processos ADD COLUMN lock_usuario TEXT;
+");
+            }
+            catch { }
+
+            try
+            {
+                conn.Execute(@"
+ALTER TABLE processos ADD COLUMN lock_timestamp TEXT;
+");
+            }
+            catch { }
+
+            DefinirVersao(conn, 3);
         }
     }
 }
