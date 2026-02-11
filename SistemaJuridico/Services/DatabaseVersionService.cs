@@ -29,6 +29,9 @@ namespace SistemaJuridico.Services
 
             if (versaoAtual < 3)
                 AtualizarParaV3_LockMultiusuario(conn);
+
+            if (versaoAtual < 4)
+                AtualizarParaV4_Auditoria(conn);
         }
 
         private void CriarTabelaControle(SqliteConnection conn)
@@ -60,28 +63,20 @@ CREATE TABLE IF NOT EXISTS schema_version (
         }
 
         // =========================
-        // VERSÃO 1 — RASCUNHO
+        // V1
         // =========================
 
         private void AtualizarParaV1(SqliteConnection conn)
         {
-            conn.Execute(@"
-ALTER TABLE processos ADD COLUMN situacao_rascunho TEXT DEFAULT 'Concluído';
-");
-
-            conn.Execute(@"
-ALTER TABLE processos ADD COLUMN motivo_rascunho TEXT;
-");
-
-            conn.Execute(@"
-ALTER TABLE processos ADD COLUMN usuario_rascunho TEXT;
-");
+            conn.Execute("ALTER TABLE processos ADD COLUMN situacao_rascunho TEXT DEFAULT 'Concluído';");
+            conn.Execute("ALTER TABLE processos ADD COLUMN motivo_rascunho TEXT;");
+            conn.Execute("ALTER TABLE processos ADD COLUMN usuario_rascunho TEXT;");
 
             DefinirVersao(conn, 1);
         }
 
         // =========================
-        // VERSÃO 2 — ITENS SAÚDE
+        // V2
         // =========================
 
         private void AtualizarParaV2(SqliteConnection conn)
@@ -98,38 +93,50 @@ CREATE TABLE IF NOT EXISTS itens_saude (
     data_prescricao TEXT,
     is_desnecessario INTEGER,
     tem_bloqueio INTEGER
-);
-");
+);");
 
             DefinirVersao(conn, 2);
         }
 
         // =========================
-        // VERSÃO 3 — LOCK MULTIUSUÁRIO
+        // V3
         // =========================
 
         private void AtualizarParaV3_LockMultiusuario(SqliteConnection conn)
         {
-            // SQLite não tem IF NOT EXISTS para coluna
-            // então usamos try/catch silencioso
-
             try
             {
-                conn.Execute(@"
-ALTER TABLE processos ADD COLUMN lock_usuario TEXT;
-");
+                conn.Execute("ALTER TABLE processos ADD COLUMN lock_usuario TEXT;");
             }
             catch { }
 
             try
             {
-                conn.Execute(@"
-ALTER TABLE processos ADD COLUMN lock_timestamp TEXT;
-");
+                conn.Execute("ALTER TABLE processos ADD COLUMN lock_timestamp TEXT;");
             }
             catch { }
 
             DefinirVersao(conn, 3);
+        }
+
+        // =========================
+        // V4 AUDITORIA
+        // =========================
+
+        private void AtualizarParaV4_Auditoria(SqliteConnection conn)
+        {
+            conn.Execute(@"
+CREATE TABLE IF NOT EXISTS audit_log (
+    id TEXT PRIMARY KEY,
+    data_hora TEXT,
+    usuario TEXT,
+    acao TEXT,
+    entidade TEXT,
+    entidade_id TEXT,
+    detalhes TEXT
+);");
+
+            DefinirVersao(conn, 4);
         }
     }
 }
