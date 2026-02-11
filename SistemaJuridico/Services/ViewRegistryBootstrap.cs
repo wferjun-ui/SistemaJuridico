@@ -32,6 +32,11 @@ namespace SistemaJuridico.Services
                 NavigationKey.Auditoria,
                 typeof(AuditoriaView),
                 typeof(AuditoriaViewModel));
+
+            registry.Register(
+                NavigationKey.ProcessoEditor,
+                typeof(ProcessoEditorHostView),
+                typeof(ProcessoEditorHostViewModel));
         }
     }
 }
