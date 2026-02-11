@@ -14,7 +14,6 @@ namespace SistemaJuridico.ViewModels
         public ObservableCollection<Processo> Processos { get; } = new();
 
         public RelayCommand CarregarCommand { get; }
-        public RelayCommand NovoProcessoCommand { get; }
         public RelayCommand<Processo> AbrirProcessoCommand { get; }
 
         public ProcessoListViewModel(
@@ -25,7 +24,6 @@ namespace SistemaJuridico.ViewModels
             _navigator = navigator;
 
             CarregarCommand = new RelayCommand(async () => await Carregar());
-            NovoProcessoCommand = new RelayCommand(AbrirCadastro);
             AbrirProcessoCommand = new RelayCommand<Processo>(AbrirProcesso);
         }
 
@@ -39,17 +37,14 @@ namespace SistemaJuridico.ViewModels
                 Processos.Add(p);
         }
 
-        private void AbrirCadastro()
-        {
-            // Vamos conectar depois com cadastro
-        }
-
-        private void AbrirProcesso(Processo processo)
+        private async void AbrirProcesso(Processo processo)
         {
             if (processo == null)
                 return;
 
-            // Navegação será conectada depois com detalhes
+            await _navigator.NavigateWithParameterAsync(
+                NavigationKey.ProcessoDetalhes,
+                processo.Id);
         }
     }
 }
