@@ -7,6 +7,7 @@ namespace SistemaJuridico.Models
         public string ProcessoId { get; set; } = "";
 
         public string DataMovimentacao { get; set; } = "";
+        DateTime.Now.ToString("dd/MM/yyyy");
 
         public string TipoLancamento { get; set; } = "";
 
