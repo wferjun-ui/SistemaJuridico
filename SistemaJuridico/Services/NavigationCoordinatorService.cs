@@ -42,6 +42,10 @@ namespace SistemaJuridico.Services
             {
                 await hostVm.CarregarProcessoAsync(id);
             }
+            if (view.DataContext is ProcessoEditorHostViewModel hostVm)
+            {
+                await hostVm.CarregarAsync(id);
+            }
         }
     }
 }
