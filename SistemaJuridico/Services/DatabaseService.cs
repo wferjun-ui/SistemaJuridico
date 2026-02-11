@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS processos(
     classificacao TEXT,
     status_fase TEXT,
     ultima_atualizacao TEXT
+    UsuarioEditando TEXT
 );
 
 CREATE TABLE IF NOT EXISTS processo_edicao_status(
