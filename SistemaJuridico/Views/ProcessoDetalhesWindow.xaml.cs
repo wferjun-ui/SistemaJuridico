@@ -1,3 +1,4 @@
+using SistemaJuridico.Services;
 using SistemaJuridico.ViewModels;
 using System.ComponentModel;
 using System.Windows;
@@ -12,7 +13,11 @@ namespace SistemaJuridico.Views
         {
             InitializeComponent();
 
-            _vm = new ProcessoDetalhesViewModel(processoId);
+            var db = new DatabaseService();
+            var processService = new ProcessService(db);
+
+            _vm = new ProcessoDetalhesViewModel(processoId, processService);
+
             DataContext = _vm;
         }
 
