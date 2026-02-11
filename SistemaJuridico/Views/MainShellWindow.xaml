@@ -11,7 +11,6 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Sidebar -->
         <Border Background="#2C3E50" Grid.Column="0">
             <StackPanel Margin="10">
 
@@ -24,14 +23,17 @@
                         Margin="5"
                         Command="{Binding OpenDashboardCommand}"/>
 
-                <Button Content="Novo Processo"
+                <Button Content="Processos"
                         Margin="5"
-                        Command="{Binding OpenNovoProcessoCommand}"/>
+                        Command="{Binding OpenProcessosCommand}"/>
+
+                <Button Content="Contas"
+                        Margin="5"
+                        Command="{Binding OpenContasCommand}"/>
 
             </StackPanel>
         </Border>
 
-        <!-- Região dinâmica -->
         <ContentControl x:Name="MainRegion"
                         Grid.Column="1"/>
 
