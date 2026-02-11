@@ -1,0 +1,34 @@
+<Window x:Class="SistemaJuridico.Views.DiligenciaEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Nova Diligência"
+        Height="250"
+        Width="400"
+        WindowStartupLocation="CenterOwner">
+
+    <StackPanel Margin="15">
+
+        <TextBlock Text="Descrição"/>
+        <TextBox Text="{Binding Descricao}" Margin="0,5"/>
+
+        <TextBlock Text="Prazo"/>
+        <DatePicker SelectedDate="{Binding DataPrazo}" Margin="0,5"/>
+
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,15">
+
+            <Button Content="Salvar"
+                    Command="{Binding SalvarCommand}"
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+                    Margin="5"/>
+
+            <Button Content="Cancelar"
+                    Command="{Binding CancelarCommand}"
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+                    Margin="5"/>
+
+        </StackPanel>
+
+    </StackPanel>
+</Window>
