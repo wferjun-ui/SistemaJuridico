@@ -1,3 +1,4 @@
+using SistemaJuridico.ViewModels;
 using System.Windows;
 
 namespace SistemaJuridico.Views
@@ -10,7 +11,14 @@ namespace SistemaJuridico.Views
         public DashboardWindow()
         {
             InitializeComponent();
-            DataContext = this;
+
+            var vm = new DashboardViewModel();
+
+            // Passa usuário para o binding
+            this.DataContext = vm;
+
+            // Permite binding do texto Usuario
+            this.DataContext = vm;
         }
 
         private void AbrirEmails(object sender, RoutedEventArgs e)
