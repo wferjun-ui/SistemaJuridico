@@ -1,56 +1,86 @@
 using SistemaJuridico.Services;
 using SistemaJuridico.ViewModels;
 using SistemaJuridico.Views;
+using System;
 using System.Windows;
 
 namespace SistemaJuridico
 {
     public partial class App : Application
     {
+        private ServiceLocator _serviceLocator;
+
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
-            var databaseService = new DatabaseService();
-            databaseService.Inicializar();
-
-            var estadoService = new EstadoSistemaService(databaseService);
-
-            if (!estadoService.SistemaPossuiDados())
+            try
             {
-                AbrirTelaMigracao(databaseService);
+                ConfigureServices();
+
+                // Abre Login
+                var loginWindow = new LoginWindow();
+                var loginVM = _serviceLocator.Get<LoginViewModel>();
+
+                loginVM.LoginSucesso += OnLoginSucesso;
+
+                loginWindow.DataContext = loginVM;
+                loginWindow.Show();
             }
-            else
+            catch (Exception ex)
             {
-                AbrirSistemaPrincipal();
+                MessageBox.Show(
+                    $"Erro ao iniciar sistema:\n{ex.Message}",
+                    "Erro",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
         }
 
-        private void AbrirTelaMigracao(DatabaseService db)
+        private void ConfigureServices()
         {
-            var workflow = new WorkflowMigracaoService(
-                new ImportacaoJsonService(db),
-                new ValidacaoMigracaoService(db)
-            );
+            _serviceLocator = new ServiceLocator();
 
-            var vm = new MigracaoViewModel(workflow);
-            var view = new MigracaoView { DataContext = vm };
+            // Serviços base
+            _serviceLocator.RegisterSingleton<NavigationService>();
+            _serviceLocator.RegisterSingleton<DialogService>();
 
-            var window = new Window
-            {
-                Title = "Migração Inicial",
-                Content = view,
-                Width = 800,
-                Height = 600
-            };
-
-            window.Show();
+            // ViewModels
+            _serviceLocator.RegisterTransient<LoginViewModel>();
+            _serviceLocator.RegisterTransient<MainShellViewModel>();
         }
 
-        private void AbrirSistemaPrincipal()
+        private void OnLoginSucesso(object sender, EventArgs e)
         {
-            var mainWindow = new MainWindow();
-            mainWindow.Show();
+            try
+            {
+                var navigationService = _serviceLocator.Get<NavigationService>();
+                var mainShellVM = _serviceLocator.Get<MainShellViewModel>();
+
+                var mainShell = new MainShellWindow(
+                    navigationService,
+                    mainShellVM);
+
+                mainShell.Show();
+
+                // Fecha login
+                foreach (Window window in Current.Windows)
+                {
+                    if (window is LoginWindow)
+                    {
+                        window.Close();
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Erro ao abrir shell principal:\n{ex.Message}",
+                    "Erro",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
         }
     }
 }
