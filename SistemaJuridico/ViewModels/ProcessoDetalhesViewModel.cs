@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SistemaJuridico.Models;
 using SistemaJuridico.Services;
+using SistemaJuridico.Views;
 using System.Collections.ObjectModel;
 using System.Windows;
 
@@ -106,6 +107,31 @@ namespace SistemaJuridico.ViewModels
             {
                 Verificacoes.Add(v);
             }
+        }
+
+        // ========================
+        // ITENS SAÚDE
+        // ========================
+
+        [RelayCommand]
+        private void EditarItensSaude()
+        {
+            if (ModoSomenteLeitura)
+                return;
+
+            var vm = new ItensSaudeEditorViewModel(
+                _processoId,
+                _itemSaudeService);
+
+            var tela = new ItensSaudeEditorWindow(vm)
+            {
+                Owner = Application.Current.MainWindow
+            };
+
+            tela.ShowDialog();
+
+            // Recarrega após edição
+            CarregarItensSaude();
         }
 
         // ========================
