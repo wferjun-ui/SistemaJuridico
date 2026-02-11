@@ -18,7 +18,7 @@ jobs:
         dotnet-version: 8.0.x
 
     - name: Restaurar dependências
-      run: dotnet restore
+      run: dotnet restore SistemaJuridico/SistemaJuridico.csproj
 
     - name: Build
       run: dotnet build SistemaJuridico/SistemaJuridico.csproj --configuration Release --no-restore
