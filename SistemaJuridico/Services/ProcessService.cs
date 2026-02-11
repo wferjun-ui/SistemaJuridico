@@ -35,7 +35,7 @@ namespace SistemaJuridico.Services
             using var conn = _db.GetConnection();
 
             decimal saldo = conn.ExecuteScalar<decimal>(@"
-                SELECT IFNULL(SUM(valor_conta),0)
+                SELECT IFNULL(SUM(valor_alvara - valor_conta),0)
                 FROM contas
                 WHERE processo_id=@id
                 AND status_conta='rascunho'
@@ -115,7 +115,8 @@ namespace SistemaJuridico.Services
             {
                 conn.Execute(@"
                     UPDATE processos
-                    SET UsuarioRascunho=@u
+                    SET UsuarioRascunho=@u,
+                        SituacaoRascunho='Em edição'
                     WHERE id=@id
                 ",
                 new { id = processoId, u = usuarioAtual });
@@ -130,11 +131,22 @@ namespace SistemaJuridico.Services
         {
             using var conn = _db.GetConnection();
 
-            conn.Execute(@"
-                UPDATE processos
-                SET UsuarioRascunho=NULL
+            var situacao = conn.ExecuteScalar<string?>(@"
+                SELECT SituacaoRascunho
+                FROM processos
                 WHERE id=@id
             ", new { id = processoId });
+
+            // Só remove lock se NÃO estiver em rascunho
+            if (situacao != "Rascunho")
+            {
+                conn.Execute(@"
+                    UPDATE processos
+                    SET UsuarioRascunho=NULL,
+                        SituacaoRascunho='Concluído'
+                    WHERE id=@id
+                ", new { id = processoId });
+            }
         }
 
         // =========================
