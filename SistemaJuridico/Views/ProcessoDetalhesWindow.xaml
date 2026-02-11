@@ -2,68 +2,176 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Detalhes do Processo"
-        Height="650"
-        Width="900">
+        Height="600"
+        Width="900"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+
+        <!-- Converter para inverter boolean -->
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <Style x:Key="CampoBloqueavel" TargetType="Control">
+            <Setter Property="IsEnabled" Value="True"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ModoSomenteLeitura}" Value="True">
+                    <Setter Property="IsEnabled" Value="False"/>
+                    <Setter Property="Opacity" Value="0.85"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+    </Window.Resources>
 
     <Grid Margin="15">
 
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition/>
+            <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Cabeçalho -->
+        <!-- ========================= -->
+        <!-- AVISO DE SOMENTE LEITURA -->
+        <!-- ========================= -->
 
-        <StackPanel>
-            <TextBlock Text="{Binding Numero}"
-                       FontSize="20"
-                       FontWeight="Bold"/>
+        <Border Background="#FFF4CE"
+                Padding="8"
+                Margin="0 0 0 10"
+                Visibility="{Binding ModoSomenteLeitura, Converter={StaticResource BoolToVis}}">
 
-            <TextBlock Text="{Binding Paciente}"
-                       FontSize="16"/>
-        </StackPanel>
+            <TextBlock Text="{Binding UsuarioEditandoTexto}"
+                       FontWeight="Bold"
+                       Foreground="DarkOrange"/>
+        </Border>
 
-        <!-- Área principal -->
+        <!-- ========================= -->
+        <!-- FORMULÁRIO -->
+        <!-- ========================= -->
 
-        <TabControl Grid.Row="1">
+        <ScrollViewer Grid.Row="1">
 
-            <TabItem Header="Resumo">
+            <Grid>
 
-                <StackPanel Margin="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
-                    <TextBlock Text="Observações Fixas"/>
-                    <TextBox Text="{Binding ObservacaoFixa}"
-                             Height="100"
-                             AcceptsReturn="True"/>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="40"/>
+                    <RowDefinition Height="40"/>
+                    <RowDefinition Height="40"/>
+                    <RowDefinition Height="40"/>
+                    <RowDefinition Height="40"/>
+                    <RowDefinition Height="120"/>
+                </Grid.RowDefinitions>
 
-                </StackPanel>
+                <!-- Número -->
 
-            </TabItem>
+                <TextBlock Text="Número:"
+                           VerticalAlignment="Center"/>
 
-            <TabItem Header="Contas">
-                <TextBlock Text="Em construção"/>
-            </TabItem>
+                <TextBox Grid.Column="1"
+                         Text="{Binding Processo.Numero}"
+                         Style="{StaticResource CampoBloqueavel}"/>
 
-            <TabItem Header="Histórico">
-                <TextBlock Text="Em construção"/>
-            </TabItem>
+                <!-- Paciente -->
 
-        </TabControl>
+                <TextBlock Grid.Row="1"
+                           Text="Paciente:"
+                           VerticalAlignment="Center"/>
 
-        <!-- Rodapé -->
+                <TextBox Grid.Row="1"
+                         Grid.Column="1"
+                         Text="{Binding Processo.Paciente}"
+                         Style="{StaticResource CampoBloqueavel}"/>
+
+                <!-- Juiz -->
+
+                <TextBlock Grid.Row="2"
+                           Text="Juiz:"
+                           VerticalAlignment="Center"/>
+
+                <TextBox Grid.Row="2"
+                         Grid.Column="1"
+                         Text="{Binding Processo.Juiz}"
+                         Style="{StaticResource CampoBloqueavel}"/>
+
+                <!-- Classificação -->
+
+                <TextBlock Grid.Row="3"
+                           Text="Classificação:"
+                           VerticalAlignment="Center"/>
+
+                <TextBox Grid.Row="3"
+                         Grid.Column="1"
+                         Text="{Binding Processo.Classificacao}"
+                         Style="{StaticResource CampoBloqueavel}"/>
+
+                <!-- Fase -->
+
+                <TextBlock Grid.Row="4"
+                           Text="Fase:"
+                           VerticalAlignment="Center"/>
+
+                <ComboBox Grid.Row="4"
+                          Grid.Column="1"
+                          SelectedItem="{Binding Processo.StatusFase}"
+                          Style="{StaticResource CampoBloqueavel}">
+
+                    <ComboBoxItem Content="Conhecimento"/>
+                    <ComboBoxItem Content="Execução"/>
+                    <ComboBoxItem Content="Arquivado"/>
+
+                </ComboBox>
+
+                <!-- Observações -->
+
+                <TextBlock Grid.Row="5"
+                           Text="Observações:"
+                           VerticalAlignment="Top"/>
+
+                <TextBox Grid.Row="5"
+                         Grid.Column="1"
+                         Text="{Binding Processo.ObservacaoFixa}"
+                         AcceptsReturn="True"
+                         VerticalScrollBarVisibility="Auto"
+                         Style="{StaticResource CampoBloqueavel}"/>
+
+            </Grid>
+
+        </ScrollViewer>
+
+        <!-- ========================= -->
+        <!-- BOTÕES -->
+        <!-- ========================= -->
 
         <StackPanel Grid.Row="2"
                     Orientation="Horizontal"
-                    HorizontalAlignment="Right">
+                    HorizontalAlignment="Right"
+                    Margin="0 10 0 0">
 
-            <Button Content="Salvar Rascunho"
+            <Button Content="Salvar rascunho"
+                    Width="140"
+                    Margin="5"
                     Command="{Binding SalvarRascunhoCommand}"
-                    Margin="5"/>
+                    Visibility="{Binding ModoSomenteLeitura,
+                                 Converter={StaticResource BoolToVis},
+                                 ConverterParameter=invert}" />
 
-            <Button Content="Concluir"
-                    Command="{Binding ConcluirCommand}"
-                    Margin="5"/>
+            <Button Content="Concluir edição"
+                    Width="140"
+                    Margin="5"
+                    Command="{Binding ConcluirEdicaoCommand}"
+                    Visibility="{Binding ModoSomenteLeitura,
+                                 Converter={StaticResource BoolToVis},
+                                 ConverterParameter=invert}" />
+
+            <Button Content="Fechar"
+                    Width="100"
+                    Margin="5"
+                    Click="Fechar_Click"/>
 
         </StackPanel>
 
