@@ -18,6 +18,8 @@ namespace SistemaJuridico.Services
         private readonly HistoricoService _historicoService;
         private readonly ItemSaudeService _itemSaudeService;
         private readonly VerificacaoService _verificacaoService;
+        private readonly AuditService _auditService;
+
 
         public ProcessoFacadeService(
             ProcessService processService,
@@ -25,7 +27,8 @@ namespace SistemaJuridico.Services
             DiligenciaService diligenciaService,
             HistoricoService historicoService,
             ItemSaudeService itemSaudeService,
-            VerificacaoService verificacaoService)
+            VerificacaoService verificacaoService,
+            AuditService auditService)
         {
             _processService = processService;
             _contaService = contaService;
@@ -33,6 +36,7 @@ namespace SistemaJuridico.Services
             _historicoService = historicoService;
             _itemSaudeService = itemSaudeService;
             _verificacaoService = verificacaoService;
+            _auditService = auditService;
         }
 
         // ========================
@@ -80,9 +84,15 @@ namespace SistemaJuridico.Services
             _contaService.Inserir(conta);
 
             _historicoService.Registrar(
-                conta.ProcessoId,
+            conta.ProcessoId,
                 "Conta adicionada",
                 $"Valor: {conta.ValorConta}");
+
+            _auditService.Registrar(
+                "Inserir Conta",
+                "Conta",
+                conta.Id,
+                $"Processo: {conta.ProcessoId} Valor: {conta.ValorConta}");
         }
 
         public void AtualizarConta(Conta conta)
@@ -92,25 +102,43 @@ namespace SistemaJuridico.Services
             _historicoService.Registrar(
                 conta.ProcessoId,
                 "Conta atualizada");
+
+            _auditService.Registrar(
+                "Atualizar Conta",
+                "Conta",
+                conta.Id,
+                $"Processo: {conta.ProcessoId}");
         }
 
-        public void ExcluirConta(string id, string processoId)
-        {
+       public void ExcluirConta(string id, string processoId)
+       {
             _contaService.Excluir(id);
 
             _historicoService.Registrar(
-                processoId,
-                "Conta excluída");
+               processoId,
+               "Conta excluída");
+
+            _auditService.Registrar(
+                "Excluir Conta",
+                "Conta",
+                id,
+                $"Processo: {processoId}");
         }
 
         public void FecharConta(string id, string processoId)
-        {
-            _contaService.FecharConta(id);
+{
+    _contaService.FecharConta(id);
 
-            _historicoService.Registrar(
-                processoId,
-                "Conta finalizada");
-        }
+    _historicoService.Registrar(
+        processoId,
+        "Conta finalizada");
+
+    _auditService.Registrar(
+        "Fechar Conta",
+        "Conta",
+        id,
+        $"Processo: {processoId}");
+}
 
         // ========================
         // DILIGÊNCIAS
@@ -121,42 +149,66 @@ namespace SistemaJuridico.Services
             return _diligenciaService.ListarPorProcesso(processoId);
         }
 
-        public void InserirDiligencia(Diligencia diligencia)
-        {
-            _diligenciaService.Inserir(diligencia);
+       public void InserirDiligencia(Diligencia diligencia)
+{
+    _diligenciaService.Inserir(diligencia);
 
-            _historicoService.Registrar(
-                diligencia.ProcessoId,
-                "Diligência criada",
-                diligencia.Descricao);
-        }
+    _historicoService.Registrar(
+        diligencia.ProcessoId,
+        "Diligência criada",
+        diligencia.Descricao);
 
-        public void ConcluirDiligencia(string id, string processoId)
-        {
-            _diligenciaService.Concluir(id);
+    _auditService.Registrar(
+        "Inserir Diligência",
+        "Diligencia",
+        diligencia.Id,
+        diligencia.Descricao);
+}
 
-            _historicoService.Registrar(
-                processoId,
-                "Diligência concluída");
-        }
+       public void ConcluirDiligencia(string id, string processoId)
+{
+    _diligenciaService.Concluir(id);
 
-        public void ReabrirDiligencia(string id, string processoId)
-        {
-            _diligenciaService.Reabrir(id);
+    _historicoService.Registrar(
+        processoId,
+        "Diligência concluída");
 
-            _historicoService.Registrar(
-                processoId,
-                "Diligência reaberta");
-        }
+    _auditService.Registrar(
+        "Concluir Diligência",
+        "Diligencia",
+        id,
+        $"Processo: {processoId}");
+}
+
+       public void ReabrirDiligencia(string id, string processoId)
+{
+    _diligenciaService.Reabrir(id);
+
+    _historicoService.Registrar(
+        processoId,
+        "Diligência reaberta");
+
+    _auditService.Registrar(
+        "Reabrir Diligência",
+        "Diligencia",
+        id,
+        $"Processo: {processoId}");
+}
 
         public void ExcluirDiligencia(string id, string processoId)
-        {
-            _diligenciaService.Excluir(id);
+{
+    _diligenciaService.Excluir(id);
 
-            _historicoService.Registrar(
-                processoId,
-                "Diligência excluída");
-        }
+    _historicoService.Registrar(
+        processoId,
+        "Diligência excluída");
+
+    _auditService.Registrar(
+        "Excluir Diligência",
+        "Diligencia",
+        id,
+        $"Processo: {processoId}");
+}
 
         public bool ExisteDiligenciaPendente(string processoId)
         {
@@ -185,37 +237,61 @@ namespace SistemaJuridico.Services
         // ========================
 
         public void SalvarRascunho(string processoId, string motivo)
-        {
-            _processService.MarcarRascunho(processoId, motivo);
+{
+    _processService.MarcarRascunho(processoId, motivo);
 
-            _historicoService.Registrar(
-                processoId,
-                "Rascunho salvo",
-                motivo);
-        }
+    _historicoService.Registrar(
+        processoId,
+        "Rascunho salvo",
+        motivo);
+
+    _auditService.Registrar(
+        "Salvar Rascunho",
+        "Processo",
+        processoId,
+        motivo);
+}
 
         public void ConcluirEdicao(string processoId)
-        {
-            _processService.MarcarConcluido(processoId);
+{
+    _processService.MarcarConcluido(processoId);
 
-            _historicoService.Registrar(
-                processoId,
-                "Edição concluída");
-        }
+    _historicoService.Registrar(
+        processoId,
+        "Edição concluída");
+
+    _auditService.Registrar(
+        "Concluir Edição",
+        "Processo",
+        processoId);
+}
 
         // ========================
         // LOCK MULTIUSUÁRIO
         // ========================
 
-        public bool TentarLock(string processoId)
-        {
-            return _processService.TentarLock(processoId);
-        }
+       public bool TentarLock(string processoId)
+{
+    var sucesso = _processService.TentarLock(processoId);
+
+    if (sucesso)
+        _auditService.Registrar(
+            "Lock Processo",
+            "Processo",
+            processoId);
+
+    return sucesso;
+}
 
         public void LiberarLock(string processoId)
-        {
-            _processService.LiberarLock(processoId);
-        }
+{
+    _processService.LiberarLock(processoId);
+
+    _auditService.Registrar(
+        "Unlock Processo",
+        "Processo",
+        processoId);
+}
 
         public string? UsuarioEditando(string processoId)
         {
