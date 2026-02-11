@@ -12,6 +12,16 @@ namespace SistemaJuridico.Views
             InitializeComponent();
             DataContext = this;
         }
+
+        private void AbrirEmails(object sender, RoutedEventArgs e)
+        {
+            if (!App.Session.IsAdmin())
+            {
+                MessageBox.Show("Apenas admin.");
+                return;
+            }
+
+            new AdminEmailsWindow().ShowDialog();
+        }
     }
 }
-
