@@ -12,10 +12,6 @@ namespace SistemaJuridico.Services
             _db = db;
         }
 
-        // =========================
-        // LISTAR PROCESSOS
-        // =========================
-
         public List<Processo> ListarProcessos()
         {
             using var conn = _db.GetConnection();
@@ -25,9 +21,34 @@ namespace SistemaJuridico.Services
             ).ToList();
         }
 
-        // =========================
-        // RESUMO PARA DASHBOARD
-        // =========================
+        // ⭐ NOVO MÉTODO
+        public void CriarProcesso(Processo processo)
+        {
+            using var conn = _db.GetConnection();
+
+            conn.Execute(@"
+                INSERT INTO processos
+                (id, numero, paciente, juiz, classificacao,
+                 status_fase, ultima_atualizacao,
+                 situacao_rascunho, usuario_rascunho)
+
+                VALUES
+                (@Id, @Numero, @Paciente, @Juiz, @Classificacao,
+                 @StatusFase, @UltimaAtualizacao,
+                 'Em edição', @Usuario)
+            ",
+            new
+            {
+                processo.Id,
+                processo.Numero,
+                processo.Paciente,
+                processo.Juiz,
+                processo.Classificacao,
+                processo.StatusFase,
+                processo.UltimaAtualizacao,
+                Usuario = App.Session.UsuarioAtual?.Email
+            });
+        }
 
         public (decimal saldoPendente, bool diligenciaPendente, string? dataUltLanc)
             ObterResumo(string processoId)
@@ -35,7 +56,7 @@ namespace SistemaJuridico.Services
             using var conn = _db.GetConnection();
 
             decimal saldo = conn.ExecuteScalar<decimal>(@"
-                SELECT IFNULL(SUM(valor_alvara - valor_conta),0)
+                SELECT IFNULL(SUM(valor_conta),0)
                 FROM contas
                 WHERE processo_id=@id
                 AND status_conta='rascunho'
@@ -58,10 +79,6 @@ namespace SistemaJuridico.Services
 
             return (saldo, diligencia, data);
         }
-
-        // =========================
-        // SALVAR RASCUNHO
-        // =========================
 
         public void MarcarRascunho(string processoId, string motivo)
         {
@@ -95,10 +112,6 @@ namespace SistemaJuridico.Services
             ", new { id = processoId });
         }
 
-        // =========================
-        // LOCK MULTIUSUÁRIO
-        // =========================
-
         public bool TentarLock(string processoId)
         {
             using var conn = _db.GetConnection();
@@ -131,27 +144,12 @@ namespace SistemaJuridico.Services
         {
             using var conn = _db.GetConnection();
 
-            var situacao = conn.ExecuteScalar<string?>(@"
-                SELECT SituacaoRascunho
-                FROM processos
+            conn.Execute(@"
+                UPDATE processos
+                SET UsuarioRascunho=NULL
                 WHERE id=@id
             ", new { id = processoId });
-
-            // Só remove lock se NÃO estiver em rascunho
-            if (situacao != "Rascunho")
-            {
-                conn.Execute(@"
-                    UPDATE processos
-                    SET UsuarioRascunho=NULL,
-                        SituacaoRascunho='Concluído'
-                    WHERE id=@id
-                ", new { id = processoId });
-            }
         }
-
-        // =========================
-        // STATUS DE EDIÇÃO
-        // =========================
 
         public string? UsuarioEditando(string processoId)
         {
