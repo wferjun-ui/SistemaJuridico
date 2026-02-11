@@ -2,23 +2,37 @@ using SistemaJuridico.Models;
 
 namespace SistemaJuridico.Services
 {
+    public class ProcessoCompletoDTO
+    {
+        public Processo Processo { get; set; } = new();
+        public List<ItemSaude> ItensSaude { get; set; } = new();
+        public List<Verificacao> Verificacoes { get; set; } = new();
+        public List<Conta> Contas { get; set; } = new();
+    }
+
     public class ProcessoFacadeService
     {
         private readonly ProcessService _processService;
         private readonly ContaService _contaService;
         private readonly DiligenciaService _diligenciaService;
         private readonly HistoricoService _historicoService;
+        private readonly ItemSaudeService _itemSaudeService;
+        private readonly VerificacaoService _verificacaoService;
 
         public ProcessoFacadeService(
             ProcessService processService,
             ContaService contaService,
             DiligenciaService diligenciaService,
-            HistoricoService historicoService)
+            HistoricoService historicoService,
+            ItemSaudeService itemSaudeService,
+            VerificacaoService verificacaoService)
         {
             _processService = processService;
             _contaService = contaService;
             _diligenciaService = diligenciaService;
             _historicoService = historicoService;
+            _itemSaudeService = itemSaudeService;
+            _verificacaoService = verificacaoService;
         }
 
         // ========================
@@ -35,6 +49,21 @@ namespace SistemaJuridico.Services
         public List<Processo> ListarProcessos()
         {
             return _processService.ListarProcessos();
+        }
+
+        // ========================
+        // LOADER COMPLETO (NOVO)
+        // ========================
+
+        public ProcessoCompletoDTO CarregarProcessoCompleto(string processoId)
+        {
+            return new ProcessoCompletoDTO
+            {
+                Processo = ObterProcesso(processoId),
+                ItensSaude = _itemSaudeService.ListarPorProcesso(processoId),
+                Verificacoes = _verificacaoService.ListarPorProcesso(processoId),
+                Contas = ObterContas(processoId)
+            };
         }
 
         // ========================
