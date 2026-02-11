@@ -1,6 +1,7 @@
 <Window x:Class="SistemaJuridico.Views.ProcessoDetalhesWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:SistemaJuridico.Views"
         Title="Detalhes do Processo"
         Height="600"
         Width="900"
@@ -51,7 +52,15 @@
 
         <ScrollViewer Grid.Row="1">
 
-            <Grid>
+    <TabControl>
+
+        <!-- ========================= -->
+        <!-- ABA DADOS DO PROCESSO -->
+        <!-- ========================= -->
+
+        <TabItem Header="Dados">
+
+            <Grid Margin="10">
 
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="180"/>
@@ -67,16 +76,11 @@
                     <RowDefinition Height="120"/>
                 </Grid.RowDefinitions>
 
-                <!-- Número -->
-
-                <TextBlock Text="Número:"
-                           VerticalAlignment="Center"/>
+                <TextBlock Text="Número:" VerticalAlignment="Center"/>
 
                 <TextBox Grid.Column="1"
                          Text="{Binding Processo.Numero}"
                          Style="{StaticResource CampoBloqueavel}"/>
-
-                <!-- Paciente -->
 
                 <TextBlock Grid.Row="1"
                            Text="Paciente:"
@@ -87,8 +91,6 @@
                          Text="{Binding Processo.Paciente}"
                          Style="{StaticResource CampoBloqueavel}"/>
 
-                <!-- Juiz -->
-
                 <TextBlock Grid.Row="2"
                            Text="Juiz:"
                            VerticalAlignment="Center"/>
@@ -98,8 +100,6 @@
                          Text="{Binding Processo.Juiz}"
                          Style="{StaticResource CampoBloqueavel}"/>
 
-                <!-- Classificação -->
-
                 <TextBlock Grid.Row="3"
                            Text="Classificação:"
                            VerticalAlignment="Center"/>
@@ -108,8 +108,6 @@
                          Grid.Column="1"
                          Text="{Binding Processo.Classificacao}"
                          Style="{StaticResource CampoBloqueavel}"/>
-
-                <!-- Fase -->
 
                 <TextBlock Grid.Row="4"
                            Text="Fase:"
@@ -126,8 +124,6 @@
 
                 </ComboBox>
 
-                <!-- Observações -->
-
                 <TextBlock Grid.Row="5"
                            Text="Observações:"
                            VerticalAlignment="Top"/>
@@ -141,7 +137,19 @@
 
             </Grid>
 
-        </ScrollViewer>
+        </TabItem>
+
+        <!-- ========================= -->
+        <!-- ABA CONTAS -->
+        <!-- ========================= -->
+
+        <TabItem Header="Contas">
+            <views:ContasView ProcessoId="{Binding Processo.Id}" />
+        </TabItem>
+
+    </TabControl>
+
+</ScrollViewer>
 
         <!-- ========================= -->
         <!-- BOTÕES -->
