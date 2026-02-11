@@ -1,0 +1,52 @@
+<UserControl x:Class="SistemaJuridico.Views.ProcessoListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid Margin="15">
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Topo -->
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+
+            <Button Content="Novo Processo"
+                    Width="140"
+                    Margin="0,0,10,0"
+                    Command="{Binding NovoProcessoCommand}"/>
+
+            <Button Content="Atualizar"
+                    Width="100"
+                    Command="{Binding CarregarCommand}"/>
+
+        </StackPanel>
+
+        <!-- Lista -->
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding Processos}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  SelectedItem="{Binding ProcessoSelecionado}">
+
+            <DataGrid.Columns>
+
+                <DataGridTextColumn Header="Número"
+                                    Binding="{Binding NumeroProcesso}"
+                                    Width="*"/>
+
+                <DataGridTextColumn Header="Cliente"
+                                    Binding="{Binding NomeCliente}"
+                                    Width="*"/>
+
+                <DataGridTextColumn Header="Status"
+                                    Binding="{Binding Status}"
+                                    Width="120"/>
+
+            </DataGrid.Columns>
+
+        </DataGrid>
+
+    </Grid>
+</UserControl>
