@@ -1,0 +1,32 @@
+<Window x:Class="SistemaJuridico.Views.AdminEmailsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="E-mails autorizados"
+        Height="400"
+        Width="400"
+        WindowStartupLocation="CenterScreen">
+
+    <Grid Margin="20">
+
+        <StackPanel>
+
+            <TextBlock Text="E-mails autorizados"
+                       FontSize="20"
+                       Margin="0,0,0,10"/>
+
+            <TextBox Text="{Binding NovoEmail}"
+                     materialDesign:HintAssist.Hint="Novo e-mail"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+            <Button Content="Adicionar"
+                    Command="{Binding AdicionarCommand}"
+                    Margin="0,10,0,10"/>
+
+            <ListBox ItemsSource="{Binding Emails}"/>
+
+        </StackPanel>
+
+    </Grid>
+</Window>
+

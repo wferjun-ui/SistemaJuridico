@@ -1,0 +1,36 @@
+<Window x:Class="SistemaJuridico.Views.LoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Login"
+        Height="320"
+        Width="400"
+        WindowStartupLocation="CenterScreen">
+
+    <Grid Margin="30">
+
+        <StackPanel>
+
+            <TextBlock Text="Sistema Jurídico"
+                       FontSize="22"
+                       FontWeight="Bold"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,20"/>
+
+            <TextBox Text="{Binding Usuario}"
+                     materialDesign:HintAssist.Hint="Usuário ou Email"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                     Margin="0,0,0,10"/>
+
+            <PasswordBox x:Name="PwdBox"
+                         materialDesign:HintAssist.Hint="Senha"
+                         Margin="0,0,0,20"/>
+
+            <Button Content="Entrar"
+                    Command="{Binding EntrarCommand}"
+                    Height="40"/>
+
+        </StackPanel>
+    </Grid>
+</Window>
+
