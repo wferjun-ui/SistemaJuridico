@@ -1,5 +1,6 @@
 using Microsoft.Win32;
 using SistemaJuridico.Services;
+using SistemaJuridico.Views;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -12,6 +13,8 @@ namespace SistemaJuridico.ViewModels
     public class MigracaoViewModel : INotifyPropertyChanged
     {
         private readonly WorkflowMigracaoService _workflow;
+
+        public event Action? MigracaoConcluidaComSucesso;
 
         public MigracaoViewModel(WorkflowMigracaoService workflow)
         {
@@ -42,7 +45,12 @@ namespace SistemaJuridico.ViewModels
         public bool IsProcessando
         {
             get => _isProcessando;
-            set { _isProcessando = value; OnPropertyChanged(); }
+            set 
+            { 
+                _isProcessando = value; 
+                OnPropertyChanged();
+                (ExecutarMigracaoCommand as RelayCommand)?.Raise();
+            }
         }
 
         private void SelecionarArquivo()
@@ -75,10 +83,16 @@ namespace SistemaJuridico.ViewModels
                 {
                     Relatorio = resultado.Relatorio;
 
-                    if (!resultado.Sucesso)
-                        MessageBox.Show("Migração concluída com inconsistências.");
-                    else
+                    if (resultado.Sucesso)
+                    {
                         MessageBox.Show("Migração concluída com sucesso.");
+
+                        MigracaoConcluidaComSucesso?.Invoke();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Migração concluída com inconsistências. Verifique o relatório.");
+                    }
                 });
             });
 
