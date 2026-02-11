@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using SistemaJuridico.Models;
 using SistemaJuridico.Services;
 using System.Collections.ObjectModel;
+using System.Windows;
 
 namespace SistemaJuridico.ViewModels
 {
@@ -15,7 +16,10 @@ namespace SistemaJuridico.ViewModels
         public ObservableCollection<Conta> Contas { get; } = new();
 
         [ObservableProperty]
-        private Conta _novaConta = new();
+        private Conta? _contaSelecionada;
+
+        [ObservableProperty]
+        private Conta _edicaoConta = new();
 
         public ContasViewModel(string processoId)
         {
@@ -37,14 +41,75 @@ namespace SistemaJuridico.ViewModels
         }
 
         [RelayCommand]
-        private void AdicionarConta()
+        private void NovaConta()
         {
-            NovaConta.ProcessoId = _processoId;
+            EdicaoConta = new Conta
+            {
+                ProcessoId = _processoId
+            };
+        }
 
-            _service.SalvarConta(NovaConta);
+        [RelayCommand]
+        private void SalvarConta()
+        {
+            if (string.IsNullOrWhiteSpace(EdicaoConta.Tipo))
+            {
+                MessageBox.Show("Tipo obrigatório");
+                return;
+            }
 
-            NovaConta = new Conta();
+            if (!Contas.Any(x => x.Id == EdicaoConta.Id))
+                _service.Inserir(EdicaoConta);
+            else
+                _service.Atualizar(EdicaoConta);
 
+            NovaConta();
+            Carregar();
+        }
+
+        [RelayCommand]
+        private void EditarConta()
+        {
+            if (ContaSelecionada == null) return;
+
+            if (!ContaSelecionada.PodeEditar)
+            {
+                MessageBox.Show("Conta já fechada.");
+                return;
+            }
+
+            EdicaoConta = new Conta
+            {
+                Id = ContaSelecionada.Id,
+                ProcessoId = ContaSelecionada.ProcessoId,
+                Tipo = ContaSelecionada.Tipo,
+                ValorAlvara = ContaSelecionada.ValorAlvara,
+                ValorConta = ContaSelecionada.ValorConta,
+                Observacao = ContaSelecionada.Observacao,
+                StatusConta = ContaSelecionada.StatusConta
+            };
+        }
+
+        [RelayCommand]
+        private void ExcluirConta()
+        {
+            if (ContaSelecionada == null) return;
+
+            if (MessageBox.Show("Excluir conta?",
+                "Confirma",
+                MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            {
+                _service.Excluir(ContaSelecionada.Id);
+                Carregar();
+            }
+        }
+
+        [RelayCommand]
+        private void FecharConta()
+        {
+            if (ContaSelecionada == null) return;
+
+            _service.FecharConta(ContaSelecionada.Id);
             Carregar();
         }
     }
