@@ -28,5 +28,11 @@ namespace SistemaJuridico.Views
 
             base.OnClosing(e);
         }
+
+        // ⭐ ADICIONE AQUI
+        private void Fechar_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
     }
 }
