@@ -13,6 +13,7 @@ namespace SistemaJuridico.ViewModels
         private readonly ContaService _contaService;
         private readonly ItemSaudeService _itemSaudeService;
         private readonly VerificacaoService _verificacaoService;
+        private readonly VerificacaoFacadeService _verificacaoFacade;
 
         private readonly string _processoId;
 
@@ -35,9 +36,11 @@ namespace SistemaJuridico.ViewModels
             _processService = processService;
 
             var db = new DatabaseService();
+
             _contaService = new ContaService(db);
             _itemSaudeService = new ItemSaudeService(db);
             _verificacaoService = new VerificacaoService(db);
+            _verificacaoFacade = new VerificacaoFacadeService();
 
             _processoId = processoId;
 
@@ -53,7 +56,7 @@ namespace SistemaJuridico.ViewModels
         }
 
         // ========================
-        // LOCK
+        // LOCK MULTIUSUÁRIO
         // ========================
 
         private void ValidarLock()
@@ -97,9 +100,12 @@ namespace SistemaJuridico.ViewModels
         {
             Verificacoes.Clear();
 
-            foreach (var v in _verificacaoService.ListarPorProcesso(_processoId)
+            foreach (var v in _verificacaoService
+                         .ListarPorProcesso(_processoId)
                          .OrderByDescending(x => x.DataHora))
+            {
                 Verificacoes.Add(v);
+            }
         }
 
         // ========================
@@ -127,6 +133,40 @@ namespace SistemaJuridico.ViewModels
 
             MessageBox.Show("Edição concluída.");
         }
+
+        [RelayCommand]
+        private void NovaVerificacao()
+        {
+            if (ModoSomenteLeitura)
+                return;
+
+            var status = Microsoft.VisualBasic.Interaction.InputBox(
+                "Informe o status do processo:");
+
+            if (string.IsNullOrWhiteSpace(status))
+                return;
+
+            var descricao = Microsoft.VisualBasic.Interaction.InputBox(
+                "Descrição da verificação:");
+
+            var responsavel = App.Session.UsuarioAtual?.Nome ?? "Sistema";
+
+            _verificacaoFacade.CriarVerificacao(
+                _processoId,
+                status,
+                responsavel,
+                descricao,
+                ItensSaude.ToList());
+
+            MessageBox.Show("Verificação registrada.");
+
+            CarregarVerificacoes();
+            CarregarItensSaude();
+        }
+
+        // ========================
+        // CONTROLE DE FECHAMENTO
+        // ========================
 
         public bool PodeFechar()
         {
