@@ -7,15 +7,18 @@ namespace SistemaJuridico.Services
         private readonly ProcessService _processService;
         private readonly ContaService _contaService;
         private readonly DiligenciaService _diligenciaService;
+        private readonly HistoricoService _historicoService;
 
         public ProcessoFacadeService(
             ProcessService processService,
             ContaService contaService,
-            DiligenciaService diligenciaService)
+            DiligenciaService diligenciaService,
+            HistoricoService historicoService)
         {
             _processService = processService;
             _contaService = contaService;
             _diligenciaService = diligenciaService;
+            _historicoService = historicoService;
         }
 
         // ========================
@@ -46,21 +49,38 @@ namespace SistemaJuridico.Services
         public void InserirConta(Conta conta)
         {
             _contaService.Inserir(conta);
+
+            _historicoService.Registrar(
+                conta.ProcessoId,
+                "Conta adicionada",
+                $"Valor: {conta.ValorConta}");
         }
 
         public void AtualizarConta(Conta conta)
         {
             _contaService.Atualizar(conta);
+
+            _historicoService.Registrar(
+                conta.ProcessoId,
+                "Conta atualizada");
         }
 
-        public void ExcluirConta(string id)
+        public void ExcluirConta(string id, string processoId)
         {
             _contaService.Excluir(id);
+
+            _historicoService.Registrar(
+                processoId,
+                "Conta excluída");
         }
 
-        public void FecharConta(string id)
+        public void FecharConta(string id, string processoId)
         {
             _contaService.FecharConta(id);
+
+            _historicoService.Registrar(
+                processoId,
+                "Conta finalizada");
         }
 
         // ========================
@@ -75,21 +95,38 @@ namespace SistemaJuridico.Services
         public void InserirDiligencia(Diligencia diligencia)
         {
             _diligenciaService.Inserir(diligencia);
+
+            _historicoService.Registrar(
+                diligencia.ProcessoId,
+                "Diligência criada",
+                diligencia.Descricao);
         }
 
-        public void ConcluirDiligencia(string id)
+        public void ConcluirDiligencia(string id, string processoId)
         {
             _diligenciaService.Concluir(id);
+
+            _historicoService.Registrar(
+                processoId,
+                "Diligência concluída");
         }
 
-        public void ReabrirDiligencia(string id)
+        public void ReabrirDiligencia(string id, string processoId)
         {
             _diligenciaService.Reabrir(id);
+
+            _historicoService.Registrar(
+                processoId,
+                "Diligência reaberta");
         }
 
-        public void ExcluirDiligencia(string id)
+        public void ExcluirDiligencia(string id, string processoId)
         {
             _diligenciaService.Excluir(id);
+
+            _historicoService.Registrar(
+                processoId,
+                "Diligência excluída");
         }
 
         public bool ExisteDiligenciaPendente(string processoId)
@@ -98,7 +135,7 @@ namespace SistemaJuridico.Services
         }
 
         // ========================
-        // RESUMO DASHBOARD
+        // RESUMO
         // ========================
 
         public (decimal saldo, bool diligencia, string? dataUltLanc)
@@ -121,11 +158,20 @@ namespace SistemaJuridico.Services
         public void SalvarRascunho(string processoId, string motivo)
         {
             _processService.MarcarRascunho(processoId, motivo);
+
+            _historicoService.Registrar(
+                processoId,
+                "Rascunho salvo",
+                motivo);
         }
 
         public void ConcluirEdicao(string processoId)
         {
             _processService.MarcarConcluido(processoId);
+
+            _historicoService.Registrar(
+                processoId,
+                "Edição concluída");
         }
 
         // ========================
