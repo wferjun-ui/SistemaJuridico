@@ -27,6 +27,11 @@ namespace SistemaJuridico.Services
                 NavigationKey.Contas,
                 typeof(ContasView),
                 typeof(ContasViewModel));
+
+            registry.Register(
+                NavigationKey.Auditoria,
+                typeof(AuditoriaView),
+                typeof(AuditoriaViewModel));
         }
     }
 }
