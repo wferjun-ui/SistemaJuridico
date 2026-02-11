@@ -13,7 +13,8 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
 
-        <TextBlock Text="{Binding Usuario}"
+       <TextBlock Text="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=Usuario}"
+
                    FontSize="16"
                    Margin="0,0,0,15"/>
 
