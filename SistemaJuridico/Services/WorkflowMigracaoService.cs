@@ -1,3 +1,4 @@
+using SistemaJuridico.Infrastructure;
 using System.Text;
 
 namespace SistemaJuridico.Services
@@ -13,6 +14,7 @@ namespace SistemaJuridico.Services
     {
         private readonly ImportacaoJsonService _importador;
         private readonly ValidacaoMigracaoService _validador;
+        private readonly LoggerService _logger = new();
 
         public WorkflowMigracaoService(
             ImportacaoJsonService importador,
@@ -29,24 +31,35 @@ namespace SistemaJuridico.Services
 
             try
             {
+                _logger.Audit("Início da migração");
+
                 relatorio.AppendLine("===== INÍCIO DA MIGRAÇÃO =====");
                 relatorio.AppendLine();
 
-                relatorio.AppendLine("Importando dados...");
-                _importador.Importar(caminhoJson);
-                relatorio.AppendLine("✔ Importação concluída");
-                relatorio.AppendLine();
+                _logger.Info("Importando dados JSON");
 
-                relatorio.AppendLine("Executando validação...");
+                _importador.Importar(caminhoJson);
+
+                relatorio.AppendLine("✔ Importação concluída");
+
+                _logger.Info("Executando validação");
+
                 var validacao = _validador.Validar(caminhoJson);
 
                 relatorio.AppendLine(validacao);
 
                 resultado.Sucesso = !validacao.Contains("❌");
                 resultado.Relatorio = relatorio.ToString();
+
+                if (resultado.Sucesso)
+                    _logger.Audit("Migração concluída com sucesso");
+                else
+                    _logger.Warn("Migração concluída com inconsistências");
             }
             catch (Exception ex)
             {
+                _logger.Error("Erro durante migração", ex);
+
                 resultado.Sucesso = false;
                 resultado.MensagemErro = ex.Message;
 
