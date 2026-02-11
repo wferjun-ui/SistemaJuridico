@@ -19,5 +19,12 @@ namespace SistemaJuridico.Services
 
             _region.Content = view;
         }
+
+        public void Navigate<TView, TViewModel>(ViewFactoryService factory)
+            where TView : UserControl, new()
+        {
+            var view = factory.CreateView<TView, TViewModel>();
+            Navigate(view);
+        }
     }
 }
