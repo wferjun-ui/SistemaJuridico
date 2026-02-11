@@ -11,12 +11,16 @@ namespace SistemaJuridico.ViewModels
     {
         private readonly ProcessService _processService;
         private readonly ContaService _contaService;
+        private readonly ItemSaudeService _itemSaudeService;
+        private readonly VerificacaoService _verificacaoService;
 
         private readonly string _processoId;
 
         public Processo Processo { get; private set; }
 
         public ObservableCollection<Conta> Contas { get; } = new();
+        public ObservableCollection<ItemSaude> ItensSaude { get; } = new();
+        public ObservableCollection<Verificacao> Verificacoes { get; } = new();
 
         [ObservableProperty]
         private bool _modoSomenteLeitura;
@@ -32,6 +36,8 @@ namespace SistemaJuridico.ViewModels
 
             var db = new DatabaseService();
             _contaService = new ContaService(db);
+            _itemSaudeService = new ItemSaudeService(db);
+            _verificacaoService = new VerificacaoService(db);
 
             _processoId = processoId;
 
@@ -40,8 +46,15 @@ namespace SistemaJuridico.ViewModels
                 .First(x => x.Id == processoId);
 
             ValidarLock();
+
             CarregarContas();
+            CarregarItensSaude();
+            CarregarVerificacoes();
         }
+
+        // ========================
+        // LOCK
+        // ========================
 
         private void ValidarLock()
         {
@@ -60,6 +73,10 @@ namespace SistemaJuridico.ViewModels
             }
         }
 
+        // ========================
+        // LOADERS
+        // ========================
+
         private void CarregarContas()
         {
             Contas.Clear();
@@ -67,6 +84,27 @@ namespace SistemaJuridico.ViewModels
             foreach (var c in _contaService.ListarPorProcesso(_processoId))
                 Contas.Add(c);
         }
+
+        private void CarregarItensSaude()
+        {
+            ItensSaude.Clear();
+
+            foreach (var item in _itemSaudeService.ListarPorProcesso(_processoId))
+                ItensSaude.Add(item);
+        }
+
+        private void CarregarVerificacoes()
+        {
+            Verificacoes.Clear();
+
+            foreach (var v in _verificacaoService.ListarPorProcesso(_processoId)
+                         .OrderByDescending(x => x.DataHora))
+                Verificacoes.Add(v);
+        }
+
+        // ========================
+        // COMANDOS
+        // ========================
 
         [RelayCommand]
         private void SalvarRascunho()
