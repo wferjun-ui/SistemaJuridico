@@ -17,9 +17,22 @@ namespace SistemaJuridico.Services
             using var conn = _db.GetConnection();
 
             return conn.Query<Conta>(@"
-                SELECT * FROM contas
+                SELECT
+                    id as Id,
+                    processo_id as ProcessoId,
+                    tipo_lancamento as TipoLancamento,
+                    historico as Historico,
+                    data_movimentacao as DataMovimentacao,
+                    mov_processo as MovProcesso,
+                    num_nf_alvara as NumNfAlvara,
+                    valor_alvara as ValorAlvara,
+                    valor_conta as ValorConta,
+                    status_conta as StatusConta,
+                    responsavel as Responsavel,
+                    observacoes as Observacoes
+                FROM contas
                 WHERE processo_id=@id
-                ORDER BY data_movimentacao DESC
+                ORDER BY data_movimentacao
             ", new { id = processoId }).ToList();
         }
 
@@ -28,11 +41,20 @@ namespace SistemaJuridico.Services
             using var conn = _db.GetConnection();
 
             conn.Execute(@"
-                INSERT INTO contas
-                VALUES
-                (@Id,@ProcessoId,@Tipo,@ValorAlvara,
-                 @ValorConta,@StatusConta,
-                 @DataMovimentacao,@Observacao)
+                INSERT INTO contas (
+                    id, processo_id, tipo_lancamento,
+                    historico, data_movimentacao,
+                    mov_processo, num_nf_alvara,
+                    valor_alvara, valor_conta,
+                    status_conta, responsavel, observacoes
+                )
+                VALUES (
+                    @Id, @ProcessoId, @TipoLancamento,
+                    @Historico, @DataMovimentacao,
+                    @MovProcesso, @NumNfAlvara,
+                    @ValorAlvara, @ValorConta,
+                    @StatusConta, @Responsavel, @Observacoes
+                )
             ", conta);
         }
 
@@ -42,10 +64,14 @@ namespace SistemaJuridico.Services
 
             conn.Execute(@"
                 UPDATE contas SET
-                    tipo=@Tipo,
+                    tipo_lancamento=@TipoLancamento,
+                    historico=@Historico,
+                    data_movimentacao=@DataMovimentacao,
+                    mov_processo=@MovProcesso,
+                    num_nf_alvara=@NumNfAlvara,
                     valor_alvara=@ValorAlvara,
                     valor_conta=@ValorConta,
-                    observacao=@Observacao
+                    observacoes=@Observacoes
                 WHERE id=@Id
             ", conta);
         }
@@ -54,7 +80,8 @@ namespace SistemaJuridico.Services
         {
             using var conn = _db.GetConnection();
 
-            conn.Execute("DELETE FROM contas WHERE id=@id",
+            conn.Execute(
+                "DELETE FROM contas WHERE id=@id",
                 new { id });
         }
 
@@ -64,7 +91,7 @@ namespace SistemaJuridico.Services
 
             conn.Execute(@"
                 UPDATE contas
-                SET status_conta='fechada'
+                SET status_conta='lancado'
                 WHERE id=@id
             ", new { id });
         }
