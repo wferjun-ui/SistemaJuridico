@@ -9,10 +9,7 @@
 
         <StackPanel HorizontalAlignment="Center"
                     VerticalAlignment="Center">
-                <Button Content="Gerenciar e-mails"
-                Click="AbrirEmails"/>
-
-
+           
             <TextBlock Text="Dashboard"
                        FontSize="26"
                        HorizontalAlignment="Center"/>
@@ -21,6 +18,10 @@
                        FontSize="16"
                        Margin="0,10,0,0"
                        HorizontalAlignment="Center"/>
+
+<Button Content="Gerenciar e-mails"
+            Click="AbrirEmails"
+            Margin="0,20,0,0"/>
 
         </StackPanel>
 
