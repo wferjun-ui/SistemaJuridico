@@ -24,12 +24,17 @@ namespace SistemaJuridico.Views
         protected override void OnClosing(CancelEventArgs e)
         {
             if (!_vm.PodeFechar())
+            {
                 e.Cancel = true;
+                return;
+            }
+
+            // 🔒 Libera lock multiusuário
+            _vm.LiberarLock();
 
             base.OnClosing(e);
         }
 
-        // ⭐ ADICIONE AQUI
         private void Fechar_Click(object sender, RoutedEventArgs e)
         {
             Close();
