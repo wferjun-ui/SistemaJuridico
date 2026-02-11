@@ -47,8 +47,7 @@ namespace SistemaJuridico.Services
         {
             return _processService
                 .ListarProcessos()
-                .FirstOrDefault(x => x.Id == id)
-                ?? new Processo();
+                .First(x => x.Id == id);
         }
 
         public List<Processo> ListarProcessos()
@@ -65,11 +64,27 @@ namespace SistemaJuridico.Services
             return new ProcessoCompletoDTO
             {
                 Processo = ObterProcesso(processoId),
-                ItensSaude = _itemSaudeService.ListarPorProcesso(processoId) ?? new(),
-                Verificacoes = _verificacaoService.ListarPorProcesso(processoId) ?? new(),
-                Contas = ObterContas(processoId) ?? new(),
-                Diligencias = ObterDiligencias(processoId) ?? new()
+                ItensSaude = _itemSaudeService.ListarPorProcesso(processoId),
+                Verificacoes = _verificacaoService.ListarPorProcesso(processoId),
+                Contas = ObterContas(processoId),
+                Diligencias = ObterDiligencias(processoId)
             };
+        }
+
+        // ========================
+        // TIMELINE ⭐ NOVO BLOCO 9
+        // ========================
+
+        public List<TimelineEventoDTO> ObterTimeline(string processoId)
+        {
+            var timeline = new TimelineService(
+                _historicoService,
+                _verificacaoService,
+                _diligenciaService,
+                _contaService,
+                _auditService);
+
+            return timeline.ObterTimeline(processoId);
         }
 
         // ========================
@@ -91,9 +106,9 @@ namespace SistemaJuridico.Services
                 $"Valor: {conta.ValorConta}");
 
             _auditService.Registrar(
-                conta.ProcessoId,
-                "Conta",
                 "Inserção",
+                "Conta",
+                conta.ProcessoId,
                 $"Valor: {conta.ValorConta}");
         }
 
@@ -106,9 +121,9 @@ namespace SistemaJuridico.Services
                 "Conta atualizada");
 
             _auditService.Registrar(
-                conta.ProcessoId,
-                "Conta",
                 "Atualização",
+                "Conta",
+                conta.ProcessoId,
                 conta.Id);
         }
 
@@ -121,9 +136,9 @@ namespace SistemaJuridico.Services
                 "Conta excluída");
 
             _auditService.Registrar(
-                processoId,
-                "Conta",
                 "Exclusão",
+                "Conta",
+                processoId,
                 id);
         }
 
@@ -136,9 +151,9 @@ namespace SistemaJuridico.Services
                 "Conta finalizada");
 
             _auditService.Registrar(
-                processoId,
-                "Conta",
                 "Fechamento",
+                "Conta",
+                processoId,
                 id);
         }
 
@@ -161,9 +176,9 @@ namespace SistemaJuridico.Services
                 diligencia.Descricao);
 
             _auditService.Registrar(
-                diligencia.ProcessoId,
-                "Diligência",
                 "Inserção",
+                "Diligência",
+                diligencia.ProcessoId,
                 diligencia.Descricao);
         }
 
@@ -176,9 +191,9 @@ namespace SistemaJuridico.Services
                 "Diligência concluída");
 
             _auditService.Registrar(
-                processoId,
-                "Diligência",
                 "Conclusão",
+                "Diligência",
+                processoId,
                 id);
         }
 
@@ -191,9 +206,9 @@ namespace SistemaJuridico.Services
                 "Diligência reaberta");
 
             _auditService.Registrar(
-                processoId,
-                "Diligência",
                 "Reabertura",
+                "Diligência",
+                processoId,
                 id);
         }
 
@@ -206,32 +221,15 @@ namespace SistemaJuridico.Services
                 "Diligência excluída");
 
             _auditService.Registrar(
-                processoId,
-                "Diligência",
                 "Exclusão",
+                "Diligência",
+                processoId,
                 id);
         }
 
         public bool ExisteDiligenciaPendente(string processoId)
         {
             return _diligenciaService.ExistePendencia(processoId);
-        }
-
-        // ========================
-        // RESUMO
-        // ========================
-
-        public (decimal saldo, bool diligencia, string? dataUltLanc)
-            ObterResumoCompleto(string processoId)
-        {
-            var resumoFinanceiro = _processService.ObterResumo(processoId);
-            var diligencia = _diligenciaService.ExistePendencia(processoId);
-
-            return (
-                resumoFinanceiro.saldoPendente,
-                diligencia,
-                resumoFinanceiro.dataUltLanc
-            );
         }
 
         // ========================
@@ -248,9 +246,9 @@ namespace SistemaJuridico.Services
                 motivo);
 
             _auditService.Registrar(
-                processoId,
-                "Processo",
                 "Rascunho",
+                "Processo",
+                processoId,
                 motivo);
         }
 
@@ -263,9 +261,9 @@ namespace SistemaJuridico.Services
                 "Edição concluída");
 
             _auditService.Registrar(
-                processoId,
-                "Processo",
                 "Conclusão edição",
+                "Processo",
+                processoId,
                 "");
         }
 
@@ -280,9 +278,9 @@ namespace SistemaJuridico.Services
             if (ok)
             {
                 _auditService.Registrar(
-                    processoId,
-                    "Processo",
                     "Lock",
+                    "Processo",
+                    processoId,
                     "Processo bloqueado para edição");
             }
 
@@ -294,9 +292,9 @@ namespace SistemaJuridico.Services
             _processService.LiberarLock(processoId);
 
             _auditService.Registrar(
-                processoId,
-                "Processo",
                 "Unlock",
+                "Processo",
+                processoId,
                 "Processo liberado");
         }
 
