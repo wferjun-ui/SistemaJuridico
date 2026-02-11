@@ -305,16 +305,20 @@ namespace SistemaJuridico.ViewModels
         // FACADE
         // ========================
 
-        private ProcessoFacadeService CriarFacade()
-        {
-            var db = new DatabaseService();
+ private ProcessoFacadeService CriarFacade()
+{
+    var db = new DatabaseService();
 
-            return new ProcessoFacadeService(
-                _processService,
-                new ContaService(db),
-                new DiligenciaService(db),
-                new HistoricoService(db));
-        }
+    return new ProcessoFacadeService(
+        _processService,
+        new ContaService(db),
+        new DiligenciaService(db),
+        new HistoricoService(db),
+        new ItemSaudeService(db),
+        new VerificacaoService(db),
+        new AuditService(db) // ⭐ NOVO — auditoria
+    );
+}
 
         // ========================
         // CONTROLE FECHAMENTO
