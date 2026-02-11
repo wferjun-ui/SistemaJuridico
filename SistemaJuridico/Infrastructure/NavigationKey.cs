@@ -11,6 +11,7 @@ namespace SistemaJuridico.Infrastructure
         Diligencias,
         Migracao,
         Auditoria,
-        Usuarios
+        Usuarios,
+        ProcessoEditor       
     }
 }
