@@ -233,6 +233,40 @@ namespace SistemaJuridico.ViewModels
         }
 
         // ========================
+        // RELATÓRIO PDF
+        // ========================
+
+        [RelayCommand]
+        private void GerarRelatorio()
+        {
+            try
+            {
+                var db = new DatabaseService();
+
+                var modelo = new RelatorioProcessoService(db)
+                    .GerarModelo(_processoId);
+
+                var salvar = new Microsoft.Win32.SaveFileDialog
+                {
+                    Filter = "PDF|*.pdf",
+                    FileName = $"Processo_{Processo.Numero}.pdf"
+                };
+
+                if (salvar.ShowDialog() != true)
+                    return;
+
+                new PdfRelatorioProcessoService()
+                    .GerarPdf(modelo, salvar.FileName);
+
+                MessageBox.Show("Relatório gerado com sucesso.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Erro ao gerar relatório: " + ex.Message);
+            }
+        }
+
+        // ========================
         // FACADE
         // ========================
 
