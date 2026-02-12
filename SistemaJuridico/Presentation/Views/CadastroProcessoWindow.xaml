@@ -138,11 +138,6 @@
 
                 <Border Background="White" CornerRadius="10" Padding="16">
                     <StackPanel>
-                        <TextBlock Text="Dados de Saúde"
-                                   FontSize="16"
-                                   FontWeight="SemiBold"
-                                   Margin="0,0,0,10"/>
-
                         <StackPanel.Style>
                             <Style TargetType="StackPanel">
                                 <Setter Property="Visibility" Value="Visible"/>
@@ -153,6 +148,11 @@
                                 </Style.Triggers>
                             </Style>
                         </StackPanel.Style>
+
+                        <TextBlock Text="Dados de Saúde"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,0,10"/>
 
                         <TextBlock Text="Medicamentos" FontWeight="SemiBold" Margin="0,4,0,4"/>
                         <Button Content="+ Medicamento" HorizontalAlignment="Left" Command="{Binding AdicionarMedicamentoCommand}" Margin="0,0,0,6"/>

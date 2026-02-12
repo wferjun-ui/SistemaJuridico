@@ -16,6 +16,7 @@ namespace SistemaJuridico.ViewModels
         private readonly ContaService _contaService;
         private readonly ItemSaudeService _itemSaudeService;
         private readonly VerificacaoService _verificacaoService;
+        private readonly HistoricoService _historicoService;
         private readonly LoggerService _logger = new();
 
         private readonly string _processoId;
@@ -29,6 +30,7 @@ namespace SistemaJuridico.ViewModels
         public ObservableCollection<ItemSaude> ItensSaude { get; } = new();
         public ObservableCollection<Verificacao> Verificacoes { get; } = new();
         public ObservableCollection<Diligencia> Diligencias { get; } = new();
+        public ObservableCollection<Historico> Historicos { get; } = new();
 
         [ObservableProperty]
         private bool _modoSomenteLeitura;
@@ -47,6 +49,7 @@ namespace SistemaJuridico.ViewModels
             _contaService = new ContaService(db);
             _itemSaudeService = new ItemSaudeService(db);
             _verificacaoService = new VerificacaoService(db);
+            _historicoService = new HistoricoService(db);
 
             _processoId = processoId;
 
@@ -61,6 +64,7 @@ namespace SistemaJuridico.ViewModels
             CarregarItensSaude();
             CarregarVerificacoes();
             CarregarDiligencias();
+            CarregarHistorico();
         }
 
         // ========================
@@ -151,6 +155,8 @@ namespace SistemaJuridico.ViewModels
 
             foreach (var c in _contaService.ListarPorProcesso(_processoId))
                 Contas.Add(c);
+
+            OnPropertyChanged(nameof(TotalContasAPrestar));
         }
 
         private void CarregarItensSaude()
@@ -171,6 +177,11 @@ namespace SistemaJuridico.ViewModels
             {
                 Verificacoes.Add(v);
             }
+
+            OnPropertyChanged(nameof(UltimaVerificacaoData));
+            OnPropertyChanged(nameof(UltimaVerificacaoResponsavel));
+            OnPropertyChanged(nameof(DataPrescricao));
+            OnPropertyChanged(nameof(PrescricaoStatus));
         }
 
         private void CarregarDiligencias()
@@ -182,6 +193,69 @@ namespace SistemaJuridico.ViewModels
 
             foreach (var d in lista)
                 Diligencias.Add(d);
+        }
+
+        private void CarregarHistorico()
+        {
+            Historicos.Clear();
+
+            foreach (var historico in _historicoService.ListarPorProcesso(_processoId))
+                Historicos.Add(historico);
+
+            OnPropertyChanged(nameof(HashProcesso));
+        }
+
+        public decimal TotalContasAPrestar => Contas.Where(c => !string.Equals(c.StatusConta, "fechada", StringComparison.OrdinalIgnoreCase)).Sum(c => c.ValorConta);
+
+        public string UltimaVerificacaoData => Verificacoes.OrderByDescending(v => v.DataHora).FirstOrDefault()?.DataHora ?? "Sem verificação";
+
+        public string UltimaVerificacaoResponsavel => Verificacoes.OrderByDescending(v => v.DataHora).FirstOrDefault()?.Responsavel ?? "N/D";
+
+        public string HashProcesso => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes($"{Processo.Id}|{Processo.Numero}|{Processo.Paciente}|{Processo.Juiz}"))).Substring(0, 16);
+
+        public string DataPrescricao
+        {
+            get
+            {
+                var ultima = Verificacoes
+                    .Select(v => DateTime.TryParse(v.DataHora, out var dt) ? dt : (DateTime?)null)
+                    .Where(dt => dt.HasValue)
+                    .Select(dt => dt!.Value)
+                    .OrderByDescending(dt => dt)
+                    .FirstOrDefault();
+
+                if (ultima == default)
+                    return "Sem base";
+
+                return ultima.AddDays(90).ToString("dd/MM/yyyy");
+            }
+        }
+
+        public string PrescricaoStatus
+        {
+            get
+            {
+                var ultima = Verificacoes
+                    .Select(v => DateTime.TryParse(v.DataHora, out var dt) ? dt : (DateTime?)null)
+                    .Where(dt => dt.HasValue)
+                    .Select(dt => dt!.Value)
+                    .OrderByDescending(dt => dt)
+                    .FirstOrDefault();
+
+                if (ultima == default)
+                    return "Atualização pendente";
+
+                var vencimento = ultima.AddDays(90);
+                var dias = (vencimento.Date - DateTime.Today).Days;
+
+                if (dias < 0)
+                    return "Atualização vencida";
+
+                if (dias <= 7)
+                    return $"Atualizar em {dias} dia(s)";
+
+                return "Em dia";
+            }
         }
         public Task CarregarAsync(int processoId)
         {
@@ -196,6 +270,7 @@ namespace SistemaJuridico.ViewModels
             CarregarItensSaude();
             CarregarVerificacoes();
             CarregarDiligencias();
+            CarregarHistorico();
 
             return Task.CompletedTask;
         }
@@ -219,6 +294,8 @@ namespace SistemaJuridico.ViewModels
             Diligencias.Clear();
             foreach (var diligencia in processo.Diligencias)
                 Diligencias.Add(diligencia);
+
+            CarregarHistorico();
 
             return Task.CompletedTask;
         }
@@ -282,6 +359,10 @@ namespace SistemaJuridico.ViewModels
 
             CarregarVerificacoes();
             CarregarItensSaude();
+            OnPropertyChanged(nameof(UltimaVerificacaoData));
+            OnPropertyChanged(nameof(UltimaVerificacaoResponsavel));
+            OnPropertyChanged(nameof(DataPrescricao));
+            OnPropertyChanged(nameof(PrescricaoStatus));
         }
 
         // ========================
@@ -308,6 +389,7 @@ namespace SistemaJuridico.ViewModels
             tela.ShowDialog();
 
             CarregarDiligencias();
+            CarregarHistorico();
         }
 
         [RelayCommand]
@@ -320,6 +402,7 @@ namespace SistemaJuridico.ViewModels
             facade.ConcluirDiligencia(d.Id, _processoId);
 
             CarregarDiligencias();
+            CarregarHistorico();
         }
 
         [RelayCommand]
@@ -332,6 +415,7 @@ namespace SistemaJuridico.ViewModels
             facade.ReabrirDiligencia(d.Id, _processoId);
 
             CarregarDiligencias();
+            CarregarHistorico();
         }
 
         // ========================
