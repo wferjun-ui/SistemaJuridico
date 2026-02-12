@@ -1,7 +1,6 @@
 using Dapper;
 using Newtonsoft.Json;
 using SistemaJuridico.Models;
-using System.IO;
 
 namespace SistemaJuridico.Services
 {
