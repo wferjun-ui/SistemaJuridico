@@ -1,5 +1,6 @@
 using System;
 using System.Windows.Controls;
+using UserControl = System.Windows.Controls.UserControl;
 
 namespace SistemaJuridico.Services
 {
