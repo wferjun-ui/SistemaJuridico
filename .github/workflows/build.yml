@@ -16,6 +16,15 @@ jobs:
       uses: actions/checkout@v4
 
     # ===============================
+    # Limpar cache WPF
+    # ===============================
+    - name: Limpar bin e obj
+      run: |
+        Remove-Item -Recurse -Force SistemaJuridico/bin -ErrorAction SilentlyContinue
+        Remove-Item -Recurse -Force SistemaJuridico/obj -ErrorAction SilentlyContinue
+      shell: pwsh
+
+    # ===============================
     # Setup .NET
     # ===============================
     - name: Setup .NET
