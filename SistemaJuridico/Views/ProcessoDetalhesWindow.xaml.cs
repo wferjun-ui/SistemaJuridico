@@ -2,7 +2,6 @@ using SistemaJuridico.Services;
 using SistemaJuridico.ViewModels;
 using System.ComponentModel;
 using System.Windows;
-using UserControl = System.Windows.Controls.UserControl;
 
 namespace SistemaJuridico.Views
 {
@@ -30,7 +29,6 @@ namespace SistemaJuridico.Views
                 return;
             }
 
-            // 🔒 Libera lock multiusuário
             _vm.LiberarLock();
 
             base.OnClosing(e);
