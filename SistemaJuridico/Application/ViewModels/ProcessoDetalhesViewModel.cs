@@ -135,6 +135,10 @@ namespace SistemaJuridico.ViewModels
                     _lockAdquirido = false;
                 }
             }
+            catch (Exception ex)
+            {
+                _logger.Error("Falha ao liberar lock do processo", ex);
+            }
         }
 
         // ========================
