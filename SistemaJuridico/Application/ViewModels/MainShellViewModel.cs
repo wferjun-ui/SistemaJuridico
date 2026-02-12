@@ -1,7 +1,6 @@
 using SistemaJuridico.Infrastructure;
 using SistemaJuridico.Services;
 using SistemaJuridico.Views;
-using System.Windows;
 
 namespace SistemaJuridico.ViewModels
 {
@@ -13,8 +12,7 @@ namespace SistemaJuridico.ViewModels
         public RelayCommand OpenProcessosCommand { get; }
         public RelayCommand OpenContasCommand { get; }
         public RelayCommand OpenAuditoriaCommand { get; }
-        public RelayCommand OpenAdminEmailsCommand { get; }
-        public RelayCommand OpenCadastroUsuarioCommand { get; }
+        public RelayCommand OpenAdminCommand { get; }
 
         public bool IsAdmin => App.Session.IsAdmin();
 
@@ -34,7 +32,7 @@ namespace SistemaJuridico.ViewModels
             OpenAuditoriaCommand = new RelayCommand(() =>
                 _navigator.Navigate(NavigationKey.Auditoria));
 
-            OpenAdminEmailsCommand = new RelayCommand(() =>
+            OpenAdminCommand = new RelayCommand(() =>
             {
                 if (!IsAdmin)
                 {

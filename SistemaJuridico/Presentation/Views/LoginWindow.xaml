@@ -5,7 +5,8 @@
         Title="Login"
         Height="320"
         Width="400"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        KeyDown="LoginWindow_KeyDown">
 
     <Grid Margin="30">
 

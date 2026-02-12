@@ -10,30 +10,39 @@
                        FontWeight="Bold"
                        Margin="0 0 0 20"/>
 
-            <!-- Financeiro -->
             <GroupBox Header="Financeiro">
                 <StackPanel>
-                    <TextBlock Text="{Binding SaldoTotalPendente,
-                        StringFormat=Saldo pendente total: R$ {0:N2}}"/>
-
-                    <TextBlock Text="{Binding UltimaMovimentacaoTexto,
-                        StringFormat=Última movimentação: {0}}"/>
+                    <TextBlock Text="{Binding SaldoTotalPendente, StringFormat=Saldo pendente total: R$ {0:N2}}"/>
+                    <TextBlock Text="{Binding UltimaMovimentacaoTexto, StringFormat=Última movimentação: {0}}"/>
                 </StackPanel>
             </GroupBox>
 
-            <!-- Rascunhos -->
-            <GroupBox Header="Processos em Rascunho" Margin="0 15 0 0">
-                <ListBox ItemsSource="{Binding ProcessosRascunho}"
-                         DisplayMemberPath="Numero"/>
+            <GroupBox Header="Processos atrasados" Margin="0 15 0 0">
+                <DataGrid ItemsSource="{Binding ProcessosAtrasados}"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          IsReadOnly="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Processo" Binding="{Binding NumeroProcesso}" Width="140"/>
+                        <DataGridTextColumn Header="Diligência" Binding="{Binding DescricaoDiligencia}" Width="*"/>
+                        <DataGridTextColumn Header="Prazo" Binding="{Binding PrazoTexto}" Width="120"/>
+                    </DataGrid.Columns>
+                </DataGrid>
             </GroupBox>
 
-            <!-- Pendências -->
-            <GroupBox Header="Diligências Pendentes" Margin="0 15 0 0">
-                <ListBox ItemsSource="{Binding ProcessosPendentes}"
-                         DisplayMemberPath="Numero"/>
+            <GroupBox Header="Processos a atrasar (próximos 7 dias)" Margin="0 15 0 0">
+                <DataGrid ItemsSource="{Binding ProcessosAAtrasar}"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          IsReadOnly="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Processo" Binding="{Binding NumeroProcesso}" Width="140"/>
+                        <DataGridTextColumn Header="Diligência" Binding="{Binding DescricaoDiligencia}" Width="*"/>
+                        <DataGridTextColumn Header="Prazo" Binding="{Binding PrazoTexto}" Width="120"/>
+                    </DataGrid.Columns>
+                </DataGrid>
             </GroupBox>
 
-            <!-- Locks -->
             <GroupBox Header="Processos Bloqueados" Margin="0 15 0 0">
                 <ListBox ItemsSource="{Binding ProcessosBloqueados}"/>
             </GroupBox>
