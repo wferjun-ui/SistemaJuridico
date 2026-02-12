@@ -9,26 +9,43 @@ jobs:
 
     steps:
 
+    # ===============================
+    # Checkout do código
+    # ===============================
     - name: Checkout
       uses: actions/checkout@v4
 
+    # ===============================
+    # Setup .NET
+    # ===============================
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
 
-    # 🔥 Força versão correta MaterialDesign
+    # ===============================
+    # Corrigir dependências automaticamente
+    # ===============================
     - name: Garantir versões MaterialDesign
       run: |
         dotnet add SistemaJuridico/SistemaJuridico.csproj package MaterialDesignColors --version 3.1.0
         dotnet add SistemaJuridico/SistemaJuridico.csproj package MaterialDesignThemes --version 5.1.0
 
+    # ===============================
+    # Restore
+    # ===============================
     - name: Restaurar dependências
       run: dotnet restore SistemaJuridico/SistemaJuridico.csproj
 
+    # ===============================
+    # Build
+    # ===============================
     - name: Build
       run: dotnet build SistemaJuridico/SistemaJuridico.csproj --configuration Release --no-restore
 
+    # ===============================
+    # Publish EXE
+    # ===============================
     - name: Publicar executável
       run: |
         dotnet publish SistemaJuridico/SistemaJuridico.csproj `
@@ -41,21 +58,35 @@ jobs:
           -o publish
       shell: pwsh
 
-    - name: Compactar build
-      run: Compress-Archive -Path publish\* -DestinationPath SistemaJuridico.zip
-      shell: pwsh
-
-    - name: Criar Tag automática
-      id: tag
+    # ===============================
+    # Gerar versão automática
+    # ===============================
+    - name: Criar versão automática
+      id: version
       run: |
-        echo "tag=v$(Get-Date -Format yyyy.MM.dd.HHmm)" >> $env:GITHUB_OUTPUT
+        $version = "v$(Get-Date -Format yyyy.MM.dd.HHmm)"
+        echo "version=$version" >> $env:GITHUB_OUTPUT
       shell: pwsh
 
+    # ===============================
+    # Compactar build
+    # ===============================
+    - name: Compactar build
+      run: |
+        $zipName = "SistemaJuridico-${{ steps.version.outputs.version }}.zip"
+        Compress-Archive -Path publish\* -DestinationPath $zipName
+        echo "zipName=$zipName" >> $env:GITHUB_OUTPUT
+      id: zip
+      shell: pwsh
+
+    # ===============================
+    # Criar Release
+    # ===============================
     - name: Criar Release
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: ${{ steps.tag.outputs.tag }}
-        name: Release ${{ steps.tag.outputs.tag }}
-        files: SistemaJuridico.zip
+        tag_name: ${{ steps.version.outputs.version }}
+        name: Release ${{ steps.version.outputs.version }}
+        files: ${{ steps.zip.outputs.zipName }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
