@@ -50,7 +50,8 @@ namespace SistemaJuridico.Services
         {
             return _processService
                 .ListarProcessos()
-                .First(x => x.Id == id);
+                .FirstOrDefault(x => x.Id == id)
+                ?? throw new KeyNotFoundException($"Processo não encontrado: {id}");
         }
 
         public List<Processo> ListarProcessos()

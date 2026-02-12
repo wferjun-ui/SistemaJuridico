@@ -103,7 +103,8 @@
 
                         <ComboBox Grid.Row="4"
                                   Grid.Column="1"
-                                  SelectedItem="{Binding Processo.StatusFase}"
+                                  SelectedValuePath="Content"
+                                  SelectedValue="{Binding Processo.StatusFase, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                   Style="{StaticResource CampoBloqueavel}">
 
                             <ComboBoxItem Content="Conhecimento"/>
@@ -144,17 +145,13 @@
                     Width="140"
                     Margin="5"
                     Command="{Binding SalvarRascunhoCommand}"
-                    Visibility="{Binding ModoSomenteLeitura,
-                                 Converter={StaticResource BoolToVis},
-                                 ConverterParameter=invert}" />
+                    Style="{StaticResource CampoBloqueavel}" />
 
             <Button Content="Concluir edição"
                     Width="140"
                     Margin="5"
                     Command="{Binding ConcluirEdicaoCommand}"
-                    Visibility="{Binding ModoSomenteLeitura,
-                                 Converter={StaticResource BoolToVis},
-                                 ConverterParameter=invert}" />
+                    Style="{StaticResource CampoBloqueavel}" />
 
             <Button Content="Fechar"
                     Width="100"

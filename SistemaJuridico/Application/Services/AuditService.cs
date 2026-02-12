@@ -62,7 +62,23 @@ VALUES (
         public Task<List<AuditLog>> ObterLogsAsync(string? processoId = null)
         {
             if (string.IsNullOrWhiteSpace(processoId))
-                return Task.FromResult(new List<AuditLog>());
+            {
+                using var conn = _db.GetConnection();
+
+                var logs = conn.Query<AuditLog>(@"
+SELECT
+    id as Id,
+    data_hora as DataHora,
+    usuario as Usuario,
+    acao as Acao,
+    entidade as Entidade,
+    entidade_id as EntidadeId,
+    detalhes as Detalhes
+FROM audit_log
+ORDER BY data_hora DESC").ToList();
+
+                return Task.FromResult(logs);
+            }
 
             return Task.FromResult(ListarPorProcesso(processoId));
         }
@@ -71,7 +87,7 @@ VALUES (
             DateTime? dataInicial,
             DateTime? dataFinal,
             string? usuario,
-            int? processoId)
+            string? processoId)
         {
             using var conn = _db.GetConnection();
 
@@ -97,7 +113,7 @@ ORDER BY data_hora DESC";
                 dataFinal = dataFinal?.ToString("o"),
                 usuario,
                 processoId,
-                processoIdTexto = processoId?.ToString()
+                processoIdTexto = processoId
             }).ToList();
 
             return Task.FromResult(logs);

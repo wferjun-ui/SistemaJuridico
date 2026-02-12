@@ -90,7 +90,42 @@ jobs:
             -p:DebugSymbols=false `
             -o "$publishDir"
 
-      - name: Empacotar publicação
+      - name: Instalar Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Gerar instalador do Windows (sem elevação/UAC)
+        id: installer
+        shell: pwsh
+        run: |
+          $scriptPath = Join-Path $env:GITHUB_WORKSPACE "installer\SistemaJuridico.iss"
+          if (-not (Test-Path $scriptPath)) {
+            throw "Arquivo de script do instalador não encontrado: $scriptPath"
+          }
+
+          $publishDir = Join-Path $env:GITHUB_WORKSPACE "publish"
+          if (-not (Test-Path $publishDir)) {
+            throw "Diretório publish não encontrado: $publishDir"
+          }
+
+          $installerOut = Join-Path $env:GITHUB_WORKSPACE "installer-out"
+          New-Item -ItemType Directory -Path $installerOut -Force | Out-Null
+
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            throw "ISCC não encontrado em: $iscc"
+          }
+
+          & "$iscc" "/DMyAppVersion=${{ github.run_number }}" "/DPublishDir=$publishDir" "/DOutputDir=$installerOut" "$scriptPath"
+
+          $setupExe = Get-ChildItem -Path $installerOut -Filter *.exe -File | Select-Object -First 1
+          if (-not $setupExe) {
+            throw "Instalador não foi gerado em $installerOut"
+          }
+
+          "installer_path=$($setupExe.FullName)" >> $env:GITHUB_OUTPUT
+
+      - name: Empacotar publicação portátil
         id: package
         shell: pwsh
         run: |
@@ -114,13 +149,14 @@ jobs:
           "exe_path=$($exe.FullName)" >> $env:GITHUB_OUTPUT
           "zip_path=$zipPath" >> $env:GITHUB_OUTPUT
 
-      - name: Publicar artefato compilado
+      - name: Publicar artefatos compilados
         uses: actions/upload-artifact@v4
         with:
-          name: SistemaJuridico-win-x64-portable
+          name: SistemaJuridico-win-x64
           path: |
             ${{ steps.package.outputs.exe_path }}
             ${{ steps.package.outputs.zip_path }}
+            ${{ steps.installer.outputs.installer_path }}
 
       - name: Gerar próxima tag SemVer
         if: env.SHOULD_CREATE_RELEASE == 'true'
@@ -176,3 +212,4 @@ jobs:
           files: |
             ${{ steps.package.outputs.exe_path }}
             ${{ steps.package.outputs.zip_path }}
+            ${{ steps.installer.outputs.installer_path }}

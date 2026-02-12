@@ -18,12 +18,16 @@ namespace SistemaJuridico
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+            ShutdownMode = ShutdownMode.OnMainWindowClose;
 
             try
             {
                 var pastaSql = GarantirPastaBanco();
                 _database = new DatabaseService(pastaSql);
                 _database.Initialize();
+
+                var versionador = new DatabaseVersionService(_database);
+                versionador.GarantirAtualizacao();
 
                 var loginWindow = new LoginWindow();
                 var vm = new LoginViewModel();
@@ -46,9 +50,18 @@ namespace SistemaJuridico
 
         private static string GarantirPastaBanco()
         {
-            var caminhoConfigurado = ConfigService.ObterCaminhoBanco();
-            if (!string.IsNullOrWhiteSpace(caminhoConfigurado) && File.Exists(caminhoConfigurado))
-                return Path.GetDirectoryName(caminhoConfigurado)!;
+            var caminhoConfigurado = ConfigService.ObterCaminhoBanco()?.Trim();
+            if (!string.IsNullOrWhiteSpace(caminhoConfigurado))
+            {
+                var pastaConfigurada = Path.GetDirectoryName(caminhoConfigurado);
+                if (!string.IsNullOrWhiteSpace(pastaConfigurada))
+                {
+                    Directory.CreateDirectory(pastaConfigurada);
+                    var caminhoNormalizado = Path.Combine(pastaConfigurada, "juridico.db");
+                    ConfigService.SalvarCaminhoBanco(caminhoNormalizado);
+                    return pastaConfigurada;
+                }
+            }
 
             using var dialog = new Forms.FolderBrowserDialog
             {
@@ -71,26 +84,24 @@ namespace SistemaJuridico
             try
             {
                 var navigationService = new NavigationService();
+                var viewRegistry = new ViewRegistryService();
+                ViewRegistryBootstrap.Register(viewRegistry);
+
                 var mainShellVM = new MainShellViewModel(new NavigationCoordinatorService(
                     navigationService,
                     new ViewFactoryService(),
-                    new ViewRegistryService()));
+                    viewRegistry));
 
                 var mainShell = new MainShellWindow(
                     navigationService,
                     mainShellVM);
 
+                var loginWindow = Current.MainWindow;
+
                 MainWindow = mainShell;
                 mainShell.Show();
 
-                foreach (Window window in Current.Windows)
-                {
-                    if (window is LoginWindow)
-                    {
-                        window.Close();
-                        break;
-                    }
-                }
+                loginWindow?.Close();
             }
             catch (Exception ex)
             {

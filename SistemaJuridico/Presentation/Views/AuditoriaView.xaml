@@ -38,7 +38,7 @@
             <DataGrid.Columns>
 
                 <DataGridTextColumn Header="Data"
-                                    Binding="{Binding Data}"
+                                    Binding="{Binding DataHora}"
                                     Width="150"/>
 
                 <DataGridTextColumn Header="Usuário"
@@ -47,10 +47,14 @@
 
                 <DataGridTextColumn Header="Ação"
                                     Binding="{Binding Acao}"
-                                    Width="200"/>
+                                    Width="160"/>
+
+                <DataGridTextColumn Header="Entidade"
+                                    Binding="{Binding Entidade}"
+                                    Width="120"/>
 
                 <DataGridTextColumn Header="Descrição"
-                                    Binding="{Binding Descricao}"
+                                    Binding="{Binding Detalhes}"
                                     Width="*"/>
 
             </DataGrid.Columns>
