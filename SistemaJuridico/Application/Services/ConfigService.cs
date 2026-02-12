@@ -1,3 +1,6 @@
+using System;
+using System.IO;
+
 namespace SistemaJuridico.Services
 {
     public static class ConfigService

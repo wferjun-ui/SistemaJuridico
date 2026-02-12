@@ -58,6 +58,11 @@ namespace SistemaJuridico.Services
             return _processService.ListarProcessos();
         }
 
+        public Task<List<Processo>> ListarProcessosAsync()
+        {
+            return Task.FromResult(ListarProcessos());
+        }
+
         public Task<ProcessoCompletoDTO> ObterProcessoCompletoAsync(int processoId)
         {
             return Task.FromResult(CarregarProcessoCompleto(processoId.ToString()));

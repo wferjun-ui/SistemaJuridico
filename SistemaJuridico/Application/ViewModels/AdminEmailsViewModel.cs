@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using Dapper;
 using CommunityToolkit.Mvvm.Input;
 using SistemaJuridico.Services;
 using System.Collections.ObjectModel;
@@ -17,13 +18,13 @@ namespace SistemaJuridico.ViewModels
 
         public AdminEmailsViewModel()
         {
-            _service = new AutorizacaoService(App.DB);
+            _service = new AutorizacaoService(new DatabaseService());
             Carregar();
         }
 
         private void Carregar()
         {
-            using var conn = App.DB.GetConnection();
+            using var conn = new DatabaseService().GetConnection();
 
             var lista = conn.Query<string>("SELECT email FROM emails_autorizados");
 

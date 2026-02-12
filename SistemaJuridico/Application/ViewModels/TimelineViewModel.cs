@@ -16,7 +16,12 @@ namespace SistemaJuridico.ViewModels
             _timelineService = timelineService;
         }
 
-        public async Task CarregarAsync(int processoId)
+        public Task CarregarAsync(int processoId)
+        {
+            return CarregarAsync(processoId.ToString());
+        }
+
+        public async Task CarregarAsync(string processoId)
         {
             Eventos.Clear();
 

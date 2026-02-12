@@ -95,7 +95,7 @@ namespace SistemaJuridico.ViewModels
             UltimaMovimentacaoTexto =
                 conta == null
                 ? "Sem movimentações"
-                : conta.DataMovimentacao.ToString("dd/MM/yyyy");
+                : conta.DataMovimentacao;
         }
 
         // =========================

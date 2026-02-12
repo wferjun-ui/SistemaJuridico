@@ -15,44 +15,19 @@ namespace SistemaJuridico.Services
             _diligenciaService = new DiligenciaService(db);
         }
 
-        // ============================
-        // PROCESSOS COM RASCUNHO
-        // ============================
-
         public List<Processo> ProcessosRascunho()
-        {
-            return _processService
-                .ListarProcessos()
-                .Where(p => p.IsRascunho)
-                .ToList();
-        }
-
-        // ============================
-        // PROCESSOS COM DILIGÊNCIA
-        // ============================
+            => _processService.ListarProcessos().Where(p => p.IsRascunho).ToList();
 
         public List<Processo> ProcessosComPendencias()
-        {
-            var processos = _processService.ListarProcessos();
+            => _processService.ListarProcessos().Where(p => _diligenciaService.ExistePendencia(p.Id)).ToList();
 
-            return processos
-                .Where(p => _diligenciaService.ExistePendencia(p.Id))
-                .ToList();
-        }
-
-        // ============================
-        // PROCESSOS BLOQUEADOS
-        // ============================
-
-        public List<(Processo processo, string usuario)>
-            ProcessosBloqueados()
+        public List<(Processo processo, string usuario)> ProcessosBloqueados()
         {
             var lista = new List<(Processo, string)>();
 
             foreach (var p in _processService.ListarProcessos())
             {
                 var usuario = _processService.UsuarioEditando(p.Id);
-
                 if (!string.IsNullOrEmpty(usuario))
                     lista.Add((p, usuario));
             }
@@ -60,30 +35,22 @@ namespace SistemaJuridico.Services
             return lista;
         }
 
-        // ============================
-        // RESUMO FINANCEIRO
-        // ============================
-
         public decimal SaldoPendenteTotal()
         {
             decimal total = 0;
-
             foreach (var p in _processService.ListarProcessos())
-            {
-                var resumo = _processService.ObterResumo(p.Id);
-                total += resumo.saldoPendente;
-            }
-
+                total += _processService.ObterResumo(p.Id).saldoPendente;
             return total;
         }
 
         public DateTime? UltimaMovimentacao()
         {
-            return _contaService
-                .ListarTodas()
+            var dataTexto = _contaService.ListarTodas()
                 .OrderByDescending(c => c.DataMovimentacao)
                 .FirstOrDefault()
                 ?.DataMovimentacao;
+
+            return DateTime.TryParse(dataTexto, out var data) ? data : null;
         }
     }
 }

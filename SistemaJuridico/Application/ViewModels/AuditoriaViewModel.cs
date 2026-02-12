@@ -1,5 +1,6 @@
 using SistemaJuridico.Models;
 using SistemaJuridico.Services;
+using SistemaJuridico.Infrastructure;
 using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;

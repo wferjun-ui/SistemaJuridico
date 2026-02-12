@@ -1,4 +1,8 @@
+using Dapper;
+using Microsoft.Data.Sqlite;
+using SistemaJuridico.Infrastructure;
 using SistemaJuridico.Models;
+
 
 namespace SistemaJuridico.Services
 {

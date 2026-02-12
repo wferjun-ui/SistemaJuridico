@@ -1,7 +1,8 @@
 using Dapper;
 using Newtonsoft.Json;
 using SistemaJuridico.Models;
-using System.Data.SQLite;
+using Microsoft.Data.Sqlite;
+using System.IO;
 using System.Text;
 
 namespace SistemaJuridico.Services
@@ -20,7 +21,7 @@ namespace SistemaJuridico.Services
             var relatorio = new StringBuilder();
 
             var json = File.ReadAllText(caminhoJson);
-            var root = JsonConvert.DeserializeObject<MigracaoRoot>(json);
+            var root = JsonConvert.DeserializeObject<MigracaoRoot>(json) ?? new MigracaoRoot();
 
             using var conn = _databaseService.GetConnection();
 
@@ -37,20 +38,20 @@ namespace SistemaJuridico.Services
             return relatorio.ToString();
         }
 
-        private void ValidarContagem(SQLiteConnection conn, MigracaoRoot root, StringBuilder relatorio)
+        private void ValidarContagem(SqliteConnection conn, MigracaoRoot root, StringBuilder relatorio)
         {
             relatorio.AppendLine(">> Contagem de Registros");
 
-            ValidarTabela(conn, "usuarios", root.usuarios.Count, relatorio);
-            ValidarTabela(conn, "processos", root.processos.Count, relatorio);
-            ValidarTabela(conn, "itens_saude", root.itens_saude.Count, relatorio);
-            ValidarTabela(conn, "verificacoes", root.verificacoes.Count, relatorio);
-            ValidarTabela(conn, "contas", root.contas.Count, relatorio);
+            ValidarTabela(conn, "usuarios", root.usuarios?.Count ?? 0, relatorio);
+            ValidarTabela(conn, "processos", root.processos?.Count ?? 0, relatorio);
+            ValidarTabela(conn, "itens_saude", root.itens_saude?.Count ?? 0, relatorio);
+            ValidarTabela(conn, "verificacoes", root.verificacoes?.Count ?? 0, relatorio);
+            ValidarTabela(conn, "contas", root.contas?.Count ?? 0, relatorio);
 
             relatorio.AppendLine();
         }
 
-        private void ValidarTabela(SQLiteConnection conn, string tabela, int esperado, StringBuilder relatorio)
+        private void ValidarTabela(SqliteConnection conn, string tabela, int esperado, StringBuilder relatorio)
         {
             var atual = conn.ExecuteScalar<int>($"SELECT COUNT(*) FROM {tabela}");
 
@@ -60,7 +61,7 @@ namespace SistemaJuridico.Services
                 relatorio.AppendLine($"❌ {tabela}: JSON={esperado} / DB={atual}");
         }
 
-        private void ValidarIntegridade(SQLiteConnection conn, StringBuilder relatorio)
+        private void ValidarIntegridade(SqliteConnection conn, StringBuilder relatorio)
         {
             relatorio.AppendLine(">> Integridade Relacional");
 
@@ -94,7 +95,7 @@ namespace SistemaJuridico.Services
             relatorio.AppendLine();
         }
 
-        private void ValidarCamposCriticos(SQLiteConnection conn, StringBuilder relatorio)
+        private void ValidarCamposCriticos(SqliteConnection conn, StringBuilder relatorio)
         {
             relatorio.AppendLine(">> Campos Críticos");
 

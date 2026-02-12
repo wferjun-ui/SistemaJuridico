@@ -111,13 +111,12 @@ namespace SistemaJuridico.ViewModels
 
         public bool IsDesnecessario
         {
-            get => Model.IsDesnecessario == 1;
+            get => Model.IsDesnecessario;
             set
             {
-                var novo = value ? 1 : 0;
-                if (Model.IsDesnecessario != novo)
+                if (Model.IsDesnecessario != value)
                 {
-                    Model.IsDesnecessario = novo;
+                    Model.IsDesnecessario = value;
                     OnPropertyChanged();
                 }
             }
@@ -125,13 +124,12 @@ namespace SistemaJuridico.ViewModels
 
         public bool TemBloqueio
         {
-            get => Model.TemBloqueio == 1;
+            get => Model.TemBloqueio;
             set
             {
-                var novo = value ? 1 : 0;
-                if (Model.TemBloqueio != novo)
+                if (Model.TemBloqueio != value)
                 {
-                    Model.TemBloqueio = novo;
+                    Model.TemBloqueio = value;
                     OnPropertyChanged();
                 }
             }

@@ -73,8 +73,8 @@ namespace SistemaJuridico.ViewModels
                 Frequencia = "Mensal",
                 Local = "Clínica",
                 DataPrescricao = "",
-                IsDesnecessario = 0,
-                TemBloqueio = 0
+                IsDesnecessario = false,
+                TemBloqueio = false
             };
 
             var vm = new ItemSaudeViewModel(novo);

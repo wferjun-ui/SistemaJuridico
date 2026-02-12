@@ -1,4 +1,5 @@
 using Microsoft.Win32;
+using SistemaJuridico.Infrastructure;
 using SistemaJuridico.Services;
 using SistemaJuridico.Views;
 using System.ComponentModel;

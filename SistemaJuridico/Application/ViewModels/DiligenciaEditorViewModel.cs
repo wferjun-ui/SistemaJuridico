@@ -44,7 +44,7 @@ namespace SistemaJuridico.ViewModels
                 Id = Guid.NewGuid().ToString(),
                 ProcessoId = _processoId,
                 Descricao = Descricao,
-                Prazo = DataPrazo,
+                Prazo = DataPrazo.ToString("yyyy-MM-dd"),
                 Concluida = false
             };
 

@@ -50,9 +50,33 @@ namespace SistemaJuridico.Services
             string statusProcesso,
             string responsavel,
             string descricao,
-            List<ItemSaude> itensAtuais)
+            bool diligenciaRealizada,
+            string descricaoDiligencia,
+            bool possuiPendencias,
+            string descricaoPendencias,
+            string prazoDiligencia,
+            string proximoPrazoPadrao,
+            string dataNotificacao,
+            List<ItemSaude> itensSnapshot)
         {
-            CriarVerificacao(processoId, statusProcesso, responsavel, descricao, itensAtuais);
+            var verificacao = new Verificacao
+            {
+                Id = Guid.NewGuid().ToString(),
+                ProcessoId = processoId,
+                DataHora = DateTime.Now.ToString("o"),
+                StatusProcesso = statusProcesso,
+                Responsavel = responsavel,
+                DiligenciaPendente = possuiPendencias,
+                PendenciaDescricao = descricaoPendencias,
+                ProximoPrazo = proximoPrazoPadrao,
+                DiligenciaDescricao = string.IsNullOrWhiteSpace(descricaoDiligencia) ? descricao : descricaoDiligencia,
+                ItensSnapshotJson = JsonConvert.SerializeObject(itensSnapshot)
+            };
+
+            _verificacaoService.Inserir(verificacao);
+            _itemSaudeService.SubstituirItensProcesso(processoId, itensSnapshot);
+            _processService.AtualizarStatus(processoId, statusProcesso);
+            _historicoService.Registrar(processoId, "Nova verificação registrada", statusProcesso);
         }
     }
 }
