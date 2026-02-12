@@ -9,23 +9,21 @@ namespace SistemaJuridico
 {
     public partial class App : System.Windows.Application
     {
-        private ServiceLocator _serviceLocator;
-
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
             try
             {
-                ConfigureServices();
-
                 // Abre Login
                 var loginWindow = new LoginWindow();
-                var loginVM = _serviceLocator.Get<LoginViewModel>();
+                var loginVM = ServiceLocator.ProcessService; // garante inicialização lazy
 
-                loginVM.LoginSucesso += OnLoginSucesso;
+                var vm = new LoginViewModel();
 
-                loginWindow.DataContext = loginVM;
+                vm.LoginSucesso += OnLoginSucesso;
+
+                loginWindow.DataContext = vm;
                 loginWindow.Show();
             }
             catch (Exception ex)
@@ -38,25 +36,12 @@ namespace SistemaJuridico
             }
         }
 
-        private void ConfigureServices()
-        {
-            _serviceLocator = new ServiceLocator();
-
-            // Serviços base
-            _serviceLocator.RegisterSingleton<NavigationService>();
-            _serviceLocator.RegisterSingleton<DialogService>();
-
-            // ViewModels
-            _serviceLocator.RegisterTransient<LoginViewModel>();
-            _serviceLocator.RegisterTransient<MainShellViewModel>();
-        }
-
         private void OnLoginSucesso(object sender, EventArgs e)
         {
             try
             {
-                var navigationService = _serviceLocator.Get<NavigationService>();
-                var mainShellVM = _serviceLocator.Get<MainShellViewModel>();
+                var navigationService = new NavigationService();
+                var mainShellVM = new MainShellViewModel();
 
                 var mainShell = new MainShellWindow(
                     navigationService,
@@ -64,7 +49,6 @@ namespace SistemaJuridico
 
                 mainShell.Show();
 
-                // Fecha login
                 foreach (Window window in Current.Windows)
                 {
                     if (window is LoginWindow)
