@@ -15,10 +15,24 @@ namespace SistemaJuridico.Services
 
         public string ConnectionString => _connectionString;
 
-        public DatabaseService() : this(Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "SistemaJuridico"))
+        public DatabaseService() : this(ObterPastaPadrao())
         {
+        }
+
+        private static string ObterPastaPadrao()
+        {
+            var caminhoConfigurado = ConfigService.ObterCaminhoBanco();
+
+            if (!string.IsNullOrWhiteSpace(caminhoConfigurado))
+            {
+                var pastaConfigurada = Path.GetDirectoryName(caminhoConfigurado);
+                if (!string.IsNullOrWhiteSpace(pastaConfigurada))
+                    return pastaConfigurada;
+            }
+
+            return Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "SistemaJuridico");
         }
 
         public DatabaseService(string baseFolder)

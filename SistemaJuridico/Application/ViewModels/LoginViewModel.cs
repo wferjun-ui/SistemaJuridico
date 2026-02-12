@@ -1,7 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SistemaJuridico.Services;
-using SistemaJuridico.Views;
 using System;
 
 namespace SistemaJuridico.ViewModels
@@ -37,10 +36,6 @@ namespace SistemaJuridico.ViewModels
             App.Session.SetUsuario(user);
             LoginSucesso?.Invoke(this, EventArgs.Empty);
 
-            var dash = new DashboardWindow();
-            dash.Show();
-
-            System.Windows.Application.Current.MainWindow?.Close();
         }
     }
 }
