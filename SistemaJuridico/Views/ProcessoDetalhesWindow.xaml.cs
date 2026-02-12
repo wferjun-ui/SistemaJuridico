@@ -2,6 +2,7 @@ using SistemaJuridico.Services;
 using SistemaJuridico.ViewModels;
 using System.ComponentModel;
 using System.Windows;
+using UserControl = System.Windows.Controls.UserControl;
 
 namespace SistemaJuridico.Views
 {
