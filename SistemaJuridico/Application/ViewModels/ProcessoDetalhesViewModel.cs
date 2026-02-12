@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using SistemaJuridico.Infrastructure;
 using SistemaJuridico.Models;
 using SistemaJuridico.Services;
 using SistemaJuridico.Views;
@@ -15,6 +16,7 @@ namespace SistemaJuridico.ViewModels
         private readonly ContaService _contaService;
         private readonly ItemSaudeService _itemSaudeService;
         private readonly VerificacaoService _verificacaoService;
+        private readonly LoggerService _logger = new();
 
         private readonly string _processoId;
 
@@ -104,9 +106,12 @@ namespace SistemaJuridico.ViewModels
                 {
                     _processService.RenovarLock(_processoId);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // evita crash se rede cair
+                    _logger.Error("Falha ao renovar lock do processo", ex);
+                    ModoSomenteLeitura = true;
+                    UsuarioEditandoTexto = "Não foi possível renovar o lock. Reabra o processo.";
+                    _lockTimer?.Stop();
                 }
             };
 
@@ -115,6 +120,11 @@ namespace SistemaJuridico.ViewModels
 
         public void LiberarLock()
         {
+            _lockTimer?.Stop();
+
+            if (!_lockAdquirido)
+                return;
+
             try
             {
                 _lockTimer?.Stop();
@@ -125,7 +135,6 @@ namespace SistemaJuridico.ViewModels
                     _lockAdquirido = false;
                 }
             }
-            catch { }
         }
 
         // ========================
