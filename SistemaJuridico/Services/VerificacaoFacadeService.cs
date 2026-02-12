@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
-using SistemaJuridico.Models;
 using SistemaJuridico.Infrastructure;
+using SistemaJuridico.Models;
 
 namespace SistemaJuridico.Services
 {
@@ -26,53 +26,33 @@ namespace SistemaJuridico.Services
             string descricao,
             List<ItemSaude> itensAtuais)
         {
-            // =========================
-            // SNAPSHOT
-            // =========================
-
             var snapshot = JsonConvert.SerializeObject(itensAtuais);
 
             var verificacao = new Verificacao
             {
                 Id = Guid.NewGuid().ToString(),
                 ProcessoId = processoId,
-                DataHora = DateTime.Now,
+                DataHora = DateTime.Now.ToString("o"),
                 StatusProcesso = statusProcesso,
                 Responsavel = responsavel,
                 DiligenciaDescricao = descricao,
                 ItensSnapshotJson = snapshot
             };
 
-            // =========================
-            // SALVAR VERIFICAÇÃO
-            // =========================
-
             _verificacaoService.Inserir(verificacao);
+            _itemSaudeService.SubstituirItensProcesso(processoId, itensAtuais);
+            _processService.AtualizarStatus(processoId, statusProcesso);
+            _historicoService.Registrar(processoId, "Nova verificação registrada", statusProcesso);
+        }
 
-            // =========================
-            // ATUALIZAR ITENS ATUAIS
-            // =========================
-
-            _itemSaudeService.SubstituirItensProcesso(
-                processoId,
-                itensAtuais);
-
-            // =========================
-            // ATUALIZAR STATUS PROCESSO
-            // =========================
-
-            _processService.AtualizarStatus(
-                processoId,
-                statusProcesso);
-
-            // =========================
-            // HISTÓRICO
-            // =========================
-
-            _historicoService.Registrar(
-                processoId,
-                "Nova verificação registrada",
-                statusProcesso);
+        public void CriarVerificacaoCompleta(
+            string processoId,
+            string statusProcesso,
+            string responsavel,
+            string descricao,
+            List<ItemSaude> itensAtuais)
+        {
+            CriarVerificacao(processoId, statusProcesso, responsavel, descricao, itensAtuais);
         }
     }
 }
