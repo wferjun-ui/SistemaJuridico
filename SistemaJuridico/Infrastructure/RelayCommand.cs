@@ -1,22 +1,25 @@
 using System;
 using System.Windows.Input;
 
-public class RelayCommand : ICommand
+namespace SistemaJuridico.Infrastructure
 {
-    private readonly Action _execute;
-    private readonly Func<bool>? _canExecute;
-
-    public RelayCommand(Action execute, Func<bool>? canExecute = null)
+    public class RelayCommand : ICommand
     {
-        _execute = execute;
-        _canExecute = canExecute;
+        private readonly Action _execute;
+        private readonly Func<bool>? _canExecute;
+
+        public RelayCommand(Action execute, Func<bool>? canExecute = null)
+        {
+            _execute = execute;
+            _canExecute = canExecute;
+        }
+
+        public bool CanExecute(object? parameter) => _canExecute?.Invoke() ?? true;
+
+        public void Execute(object? parameter) => _execute();
+
+        public event EventHandler? CanExecuteChanged;
+
+        public void Raise() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
     }
-
-    public bool CanExecute(object? parameter) => _canExecute?.Invoke() ?? true;
-
-    public void Execute(object? parameter) => _execute();
-
-    public event EventHandler? CanExecuteChanged;
-
-    public void Raise() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
 }
