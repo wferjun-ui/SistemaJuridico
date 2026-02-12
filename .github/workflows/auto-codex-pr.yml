@@ -1,0 +1,71 @@
+name: Auto Codex PR
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependências
+        run: pip install openai PyGithub
+
+      - name: Executar IA
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
+        run: |
+          python << 'EOF'
+import os
+from openai import OpenAI
+from github import Github
+
+client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+g = Github(os.environ["GITHUB_PAT"])
+
+repo = g.get_repo(os.environ["GITHUB_REPOSITORY"])
+
+prompt = "Analise o projeto e gere melhorias simples"
+
+response = client.responses.create(
+    model="gpt-5-codex",
+    input=prompt
+)
+
+conteudo = response.output_text
+
+source = repo.get_branch("main").commit.sha
+branch_name = "codex-auto-branch"
+
+try:
+    repo.get_branch(branch_name)
+except:
+    repo.create_git_ref(ref=f"refs/heads/{branch_name}", sha=source)
+
+repo.create_file(
+    "codex_output.txt",
+    "Arquivo gerado pela IA",
+    conteudo,
+    branch=branch_name
+)
+
+repo.create_pull(
+    title="PR automática criada pela IA",
+    body="Gerada automaticamente",
+    head=branch_name,
+    base="main"
+)
+EOF
