@@ -144,6 +144,17 @@ namespace SistemaJuridico.Services
 
             LiberarLock(processoId);
         }
+public void CriarProcesso(Processo processo)
+        {
+            using var conn = _db.GetConnection();
+            conn.Execute("INSERT INTO processos (id, numero, paciente, juiz, classificacao, status_fase, ultima_atualizacao) VALUES (@Id, @Numero, @Paciente, @Juiz, @Classificacao, @StatusFase, @UltimaAtualizacao)", processo);
+        }
+
+        public void AtualizarStatus(string processoId, string status)
+        {
+            using var conn = _db.GetConnection();
+            conn.Execute("UPDATE processos SET status_fase=@status WHERE id=@processoId", new { processoId, status });
+        }
 
         // ========================
         // EXISTENTES (mantidos)
