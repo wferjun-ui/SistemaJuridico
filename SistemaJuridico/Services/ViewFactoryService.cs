@@ -7,11 +7,8 @@ namespace SistemaJuridico.Services
 {
     public class ViewFactoryService
     {
-        private readonly ServiceLocator _serviceLocator;
-
-        public ViewFactoryService(ServiceLocator serviceLocator)
+        public ViewFactoryService()
         {
-            _serviceLocator = serviceLocator;
         }
 
         public UserControl CreateView<TView, TViewModel>()
@@ -19,7 +16,7 @@ namespace SistemaJuridico.Services
         {
             var view = new TView();
 
-            var vm = _serviceLocator.Get<TViewModel>();
+            var vm = ServiceLocator.Get<TViewModel>();
 
             view.DataContext = vm;
 
@@ -30,7 +27,7 @@ namespace SistemaJuridico.Services
         {
             var view = (UserControl)Activator.CreateInstance(viewType);
 
-            var vm = _serviceLocator.Get(viewModelType);
+            var vm = ServiceLocator.Get(viewModelType);
 
             view.DataContext = vm;
 
