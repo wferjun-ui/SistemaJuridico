@@ -12,6 +12,8 @@ permissions:
 jobs:
   build-release:
     runs-on: windows-latest
+    env:
+      SHOULD_CREATE_RELEASE: ${{ github.event_name == 'workflow_dispatch' }}
 
     steps:
       - name: Checkout
@@ -79,6 +81,7 @@ jobs:
           $publishDir = Join-Path $env:GITHUB_WORKSPACE "publish"
           dotnet publish "${{ steps.detect.outputs.publish_project }}" `
             --configuration Release `
+            --framework net8.0-windows `
             --runtime win-x64 `
             --self-contained true `
             -p:PublishSingleFile=true `
@@ -120,6 +123,7 @@ jobs:
             ${{ steps.package.outputs.zip_path }}
 
       - name: Gerar próxima tag SemVer
+        if: env.SHOULD_CREATE_RELEASE == 'true'
         id: semver
         uses: actions/github-script@v7
         with:
@@ -154,6 +158,7 @@ jobs:
             core.setOutput('tag', next);
 
       - name: Criar tag
+        if: env.SHOULD_CREATE_RELEASE == 'true'
         shell: pwsh
         run: |
           git config user.name "github-actions[bot]"
@@ -162,6 +167,7 @@ jobs:
           git push origin "${{ steps.semver.outputs.tag }}"
 
       - name: Criar release e fazer upload dos binários
+        if: env.SHOULD_CREATE_RELEASE == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.semver.outputs.tag }}
