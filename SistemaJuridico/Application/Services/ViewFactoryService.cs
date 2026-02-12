@@ -26,7 +26,8 @@ namespace SistemaJuridico.Services
 
         public UserControl CreateView(Type viewType, Type viewModelType)
         {
-            var view = (UserControl)Activator.CreateInstance(viewType);
+            var view = Activator.CreateInstance(viewType) as UserControl
+                ?? throw new InvalidOperationException($"Não foi possível instanciar a view '{viewType.FullName}'.");
 
             var vm = ServiceLocator.Get(viewModelType);
 
