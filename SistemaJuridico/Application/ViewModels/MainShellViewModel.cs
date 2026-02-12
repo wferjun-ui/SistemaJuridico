@@ -40,10 +40,18 @@ namespace SistemaJuridico.ViewModels
                     return;
                 }
 
-                new AdminEmailsWindow
+                new AdminEmailsWindow { Owner = System.Windows.Application.Current.MainWindow }.ShowDialog();
+            });
+
+            OpenCadastroUsuarioCommand = new RelayCommand(() =>
+            {
+                if (!IsAdmin)
                 {
-                    Owner = System.Windows.Application.Current.MainWindow
-                }.ShowDialog();
+                    System.Windows.MessageBox.Show("Apenas administradores podem acessar este recurso.");
+                    return;
+                }
+
+                new CadastroUsuarioWindow { Owner = System.Windows.Application.Current.MainWindow }.ShowDialog();
             });
         }
 

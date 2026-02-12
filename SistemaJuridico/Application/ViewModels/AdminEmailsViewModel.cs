@@ -86,7 +86,7 @@ namespace SistemaJuridico.ViewModels
 
             if (UsuarioSelecionado == null)
             {
-                System.Windows.MessageBox.Show("Selecione um usuário.");
+                System.Windows.MessageBox.Show("Apenas administradores podem alterar e-mails autorizados.");
                 return;
             }
 
@@ -109,7 +109,7 @@ namespace SistemaJuridico.ViewModels
 
             if (UsuarioSelecionado == null)
             {
-                System.Windows.MessageBox.Show("Selecione um usuário.");
+                System.Windows.MessageBox.Show("E-mail já cadastrado ou inválido.");
                 return;
             }
 
