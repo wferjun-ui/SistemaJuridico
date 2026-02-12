@@ -13,10 +13,6 @@ namespace SistemaJuridico.Services
             _database = database;
         }
 
-        // =========================
-        // LISTAR
-        // =========================
-
         public List<ItemSaude> ListarPorProcesso(string processoId)
         {
             using var conn = _database.CreateConnection();
@@ -40,10 +36,6 @@ namespace SistemaJuridico.Services
                   WHERE id = @Id",
                 new { Id = id });
         }
-
-        // =========================
-        // INSERIR
-        // =========================
 
         public void Inserir(ItemSaude item)
         {
@@ -80,10 +72,6 @@ namespace SistemaJuridico.Services
                 item);
         }
 
-        // =========================
-        // ATUALIZAR
-        // =========================
-
         public void Atualizar(ItemSaude item)
         {
             using var conn = _database.CreateConnection();
@@ -102,10 +90,6 @@ namespace SistemaJuridico.Services
                 item);
         }
 
-        // =========================
-        // EXCLUIR
-        // =========================
-
         public void Excluir(string id)
         {
             using var conn = _database.CreateConnection();
@@ -115,10 +99,6 @@ namespace SistemaJuridico.Services
                   WHERE id = @Id",
                 new { Id = id });
         }
-
-        // =========================
-        // REGRAS DE NEGÓCIO
-        // =========================
 
         public void MarcarDesnecessario(string id, bool valor)
         {
@@ -140,6 +120,18 @@ namespace SistemaJuridico.Services
                   SET tem_bloqueio = @Valor
                   WHERE id = @Id",
                 new { Id = id, Valor = bloqueado ? 1 : 0 });
+        }
+
+        public void SubstituirItensProcesso(string processoId, List<ItemSaude> itens)
+        {
+            using var conn = _database.CreateConnection();
+            conn.Execute("DELETE FROM itens_saude WHERE processo_id = @ProcessoId", new { ProcessoId = processoId });
+
+            foreach (var item in itens)
+            {
+                item.ProcessoId = processoId;
+                Inserir(item);
+            }
         }
     }
 }
