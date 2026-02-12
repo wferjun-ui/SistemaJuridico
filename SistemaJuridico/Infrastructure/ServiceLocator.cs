@@ -12,16 +12,8 @@ namespace SistemaJuridico.Infrastructure
         private static ItemSaudeService? _itemSaudeService;
         private static VerificacaoService? _verificacaoService;
 
-        // ========================
-        // DATABASE
-        // ========================
-
         public static DatabaseService Database =>
             _database ??= new DatabaseService();
-
-        // ========================
-        // SERVICES
-        // ========================
 
         public static ProcessService ProcessService =>
             _processService ??= new ProcessService(Database);
@@ -40,5 +32,18 @@ namespace SistemaJuridico.Infrastructure
 
         public static VerificacaoService VerificacaoService =>
             _verificacaoService ??= new VerificacaoService(Database);
+
+        public static T Get<T>() where T : class
+        {
+            if (typeof(T) == typeof(ProcessService)) return (ProcessService as T)!;
+            if (typeof(T) == typeof(ContaService)) return (ContaService as T)!;
+            if (typeof(T) == typeof(DiligenciaService)) return (DiligenciaService as T)!;
+            if (typeof(T) == typeof(HistoricoService)) return (HistoricoService as T)!;
+            if (typeof(T) == typeof(ItemSaudeService)) return (ItemSaudeService as T)!;
+            if (typeof(T) == typeof(VerificacaoService)) return (VerificacaoService as T)!;
+            if (typeof(T) == typeof(DatabaseService)) return (Database as T)!;
+
+            throw new InvalidOperationException($"Tipo não registrado: {typeof(T).FullName}");
+        }
     }
 }
