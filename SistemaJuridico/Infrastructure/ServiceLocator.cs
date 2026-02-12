@@ -1,4 +1,5 @@
 using SistemaJuridico.Services;
+using System;
 
 namespace SistemaJuridico.Infrastructure
 {
@@ -44,6 +45,19 @@ namespace SistemaJuridico.Infrastructure
             if (typeof(T) == typeof(DatabaseService)) return (Database as T)!;
 
             throw new InvalidOperationException($"Tipo não registrado: {typeof(T).FullName}");
+        }
+
+        public static object Get(Type type)
+        {
+            if (type == typeof(ProcessService)) return ProcessService;
+            if (type == typeof(ContaService)) return ContaService;
+            if (type == typeof(DiligenciaService)) return DiligenciaService;
+            if (type == typeof(HistoricoService)) return HistoricoService;
+            if (type == typeof(ItemSaudeService)) return ItemSaudeService;
+            if (type == typeof(VerificacaoService)) return VerificacaoService;
+            if (type == typeof(DatabaseService)) return Database;
+
+            throw new InvalidOperationException($"Tipo não registrado: {type.FullName}");
         }
     }
 }
