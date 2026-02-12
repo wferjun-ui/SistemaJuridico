@@ -1,4 +1,5 @@
 using SistemaJuridico.Models;
+using System;
 
 namespace SistemaJuridico.Services
 {
@@ -23,7 +24,8 @@ namespace SistemaJuridico.Services
         {
             var processo = _processService
                 .ListarProcessos()
-                .First(x => x.Id == processoId);
+                .FirstOrDefault(x => x.Id == processoId)
+                ?? throw new InvalidOperationException($"Processo não encontrado: {processoId}");
 
             return new RelatorioProcessoModel
             {

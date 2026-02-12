@@ -1,4 +1,4 @@
-name: Build e Release
+name: Build and Release
 
 on:
   push:
@@ -26,7 +26,7 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      - name: Detectar solução ou projeto principal
+      - name: Detect solution and app project
         id: detect
         shell: pwsh
         run: |
@@ -46,7 +46,7 @@ jobs:
             }
 
             if (-not $proj) {
-              throw 'Nenhum arquivo .sln ou .csproj encontrado.'
+              throw 'No .sln or .csproj found.'
             }
 
             "build_target=$($proj.FullName)" >> $env:GITHUB_OUTPUT
@@ -64,18 +64,18 @@ jobs:
           }
 
           if (-not $publishProj) {
-            throw 'Nenhum projeto para publish encontrado.'
+            throw 'No publish project found.'
           }
 
           "publish_project=$($publishProj.FullName)" >> $env:GITHUB_OUTPUT
 
-      - name: Restaurar dependências
+      - name: Restore dependencies
         run: dotnet restore "${{ steps.detect.outputs.build_target }}"
 
-      - name: Compilar Release
+      - name: Build Release
         run: dotnet build "${{ steps.detect.outputs.build_target }}" --configuration Release --no-restore
 
-      - name: Publicar executável self-contained
+      - name: Publish self-contained executable
         shell: pwsh
         run: |
           $publishDir = Join-Path $env:GITHUB_WORKSPACE "publish"
@@ -90,18 +90,53 @@ jobs:
             -p:DebugSymbols=false `
             -o "$publishDir"
 
-      - name: Empacotar publicação
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Build Windows installer (no UAC elevation)
+        id: installer
+        shell: pwsh
+        run: |
+          $scriptPath = Join-Path $env:GITHUB_WORKSPACE "installer\SistemaJuridico.iss"
+          if (-not (Test-Path $scriptPath)) {
+            throw "Installer script not found: $scriptPath"
+          }
+
+          $publishDir = Join-Path $env:GITHUB_WORKSPACE "publish"
+          if (-not (Test-Path $publishDir)) {
+            throw "Publish directory not found: $publishDir"
+          }
+
+          $installerOut = Join-Path $env:GITHUB_WORKSPACE "installer-out"
+          New-Item -ItemType Directory -Path $installerOut -Force | Out-Null
+
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            throw "ISCC not found at: $iscc"
+          }
+
+          & "$iscc" "/DMyAppVersion=${{ github.run_number }}" "/DPublishDir=$publishDir" "/DOutputDir=$installerOut" "$scriptPath"
+
+          $setupExe = Get-ChildItem -Path $installerOut -Filter *.exe -File | Select-Object -First 1
+          if (-not $setupExe) {
+            throw "Installer was not generated in $installerOut"
+          }
+
+          "installer_path=$($setupExe.FullName)" >> $env:GITHUB_OUTPUT
+
+      - name: Package portable publish
         id: package
         shell: pwsh
         run: |
           $publishDir = Join-Path $env:GITHUB_WORKSPACE "publish"
           if (-not (Test-Path $publishDir)) {
-            throw "Diretório publish não encontrado: $publishDir"
+            throw "Publish directory not found: $publishDir"
           }
 
           $exe = Get-ChildItem -Path $publishDir -Filter *.exe -File | Select-Object -First 1
           if (-not $exe) {
-            throw "Nenhum executável .exe encontrado em $publishDir"
+            throw "No .exe found in $publishDir"
           }
 
           $zipPath = Join-Path $env:GITHUB_WORKSPACE "SistemaJuridico-win-x64-portable.zip"
@@ -114,15 +149,16 @@ jobs:
           "exe_path=$($exe.FullName)" >> $env:GITHUB_OUTPUT
           "zip_path=$zipPath" >> $env:GITHUB_OUTPUT
 
-      - name: Publicar artefato compilado
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: SistemaJuridico-win-x64-portable
+          name: SistemaJuridico-win-x64
           path: |
             ${{ steps.package.outputs.exe_path }}
             ${{ steps.package.outputs.zip_path }}
+            ${{ steps.installer.outputs.installer_path }}
 
-      - name: Gerar próxima tag SemVer
+      - name: Compute next SemVer tag
         if: env.SHOULD_CREATE_RELEASE == 'true'
         id: semver
         uses: actions/github-script@v7
@@ -157,7 +193,7 @@ jobs:
 
             core.setOutput('tag', next);
 
-      - name: Criar tag
+      - name: Create tag
         if: env.SHOULD_CREATE_RELEASE == 'true'
         shell: pwsh
         run: |
@@ -166,7 +202,7 @@ jobs:
           git tag "${{ steps.semver.outputs.tag }}"
           git push origin "${{ steps.semver.outputs.tag }}"
 
-      - name: Criar release e fazer upload dos binários
+      - name: Create release and upload binaries
         if: env.SHOULD_CREATE_RELEASE == 'true'
         uses: softprops/action-gh-release@v2
         with:
@@ -176,3 +212,4 @@ jobs:
           files: |
             ${{ steps.package.outputs.exe_path }}
             ${{ steps.package.outputs.zip_path }}
+            ${{ steps.installer.outputs.installer_path }}

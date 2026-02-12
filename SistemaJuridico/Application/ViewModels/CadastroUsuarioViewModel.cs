@@ -24,16 +24,35 @@ namespace SistemaJuridico.ViewModels
         [RelayCommand]
         private void Cadastrar()
         {
-            if (!_autorizacao.EmailAutorizado(Email))
+            if (!App.Session.IsAdmin())
+            {
+                MessageBox.Show("Apenas administradores podem criar usuários.");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(Username) ||
+                string.IsNullOrWhiteSpace(Email) ||
+                string.IsNullOrWhiteSpace(Senha))
+            {
+                MessageBox.Show("Preencha usuário, e-mail e senha.");
+                return;
+            }
+
+            if (!_autorizacao.EmailAutorizado(Email.Trim()))
             {
                 MessageBox.Show("E-mail não autorizado.");
                 return;
             }
 
-            _auth.CriarUsuario(Username, Email, Senha, Perfil);
-
-            MessageBox.Show("Usuário criado.");
+            try
+            {
+                _auth.CriarUsuario(Username, Email, Senha, Perfil);
+                MessageBox.Show("Usuário criado.");
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show($"Erro ao criar usuário: {ex.Message}");
+            }
         }
     }
 }
-

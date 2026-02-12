@@ -9,7 +9,6 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Topo -->
         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
 
             <Button Content="Novo Processo"
@@ -23,26 +22,26 @@
 
         </StackPanel>
 
-        <!-- Lista -->
         <DataGrid Grid.Row="1"
                   ItemsSource="{Binding Processos}"
                   AutoGenerateColumns="False"
                   IsReadOnly="True"
-                  SelectedItem="{Binding ProcessoSelecionado}">
+                  SelectedItem="{Binding ProcessoSelecionado}"
+                  MouseDoubleClick="DataGrid_MouseDoubleClick">
 
             <DataGrid.Columns>
 
                 <DataGridTextColumn Header="Número"
-                                    Binding="{Binding NumeroProcesso}"
+                                    Binding="{Binding Numero}"
                                     Width="*"/>
 
-                <DataGridTextColumn Header="Cliente"
-                                    Binding="{Binding NomeCliente}"
+                <DataGridTextColumn Header="Paciente"
+                                    Binding="{Binding Paciente}"
                                     Width="*"/>
 
                 <DataGridTextColumn Header="Status"
-                                    Binding="{Binding Status}"
-                                    Width="120"/>
+                                    Binding="{Binding StatusFase}"
+                                    Width="160"/>
 
             </DataGrid.Columns>
 
