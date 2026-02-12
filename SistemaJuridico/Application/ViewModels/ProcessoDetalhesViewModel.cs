@@ -127,12 +127,13 @@ namespace SistemaJuridico.ViewModels
 
             try
             {
-                _processService.LiberarLock(_processoId);
-                _lockAdquirido = false;
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("Falha ao liberar lock do processo", ex);
+                _lockTimer?.Stop();
+
+                if (_lockAdquirido)
+                {
+                    _processService.LiberarLock(_processoId);
+                    _lockAdquirido = false;
+                }
             }
         }
 
