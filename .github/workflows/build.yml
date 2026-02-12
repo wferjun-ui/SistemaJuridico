@@ -1,57 +1,95 @@
 diff --git a/.github/workflows/build.yml b/.github/workflows/build.yml
-index a477937be3b9f120608b8af430ba563f87e6be66..66872312dd97fe010a57ea06d56304594bdbd940 100644
+index 7356ca3154ba74def609c2b58d19aad4138a6346..926218bc48b92922cf4a3b4eec5fa1a9ac42f398 100644
 --- a/.github/workflows/build.yml
 +++ b/.github/workflows/build.yml
-@@ -1,48 +1,51 @@
- name: Build e Release
- 
- on:
+@@ -1,57 +1,33 @@
+-diff --git a/.github/workflows/build.yml b/.github/workflows/build.yml
+-index a477937be3b9f120608b8af430ba563f87e6be66..66872312dd97fe010a57ea06d56304594bdbd940 100644
+---- a/.github/workflows/build.yml
+-+++ b/.github/workflows/build.yml
+-@@ -1,48 +1,51 @@
+- name: Build e Release
+- 
+- on:
+-+  push:
+-+    branches:
+-+      - main
+-   workflow_dispatch:
+- 
+- jobs:
+-   build:
+-     runs-on: windows-latest
+- 
+-     steps:
+- 
+-     # ===============================
+-     # Checkout do código
+-     # ===============================
+-     - name: Checkout
+-       uses: actions/checkout@v4
+- 
+-     # ===============================
+-     # Limpar cache WPF
+-     # ===============================
+-     - name: Limpar bin e obj
+-       run: |
+--       Get-ChildItem -Path . -Recurse -Directory -Include bin,obj | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+-+        Get-ChildItem -Path . -Recurse -Directory -Include bin,obj | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+-         Remove-Item -Recurse -Force SistemaJuridico/bin -ErrorAction SilentlyContinue
+-         Remove-Item -Recurse -Force SistemaJuridico/obj -ErrorAction SilentlyContinue
+-       shell: pwsh
+- 
+-     # ===============================
+-     # Setup .NET
+-     # ===============================
+-     - name: Setup .NET
+-       uses: actions/setup-dotnet@v4
+-       with:
+-         dotnet-version: 8.0.x
+- 
+-     # ===============================
+-     # Corrigir dependências automaticamente
+-     # ===============================
+-     - name: Garantir versões MaterialDesign
+-       run: |
+-         dotnet add SistemaJuridico/SistemaJuridico.csproj package MaterialDesignColors --version 3.1.0
+-         dotnet add SistemaJuridico/SistemaJuridico.csproj package MaterialDesignThemes --version 5.1.0
+- 
+-     # ===============================
+-     # Restore
+-     # ===============================
+-     - name: Restaurar dependências
+-       run: dotnet restore SistemaJuridico/SistemaJuridico.csproj
++name: Build e Release
++
++on:
 +  push:
 +    branches:
 +      - main
-   workflow_dispatch:
- 
- jobs:
-   build:
-     runs-on: windows-latest
- 
-     steps:
- 
-     # ===============================
-     # Checkout do código
-     # ===============================
-     - name: Checkout
-       uses: actions/checkout@v4
- 
-     # ===============================
-     # Limpar cache WPF
-     # ===============================
-     - name: Limpar bin e obj
-       run: |
--       Get-ChildItem -Path . -Recurse -Directory -Include bin,obj | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
-+        Get-ChildItem -Path . -Recurse -Directory -Include bin,obj | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
-         Remove-Item -Recurse -Force SistemaJuridico/bin -ErrorAction SilentlyContinue
-         Remove-Item -Recurse -Force SistemaJuridico/obj -ErrorAction SilentlyContinue
-       shell: pwsh
- 
-     # ===============================
-     # Setup .NET
-     # ===============================
-     - name: Setup .NET
-       uses: actions/setup-dotnet@v4
-       with:
-         dotnet-version: 8.0.x
- 
-     # ===============================
-     # Corrigir dependências automaticamente
-     # ===============================
-     - name: Garantir versões MaterialDesign
-       run: |
-         dotnet add SistemaJuridico/SistemaJuridico.csproj package MaterialDesignColors --version 3.1.0
-         dotnet add SistemaJuridico/SistemaJuridico.csproj package MaterialDesignThemes --version 5.1.0
- 
-     # ===============================
-     # Restore
-     # ===============================
-     - name: Restaurar dependências
-       run: dotnet restore SistemaJuridico/SistemaJuridico.csproj
++  workflow_dispatch:
++
++jobs:
++  build:
++    runs-on: windows-latest
++
++    steps:
++      - name: Checkout
++        uses: actions/checkout@v4
++
++      - name: Limpar bin e obj
++        shell: pwsh
++        run: |
++          Get-ChildItem -Path . -Recurse -Directory -Include bin,obj | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
++          Remove-Item -Recurse -Force SistemaJuridico/bin -ErrorAction SilentlyContinue
++          Remove-Item -Recurse -Force SistemaJuridico/obj -ErrorAction SilentlyContinue
++
++      - name: Setup .NET
++        uses: actions/setup-dotnet@v4
++        with:
++          dotnet-version: 8.0.x
++
++      - name: Restaurar dependências
++        run: dotnet restore SistemaJuridico/SistemaJuridico.csproj
++
++      - name: Build
++        run: dotnet build SistemaJuridico/SistemaJuridico.csproj --configuration Release --no-restore
