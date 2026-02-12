@@ -1,14 +1,10 @@
 using System;
 using System.IO;
-using System.Windows.Forms;
 
 namespace SistemaJuridico.Services
 {
     public class InicializacaoSistemaService
     {
-        // =========================
-        // INICIALIZAÇÃO PRINCIPAL
-        // =========================
         public string Inicializar()
         {
             var caminhoDb = ConfigService.ObterCaminhoBanco();
@@ -23,41 +19,27 @@ namespace SistemaJuridico.Services
                 ConfigService.SalvarCaminhoBanco(caminhoDb);
             }
 
-            // Inicializa banco base
             var db = new DatabaseService(Path.GetDirectoryName(caminhoDb)!);
             db.Initialize();
 
-            // Versionamento
             var versionador = new DatabaseVersionService(db);
             versionador.GarantirAtualizacao();
 
-            // Importação automática
             ImportarSeExistirJson(db);
 
             return caminhoDb;
         }
 
-        // =========================
-        // SELECIONAR PASTA
-        // =========================
         private string SelecionarPastaBanco()
         {
-            using var dialog = new FolderBrowserDialog();
+            var pasta = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "SistemaJuridico");
 
-            dialog.Description =
-                "Selecione a pasta onde ficará o banco do sistema";
-
-            if (dialog.ShowDialog() == DialogResult.OK)
-            {
-                return Path.Combine(dialog.SelectedPath, "juridico.db");
-            }
-
-            return "";
+            Directory.CreateDirectory(pasta);
+            return Path.Combine(pasta, "juridico.db");
         }
 
-        // =========================
-        // IMPORTAÇÃO AUTOMÁTICA
-        // =========================
         private void ImportarSeExistirJson(DatabaseService db)
         {
             var pasta = ConfigService.ObterCaminhoBanco();
