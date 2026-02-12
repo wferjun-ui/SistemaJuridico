@@ -6,5 +6,7 @@ namespace SistemaJuridico.Models
         public string username { get; set; } = "";
         public string email { get; set; } = "";
         public int is_admin { get; set; }
+        public string password_hash { get; set; } = "";
+        public string salt { get; set; } = "";
     }
 }
