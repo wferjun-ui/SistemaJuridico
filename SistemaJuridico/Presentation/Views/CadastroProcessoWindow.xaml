@@ -86,7 +86,8 @@
                                 </TextBox.Style>
                             </TextBox>
                             <CheckBox Content="Possui genitor/representante"
-                                      IsChecked="{Binding TemRepresentante}"/>
+                                      IsChecked="{Binding TemRepresentante}"
+                                      Margin="0,6,0,0"/>
                         </StackPanel>
 
                         <StackPanel Grid.Column="1" Grid.Row="1" Margin="12,0,0,10">
@@ -114,6 +115,7 @@
                                      Text="{Binding NovoReu, UpdateSourceTrigger=PropertyChanged}"
                                      ToolTip="Digite um nome e clique em adicionar"/>
                             <Button Content="Adicionar"
+                                    Margin="8,0,0,0"
                                     Command="{Binding AdicionarReuCommand}"/>
                         </StackPanel>
 
@@ -123,6 +125,7 @@
                                     <DockPanel Margin="0,4,0,4">
                                         <Button DockPanel.Dock="Right"
                                                 Content="Remover"
+                                                Margin="8,0,0,0"
                                                 Command="{Binding DataContext.RemoverReuCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                 CommandParameter="{Binding}"/>
                                         <TextBox Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged}"/>
@@ -134,9 +137,14 @@
                 </Border>
 
                 <Border Background="White" CornerRadius="10" Padding="16">
-                    <Grid>
-                        <Grid.Style>
-                            <Style TargetType="Grid">
+                    <StackPanel>
+                        <TextBlock Text="Dados de Saúde"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,0,10"/>
+
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
                                 <Setter Property="Visibility" Value="Visible"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsProcessoSaude}" Value="False">
@@ -144,115 +152,100 @@
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
-                        </Grid.Style>
+                        </StackPanel.Style>
 
-                        <StackPanel>
-                            <TextBlock Text="Dados de Saúde"
-                                       FontSize="16"
-                                       FontWeight="SemiBold"
-                                       Margin="0,0,0,10"/>
+                        <TextBlock Text="Medicamentos" FontWeight="SemiBold" Margin="0,4,0,4"/>
+                        <Button Content="+ Medicamento" HorizontalAlignment="Left" Command="{Binding AdicionarMedicamentoCommand}" Margin="0,0,0,6"/>
+                        <DataGrid AutoGenerateColumns="False" CanUserAddRows="False" ItemsSource="{Binding Medicamentos}" Margin="0,0,0,10">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="Nome" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox IsEditable="True"
+                                                  IsTextSearchEnabled="True"
+                                                  ItemsSource="{Binding DataContext.SugestoesMedicamentos, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                  Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Quantidade" Width="130" Binding="{Binding Quantidade, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTemplateColumn Header="Ações" Width="110">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="Remover" Command="{Binding DataContext.RemoverSaudeItemCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
 
-                            <TextBlock Text="Medicamentos" FontWeight="SemiBold"/>
-                            <Button Content="+ Medicamento" HorizontalAlignment="Left" Command="{Binding AdicionarMedicamentoCommand}"/>
-                            <DataGrid AutoGenerateColumns="False" CanUserAddRows="False" ItemsSource="{Binding Medicamentos}">
-                                <DataGrid.Columns>
-                                    <DataGridTemplateColumn Header="Nome" Width="*">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <ComboBox IsEditable="True"
-                                                          IsTextSearchEnabled="True"
-                                                          ItemsSource="{Binding DataContext.SugestoesMedicamentos, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                          Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged}"/>
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
-                                    <DataGridTextColumn Header="Quantidade" Width="130" Binding="{Binding Quantidade, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <DataGridTemplateColumn Header="Ações" Width="110">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <Button Content="Remover"
-                                                        Command="{Binding DataContext.RemoverSaudeItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                        CommandParameter="{Binding}"/>
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
-                                </DataGrid.Columns>
-                            </DataGrid>
+                        <TextBlock Text="Terapias" FontWeight="SemiBold" Margin="0,4,0,4"/>
+                        <Button Content="+ Terapia" HorizontalAlignment="Left" Command="{Binding AdicionarTerapiaCommand}" Margin="0,0,0,6"/>
+                        <DataGrid AutoGenerateColumns="False" CanUserAddRows="False" ItemsSource="{Binding Terapias}" Margin="0,0,0,10">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="Nome" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox IsEditable="True"
+                                                  IsTextSearchEnabled="True"
+                                                  ItemsSource="{Binding DataContext.SugestoesTerapias, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                  Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Quantidade" Width="130" Binding="{Binding Quantidade, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTextColumn Header="Local de realização" Width="220" Binding="{Binding Local, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTemplateColumn Header="Ações" Width="110">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="Remover" Command="{Binding DataContext.RemoverSaudeItemCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
 
-                            <TextBlock Text="Terapias" FontWeight="SemiBold"/>
-                            <Button Content="+ Terapia" HorizontalAlignment="Left" Command="{Binding AdicionarTerapiaCommand}"/>
-                            <DataGrid AutoGenerateColumns="False" CanUserAddRows="False" ItemsSource="{Binding Terapias}">
-                                <DataGrid.Columns>
-                                    <DataGridTemplateColumn Header="Nome" Width="*">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <ComboBox IsEditable="True"
-                                                          IsTextSearchEnabled="True"
-                                                          ItemsSource="{Binding DataContext.SugestoesTerapias, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                          Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged}"/>
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
-                                    <DataGridTextColumn Header="Quantidade" Width="130" Binding="{Binding Quantidade, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <DataGridTextColumn Header="Local de realização" Width="220" Binding="{Binding Local, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <DataGridTemplateColumn Header="Ações" Width="110">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <Button Content="Remover"
-                                                        Command="{Binding DataContext.RemoverSaudeItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                        CommandParameter="{Binding}"/>
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
-                                </DataGrid.Columns>
-                            </DataGrid>
+                        <TextBlock Text="Cirurgias" FontWeight="SemiBold" Margin="0,4,0,4"/>
+                        <Button Content="+ Cirurgia" HorizontalAlignment="Left" Command="{Binding AdicionarCirurgiaCommand}" Margin="0,0,0,6"/>
+                        <DataGrid AutoGenerateColumns="False" CanUserAddRows="False" ItemsSource="{Binding Cirurgias}" Margin="0,0,0,10">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="Nome" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox IsEditable="True"
+                                                  IsTextSearchEnabled="True"
+                                                  ItemsSource="{Binding DataContext.SugestoesCirurgias, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                  Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Quantidade" Width="130" Binding="{Binding Quantidade, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTemplateColumn Header="Ações" Width="110">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="Remover" Command="{Binding DataContext.RemoverSaudeItemCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
 
-                            <TextBlock Text="Cirurgias" FontWeight="SemiBold"/>
-                            <Button Content="+ Cirurgia" HorizontalAlignment="Left" Command="{Binding AdicionarCirurgiaCommand}"/>
-                            <DataGrid AutoGenerateColumns="False" CanUserAddRows="False" ItemsSource="{Binding Cirurgias}">
-                                <DataGrid.Columns>
-                                    <DataGridTemplateColumn Header="Nome" Width="*">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <ComboBox IsEditable="True"
-                                                          IsTextSearchEnabled="True"
-                                                          ItemsSource="{Binding DataContext.SugestoesCirurgias, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                          Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged}"/>
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
-                                    <DataGridTextColumn Header="Quantidade" Width="130" Binding="{Binding Quantidade, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <DataGridTemplateColumn Header="Ações" Width="110">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <Button Content="Remover"
-                                                        Command="{Binding DataContext.RemoverSaudeItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                        CommandParameter="{Binding}"/>
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
-                                </DataGrid.Columns>
-                            </DataGrid>
-
-                            <TextBlock Text="Outros" FontWeight="SemiBold"/>
-                            <Button Content="+ Outro" HorizontalAlignment="Left" Command="{Binding AdicionarOutroSaudeCommand}"/>
-                            <DataGrid AutoGenerateColumns="False" CanUserAddRows="False" ItemsSource="{Binding OutrosSaude}">
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Descrição" Width="*" Binding="{Binding Nome, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <DataGridTextColumn Header="Quantidade" Width="130" Binding="{Binding Quantidade, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <DataGridTemplateColumn Header="Ações" Width="110">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <Button Content="Remover"
-                                                        Command="{Binding DataContext.RemoverSaudeItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                        CommandParameter="{Binding}"/>
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
-                                </DataGrid.Columns>
-                            </DataGrid>
-                        </StackPanel>
-                    </Grid>
+                        <TextBlock Text="Outros" FontWeight="SemiBold" Margin="0,4,0,4"/>
+                        <Button Content="+ Outro" HorizontalAlignment="Left" Command="{Binding AdicionarOutroSaudeCommand}" Margin="0,0,0,6"/>
+                        <DataGrid AutoGenerateColumns="False" CanUserAddRows="False" ItemsSource="{Binding OutrosSaude}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Descrição" Width="*" Binding="{Binding Nome, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTextColumn Header="Quantidade" Width="130" Binding="{Binding Quantidade, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTemplateColumn Header="Ações" Width="110">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="Remover" Command="{Binding DataContext.RemoverSaudeItemCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
                 </Border>
             </StackPanel>
         </ScrollViewer>
@@ -264,7 +257,7 @@
                        Text="{Binding StatusMensagem}"/>
 
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="Cancelar" Width="130" Command="{Binding CancelarCommand}"/>
+                <Button Content="Cancelar" Width="130" Margin="0,0,8,0" Command="{Binding CancelarCommand}"/>
                 <Button Content="Salvar Processo" Width="160" Command="{Binding SalvarCommand}"/>
             </StackPanel>
         </DockPanel>
