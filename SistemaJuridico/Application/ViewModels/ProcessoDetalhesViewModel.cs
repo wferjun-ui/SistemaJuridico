@@ -207,7 +207,11 @@ namespace SistemaJuridico.ViewModels
 
             foreach (var v in verificacoes)
                 Verificacoes.Add(v);
-            }
+
+            var ultima = verificacoes.FirstOrDefault();
+            _ultimaVerificacaoData = ultima?.DataHora ?? "Sem verificação";
+            _ultimaVerificacaoResponsavel = string.IsNullOrWhiteSpace(ultima?.Responsavel) ? "N/D" : ultima.Responsavel;
+            _ultimaVerificacaoDate = ParseData(ultima?.DataHora);
 
             OnPropertyChanged(nameof(UltimaVerificacaoData));
             OnPropertyChanged(nameof(UltimaVerificacaoResponsavel));
@@ -246,59 +250,6 @@ namespace SistemaJuridico.ViewModels
                 Historicos.Add(historico);
 
             OnPropertyChanged(nameof(HashProcesso));
-        }
-
-        public decimal TotalContasAPrestar => Contas.Where(c => !string.Equals(c.StatusConta, "fechada", StringComparison.OrdinalIgnoreCase)).Sum(c => c.ValorConta);
-
-        public string UltimaVerificacaoData => Verificacoes.OrderByDescending(v => v.DataHora).FirstOrDefault()?.DataHora ?? "Sem verificação";
-
-        public string UltimaVerificacaoResponsavel => Verificacoes.OrderByDescending(v => v.DataHora).FirstOrDefault()?.Responsavel ?? "N/D";
-
-        public string HashProcesso => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes($"{Processo.Id}|{Processo.Numero}|{Processo.Paciente}|{Processo.Juiz}"))).Substring(0, 16);
-
-        public string DataPrescricao
-        {
-            get
-            {
-                var ultima = Verificacoes
-                    .Select(v => DateTime.TryParse(v.DataHora, out var dt) ? dt : (DateTime?)null)
-                    .Where(dt => dt.HasValue)
-                    .Select(dt => dt!.Value)
-                    .OrderByDescending(dt => dt)
-                    .FirstOrDefault();
-
-                if (ultima == default)
-                    return "Sem base";
-
-                return ultima.AddDays(90).ToString("dd/MM/yyyy");
-            }
-        }
-
-        public string PrescricaoStatus
-        {
-            get
-            {
-                var ultima = Verificacoes
-                    .Select(v => DateTime.TryParse(v.DataHora, out var dt) ? dt : (DateTime?)null)
-                    .Where(dt => dt.HasValue)
-                    .Select(dt => dt!.Value)
-                    .OrderByDescending(dt => dt)
-                    .FirstOrDefault();
-
-                if (ultima == default)
-                    return "Atualização pendente";
-
-                var vencimento = ultima.AddDays(90);
-                var dias = (vencimento.Date - DateTime.Today).Days;
-
-                if (dias < 0)
-                    return "Atualização vencida";
-
-                if (dias <= 7)
-                    return $"Atualizar em {dias} dia(s)";
-
-                return "Em dia";
-            }
         }
         public Task CarregarAsync(int processoId)
         {
