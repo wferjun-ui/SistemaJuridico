@@ -20,6 +20,7 @@ jobs:
     # ===============================
     - name: Limpar bin e obj
       run: |
+       Get-ChildItem -Path . -Recurse -Directory -Include bin,obj | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
         Remove-Item -Recurse -Force SistemaJuridico/bin -ErrorAction SilentlyContinue
         Remove-Item -Recurse -Force SistemaJuridico/obj -ErrorAction SilentlyContinue
       shell: pwsh
