@@ -2,8 +2,10 @@ name: Build e Release
 
 on:
   workflow_dispatch:
+
 permissions:
   contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -15,13 +17,16 @@ jobs:
     # ===============================
     - name: Checkout
       uses: actions/checkout@v4
+      with:
+        persist-credentials: true
+        fetch-depth: 0
 
     # ===============================
     # Limpar cache WPF
     # ===============================
     - name: Limpar bin e obj
       run: |
-       Get-ChildItem -Path . -Recurse -Directory -Include bin,obj | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+        Get-ChildItem -Path . -Recurse -Directory -Include bin,obj | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
         Remove-Item -Recurse -Force SistemaJuridico/bin -ErrorAction SilentlyContinue
         Remove-Item -Recurse -Force SistemaJuridico/obj -ErrorAction SilentlyContinue
       shell: pwsh
@@ -41,6 +46,24 @@ jobs:
       run: |
         dotnet add SistemaJuridico/SistemaJuridico.csproj package MaterialDesignColors --version 3.1.0
         dotnet add SistemaJuridico/SistemaJuridico.csproj package MaterialDesignThemes --version 5.1.0
+
+    # ===============================
+    # Commit automático se houver mudanças
+    # ===============================
+    - name: Commit alterações automáticas
+      shell: pwsh
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+        git add .
+
+        if (git diff --cached --quiet) {
+          Write-Host "Nenhuma alteração para commit."
+        } else {
+          git commit -m "CI: Atualização automática de dependências"
+          git push
+        }
 
     # ===============================
     # Restore
@@ -83,12 +106,12 @@ jobs:
     # Compactar build
     # ===============================
     - name: Compactar build
+      id: zip
+      shell: pwsh
       run: |
         $zipName = "SistemaJuridico-${{ steps.version.outputs.version }}.zip"
         Compress-Archive -Path publish\* -DestinationPath $zipName
         echo "zipName=$zipName" >> $env:GITHUB_OUTPUT
-      id: zip
-      shell: pwsh
 
     # ===============================
     # Criar Release
