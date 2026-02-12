@@ -1,4 +1,4 @@
-<Window x:Class="SistemaJuridico.Views.ProcessoDetalhesWindow"
+<Window x:Class="SistemaJuridico.Views.ProcessoDetalhesView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Detalhes do Processo"
@@ -39,25 +39,21 @@
 
         <TabControl Grid.Row="1">
 
-            <!-- CONTAS -->
             <TabItem Header="Contas">
                 <DataGrid ItemsSource="{Binding Contas}"
                           AutoGenerateColumns="True"/>
             </TabItem>
 
-            <!-- ITENS SAÚDE -->
             <TabItem Header="Itens Saúde">
                 <DataGrid ItemsSource="{Binding ItensSaude}"
                           AutoGenerateColumns="True"/>
             </TabItem>
 
-            <!-- VERIFICAÇÕES -->
             <TabItem Header="Verificações">
                 <DataGrid ItemsSource="{Binding Verificacoes}"
                           AutoGenerateColumns="True"/>
             </TabItem>
 
-            <!-- DILIGÊNCIAS -->
             <TabItem Header="Diligências">
                 <DataGrid ItemsSource="{Binding Diligencias}"
                           AutoGenerateColumns="True"/>
@@ -90,7 +86,6 @@
                     Command="{Binding NovaDiligenciaCommand}"
                     Margin="5"/>
 
-            <!-- ✅ NOVO BOTÃO PDF -->
             <Button Content="Gerar Relatório PDF"
                     Command="{Binding GerarRelatorioCommand}"
                     Margin="5"
