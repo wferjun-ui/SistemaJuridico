@@ -1,6 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using SistemaJuridico.Models;
 using SistemaJuridico.Services;
 using SistemaJuridico.Views;
 using System.Collections.ObjectModel;
@@ -11,19 +10,11 @@ namespace SistemaJuridico.ViewModels
     public partial class DashboardViewModel : ObservableObject
     {
         private readonly ProcessService _service;
-        private readonly ContaService _contaService;
         private readonly DiligenciaService _diligenciaService;
 
-        public ObservableCollection<ProcessoResumoVM> Processos { get; } = new();
         public ObservableCollection<ProcessoPrazoVM> ProcessosAtrasados { get; } = new();
         public ObservableCollection<ProcessoPrazoVM> ProcessosAAtrasar { get; } = new();
         public ObservableCollection<string> ProcessosBloqueados { get; } = new();
-
-        [ObservableProperty]
-        private decimal _saldoTotalPendente;
-
-        [ObservableProperty]
-        private string _ultimaMovimentacaoTexto = "";
 
         [ObservableProperty]
         private int _totalAtrasados;
@@ -37,12 +28,14 @@ namespace SistemaJuridico.ViewModels
         [ObservableProperty]
         private string _usuarioLogadoTexto = "";
 
+        [ObservableProperty]
+        private string _resumoRascunhosTexto = "Sem processos em rascunho ou edição pendente.";
+
         public DashboardViewModel()
         {
             var db = new DatabaseService();
 
             _service = new ProcessService(db);
-            _contaService = new ContaService(db);
             _diligenciaService = new DiligenciaService(db);
 
             Carregar();
@@ -51,15 +44,14 @@ namespace SistemaJuridico.ViewModels
         [RelayCommand]
         private void Carregar()
         {
-            Processos.Clear();
             ProcessosAtrasados.Clear();
             ProcessosAAtrasar.Clear();
             ProcessosBloqueados.Clear();
 
-            decimal saldoGlobal = 0;
             int atrasados = 0;
             int aAtrasar = 0;
             int bloqueados = 0;
+            int processosNaoConcluidos = 0;
 
             var hoje = DateTime.Today;
             var limiteAAtrasar = hoje.AddDays(7);
@@ -68,8 +60,8 @@ namespace SistemaJuridico.ViewModels
 
             foreach (var p in _service.ListarProcessos())
             {
-                var resumo = _service.ObterResumo(p.Id);
-                saldoGlobal += resumo.saldoPendente;
+                if (!string.Equals(p.SituacaoRascunho, "Concluído", StringComparison.OrdinalIgnoreCase))
+                    processosNaoConcluidos++;
 
                 var usuarioLock = _service.UsuarioEditando(p.Id);
                 if (!string.IsNullOrWhiteSpace(usuarioLock) && usuarioLock != atual)
@@ -88,7 +80,9 @@ namespace SistemaJuridico.ViewModels
                         ProcessoId = p.Id,
                         NumeroProcesso = p.Numero,
                         DescricaoDiligencia = diligencia.Descricao,
-                        Prazo = prazo
+                        Prazo = prazo,
+                        SituacaoRascunho = string.IsNullOrWhiteSpace(p.SituacaoRascunho) ? "Concluído" : p.SituacaoRascunho,
+                        MotivoRascunho = p.MotivoRascunho
                     };
 
                     if (prazo.Date < hoje)
@@ -102,35 +96,15 @@ namespace SistemaJuridico.ViewModels
                         ProcessosAAtrasar.Add(vmPrazo);
                     }
                 }
-
-                Processos.Add(new ProcessoResumoVM
-                {
-                    Processo = p,
-                    SaldoPendente = resumo.saldoPendente,
-                    DiligenciaPendente = resumo.diligenciaPendente,
-                    DataUltimoLancamento = resumo.dataUltLanc
-                });
             }
 
-            SaldoTotalPendente = saldoGlobal;
             TotalAtrasados = atrasados;
             TotalAAtrasar = aAtrasar;
             TotalBloqueados = bloqueados;
 
-            AtualizarUltimaMovimentacao();
-        }
-
-        private void AtualizarUltimaMovimentacao()
-        {
-            var conta = _contaService
-                .ListarTodas()
-                .OrderByDescending(c => c.DataMovimentacao)
-                .FirstOrDefault();
-
-            UltimaMovimentacaoTexto =
-                conta == null
-                ? "Sem movimentações"
-                : conta.DataMovimentacao;
+            ResumoRascunhosTexto = processosNaoConcluidos == 0
+                ? "Sem processos em rascunho ou edição pendente."
+                : $"{processosNaoConcluidos} processo(s) com alterações não salvas (Rascunho/Em edição).";
         }
 
         private static bool TryParsePrazo(string? prazo, out DateTime data)
@@ -146,27 +120,16 @@ namespace SistemaJuridico.ViewModels
         }
 
         [RelayCommand]
-        private void AbrirProcesso(ProcessoResumoVM processo)
+        private void AbrirProcesso(ProcessoPrazoVM processoPrazo)
         {
-            if (processo == null)
+            if (processoPrazo == null || string.IsNullOrWhiteSpace(processoPrazo.ProcessoId))
                 return;
 
-            var tela = new ProcessoDetalhesWindow(processo.Processo.Id);
+            var tela = new ProcessoDetalhesWindow(processoPrazo.ProcessoId);
             tela.ShowDialog();
 
             Carregar();
         }
-    }
-
-    public class ProcessoResumoVM
-    {
-        public Processo Processo { get; set; } = new();
-
-        public decimal SaldoPendente { get; set; }
-
-        public bool DiligenciaPendente { get; set; }
-
-        public string? DataUltimoLancamento { get; set; }
     }
 
     public class ProcessoPrazoVM
@@ -175,7 +138,13 @@ namespace SistemaJuridico.ViewModels
         public string NumeroProcesso { get; set; } = string.Empty;
         public string DescricaoDiligencia { get; set; } = string.Empty;
         public DateTime Prazo { get; set; }
+        public string SituacaoRascunho { get; set; } = "Concluído";
+        public string? MotivoRascunho { get; set; }
 
         public string PrazoTexto => Prazo.ToString("dd/MM/yyyy");
+
+        public string StatusSalvamentoTexto => string.Equals(SituacaoRascunho, "Concluído", StringComparison.OrdinalIgnoreCase)
+            ? "Salvo"
+            : $"Não salvo ({SituacaoRascunho})";
     }
 }
