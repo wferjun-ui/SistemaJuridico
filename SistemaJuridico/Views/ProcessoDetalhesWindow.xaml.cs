@@ -9,7 +9,7 @@ namespace SistemaJuridico.Views
     {
         private readonly ProcessoDetalhesViewModel _vm;
 
-        public ProcessoDetalhesWindow(string processoId)
+        public ProcessoDetalhesWindow(int processoId)
         {
             InitializeComponent();
 
