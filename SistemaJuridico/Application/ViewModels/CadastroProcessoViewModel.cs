@@ -146,7 +146,7 @@ namespace SistemaJuridico.ViewModels
             if (erro != null)
             {
                 StatusMensagem = erro;
-                MessageBox.Show(erro, "Validação", MessageBoxButton.OK, MessageBoxImage.Warning);
+                System.Windows.MessageBox.Show(erro, "Validação", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -175,7 +175,7 @@ namespace SistemaJuridico.ViewModels
                 await Task.Delay(350);
 
                 StatusMensagem = "Processo criado com sucesso.";
-                MessageBox.Show("Processo criado.", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
+                System.Windows.MessageBox.Show("Processo criado.", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
                 FecharTela?.Invoke();
             }
             finally
