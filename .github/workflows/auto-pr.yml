@@ -1,0 +1,56 @@
+name: Auto PR Changes
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_file:
+        description: "Arquivo para editar"
+        required: true
+        default: "patch.diff"
+      content:
+        description: "Conteúdo novo (texto)"
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Aplicar alteração
+        shell: bash
+        run: |
+          printf "%s\n" "${{ github.event.inputs.content }}" > "${{ github.event.inputs.target_file }}"
+
+      - name: Commit (se houver mudança)
+        id: commit
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "${{ github.event.inputs.target_file }}"
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "chore: atualizar ${{ github.event.inputs.target_file }}"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Criar/atualizar PR
+        if: steps.commit.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: "auto/pr-${{ github.run_id }}"
+          base: "main"
+          title: "chore: atualização automática via workflow_dispatch"
+          body: |
+            PR criado automaticamente via GitHub Actions.
+            Arquivo alterado: `${{ github.event.inputs.target_file }}`
