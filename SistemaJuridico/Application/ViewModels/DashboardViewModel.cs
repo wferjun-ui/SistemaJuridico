@@ -30,6 +30,9 @@ namespace SistemaJuridico.ViewModels
         [ObservableProperty]
         private int _totalBloqueados;
 
+        [ObservableProperty]
+        private string _usuarioLogadoTexto = "";
+
         public DashboardViewModel()
         {
             var db = new DatabaseService();
@@ -53,6 +56,7 @@ namespace SistemaJuridico.ViewModels
             int bloqueados = 0;
 
             var atual = App.Session.UsuarioAtual?.Email;
+            UsuarioLogadoTexto = $"Logado como: {atual ?? "(não identificado)"}";
 
             foreach (var p in _service.ListarProcessos())
             {

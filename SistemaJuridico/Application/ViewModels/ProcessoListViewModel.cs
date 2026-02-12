@@ -4,7 +4,6 @@ using SistemaJuridico.Infrastructure;
 using SistemaJuridico.Views;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using System.Windows;
 
 namespace SistemaJuridico.ViewModels
 {
@@ -14,7 +13,19 @@ namespace SistemaJuridico.ViewModels
 
         public ObservableCollection<Processo> Processos { get; } = new();
 
+        private Processo? _processoSelecionado;
+        public Processo? ProcessoSelecionado
+        {
+            get => _processoSelecionado;
+            set
+            {
+                _processoSelecionado = value;
+                OnPropertyChanged();
+            }
+        }
+
         public RelayCommand CarregarCommand { get; }
+        public RelayCommand NovoProcessoCommand { get; }
         public RelayCommand<Processo?> AbrirProcessoCommand { get; }
 
         public ProcessoListViewModel(ProcessoFacadeService processoService)
@@ -22,7 +33,10 @@ namespace SistemaJuridico.ViewModels
             _processoService = processoService;
 
             CarregarCommand = new RelayCommand(async () => await Carregar());
+            NovoProcessoCommand = new RelayCommand(NovoProcesso);
             AbrirProcessoCommand = new RelayCommand<Processo?>(AbrirProcesso);
+
+            _ = Carregar();
         }
 
         private async Task Carregar()
@@ -35,13 +49,21 @@ namespace SistemaJuridico.ViewModels
                 Processos.Add(p);
         }
 
+        private void NovoProcesso()
+        {
+            var window = new CadastroProcessoWindow();
+            window.ShowDialog();
+            _ = Carregar();
+        }
+
         private void AbrirProcesso(Processo? processo)
         {
             if (processo == null)
                 return;
 
             var window = new ProcessoDetalhesWindow(processo.Id);
-            window.Show();
+            window.ShowDialog();
+            _ = Carregar();
         }
     }
 }

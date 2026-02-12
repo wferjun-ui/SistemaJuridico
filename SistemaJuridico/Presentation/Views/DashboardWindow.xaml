@@ -17,7 +17,7 @@
 
         <DockPanel Margin="0 0 0 10">
 
-            <TextBlock Text="{Binding Usuario}"
+            <TextBlock Text="{Binding UsuarioLogadoTexto}"
                        FontWeight="Bold"
                        FontSize="14"
                        DockPanel.Dock="Left"/>
