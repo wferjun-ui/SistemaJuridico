@@ -1,4 +1,5 @@
 using SistemaJuridico.Infrastructure;
+using SistemaJuridico.ViewModels;
 using System.Threading.Tasks;
 
 namespace SistemaJuridico.Services
@@ -22,9 +23,7 @@ namespace SistemaJuridico.Services
         public void Navigate(NavigationKey key)
         {
             var (viewType, vmType) = _registry.Resolve(key);
-
             var view = _factory.CreateView(viewType, vmType);
-
             _navigation.Navigate(view);
         }
 
@@ -33,19 +32,14 @@ namespace SistemaJuridico.Services
             int id)
         {
             var (viewType, vmType) = _registry.Resolve(key);
-
             var view = _factory.CreateView(viewType, vmType);
-
             _navigation.Navigate(view);
 
-            if (view.DataContext is ProcessoDetalhesHostViewModel hostVm)
-            {
-                await hostVm.CarregarProcessoAsync(id);
-            }
-            if (view.DataContext is ProcessoEditorHostViewModel hostVm)
-            {
-                await hostVm.CarregarAsync(id);
-            }
+            if (view.DataContext is ProcessoDetalhesHostViewModel detalhesHostVm)
+                await detalhesHostVm.CarregarProcessoAsync(id);
+
+            if (view.DataContext is ProcessoEditorHostViewModel editorHostVm)
+                await editorHostVm.CarregarAsync(id);
         }
     }
 }
