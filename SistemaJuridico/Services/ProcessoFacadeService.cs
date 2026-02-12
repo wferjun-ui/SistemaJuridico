@@ -1,6 +1,7 @@
 using SistemaJuridico.Models;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace SistemaJuridico.Services
 {
@@ -26,12 +27,7 @@ namespace SistemaJuridico.Services
         public ProcessoFacadeService(
             ProcessService processService,
             ContaService contaService,
-            DiligenciaService diligenciaService,
-            HistoricoService historicoService,
-            ItemSaudeService itemSaudeService,
-            VerificacaoService verificacaoService,
-            AuditService auditService)
-        {
+@@ -35,50 +36,60 @@ namespace SistemaJuridico.Services
             _processService = processService;
             _contaService = contaService;
             _diligenciaService = diligenciaService;
@@ -55,6 +51,16 @@ namespace SistemaJuridico.Services
         public List<Processo> ListarProcessos()
         {
             return _processService.ListarProcessos();
+        }
+
+        public Task<ProcessoCompletoDTO> ObterProcessoCompletoAsync(int processoId)
+        {
+            return Task.FromResult(CarregarProcessoCompleto(processoId.ToString()));
+        }
+
+        public Task<ProcessoLockInfo> ObterEstadoEdicaoAsync(int processoId)
+        {
+            return Task.FromResult(new ProcessoLockInfo());
         }
 
         // ========================
