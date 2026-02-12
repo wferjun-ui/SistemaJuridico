@@ -3,6 +3,7 @@ using SistemaJuridico.ViewModels;
 using SistemaJuridico.Views;
 using System;
 using System.Windows;
+using SistemaJuridico.Infrastructure;
 
 namespace SistemaJuridico
 {
