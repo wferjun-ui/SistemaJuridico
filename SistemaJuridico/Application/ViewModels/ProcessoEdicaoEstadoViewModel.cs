@@ -15,8 +15,8 @@ namespace SistemaJuridico.ViewModels
             set => SetProperty(ref _somenteLeitura, value);
         }
 
-        private string _mensagemEstado;
-        public string MensagemEstado
+        private string? _mensagemEstado;
+        public string? MensagemEstado
         {
             get => _mensagemEstado;
             set => SetProperty(ref _mensagemEstado, value);

@@ -6,7 +6,7 @@ namespace SistemaJuridico.Services
 {
     public class NavigationService
     {
-        private ContentControl _region;
+        private ContentControl? _region;
 
         public void Configure(ContentControl region)
         {

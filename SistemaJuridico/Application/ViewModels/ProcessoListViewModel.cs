@@ -15,14 +15,14 @@ namespace SistemaJuridico.ViewModels
         public ObservableCollection<Processo> Processos { get; } = new();
 
         public RelayCommand CarregarCommand { get; }
-        public RelayCommand<Processo> AbrirProcessoCommand { get; }
+        public RelayCommand<Processo?> AbrirProcessoCommand { get; }
 
         public ProcessoListViewModel(ProcessoFacadeService processoService)
         {
             _processoService = processoService;
 
             CarregarCommand = new RelayCommand(async () => await Carregar());
-            AbrirProcessoCommand = new RelayCommand<Processo>(AbrirProcesso);
+            AbrirProcessoCommand = new RelayCommand<Processo?>(AbrirProcesso);
         }
 
         private async Task Carregar()
@@ -35,7 +35,7 @@ namespace SistemaJuridico.ViewModels
                 Processos.Add(p);
         }
 
-        private void AbrirProcesso(Processo processo)
+        private void AbrirProcesso(Processo? processo)
         {
             if (processo == null)
                 return;

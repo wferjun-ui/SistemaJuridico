@@ -15,7 +15,7 @@ namespace SistemaJuridico.ViewModels
 
         public DateTime? DataInicial { get; set; }
         public DateTime? DataFinal { get; set; }
-        public string UsuarioFiltro { get; set; }
+        public string? UsuarioFiltro { get; set; }
         public int? ProcessoIdFiltro { get; set; }
 
         public RelayCommand FiltrarCommand { get; }
