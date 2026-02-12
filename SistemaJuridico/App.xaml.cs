@@ -1,23 +1,26 @@
+using SistemaJuridico.Infrastructure;
 using SistemaJuridico.Services;
 using SistemaJuridico.ViewModels;
 using SistemaJuridico.Views;
 using System;
 using System.Windows;
-using SistemaJuridico.Infrastructure;
 
 namespace SistemaJuridico
 {
     public partial class App : System.Windows.Application
     {
+        private static readonly DatabaseService _database = new();
+        public static string DB => _database.ConnectionString;
+        public static SessionService Session { get; } = new();
+
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
             try
             {
-                // Abre Login
                 var loginWindow = new LoginWindow();
-                var loginVM = ServiceLocator.ProcessService; // garante inicialização lazy
+                var loginVM = ServiceLocator.ProcessService;
 
                 var vm = new LoginViewModel();
 
@@ -28,7 +31,7 @@ namespace SistemaJuridico
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     $"Erro ao iniciar sistema:\n{ex.Message}",
                     "Erro",
                     MessageBoxButton.OK,
@@ -36,12 +39,15 @@ namespace SistemaJuridico
             }
         }
 
-        private void OnLoginSucesso(object sender, EventArgs e)
+        private void OnLoginSucesso(object? sender, EventArgs e)
         {
             try
             {
                 var navigationService = new NavigationService();
-                var mainShellVM = new MainShellViewModel();
+                var mainShellVM = new MainShellViewModel(new NavigationCoordinatorService(
+                    navigationService,
+                    new ViewFactoryService(),
+                    new ViewRegistryService()));
 
                 var mainShell = new MainShellWindow(
                     navigationService,
@@ -60,7 +66,7 @@ namespace SistemaJuridico
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     $"Erro ao abrir shell principal:\n{ex.Message}",
                     "Erro",
                     MessageBoxButton.OK,
@@ -68,4 +74,3 @@ namespace SistemaJuridico
             }
         }
     }
-}
