@@ -14,7 +14,15 @@ namespace SistemaJuridico.Services
 
         public async Task<ProcessoLockInfo> ObterEstadoAsync(int processoId)
         {
-            return await _facade.ObterEstadoEdicaoAsync(processoId);
+            // STUB seguro até implementação real no facade
+            try
+            {
+                return await _facade.ObterEstadoEdicaoAsync(processoId);
+            }
+            catch
+            {
+                return await Task.FromResult(new ProcessoLockInfo());
+            }
         }
     }
 }
