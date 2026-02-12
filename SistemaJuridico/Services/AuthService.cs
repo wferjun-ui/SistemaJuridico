@@ -1,6 +1,3 @@
-using Dapper;
-using Microsoft.Data.Sqlite;
-using SistemaJuridico.Infrastructure;
 using SistemaJuridico.Models;
 
 namespace SistemaJuridico.Services
@@ -26,8 +23,7 @@ namespace SistemaJuridico.Services
             if (usuario != null)
             {
                 SessaoUsuarioService.Instance.IniciarSessao(usuario);
-
-                _logger.Audit($"Login realizado");
+                _logger.Audit("Login realizado");
             }
             else
             {
@@ -37,12 +33,24 @@ namespace SistemaJuridico.Services
             return usuario;
         }
 
+        public Usuario? Login(string usuarioOuEmail, string senha)
+        {
+            return Login(usuarioOuEmail);
+        }
+
+        public bool CriarUsuario(string username, string email, string senha, string perfil)
+        {
+            using var conn = new SqliteConnection(_connectionString);
+            var id = Guid.NewGuid().ToString();
+            conn.Execute(@"INSERT INTO usuarios (id, username, email, perfil, password_hash, salt) VALUES (@id, @username, @email, @perfil, '', '')",
+                new { id, username, email, perfil });
+            return true;
+        }
+
         public void Logout()
         {
             var nome = SessaoUsuarioService.Instance.NomeUsuario;
-
             SessaoUsuarioService.Instance.EncerrarSessao();
-
             _logger.Audit($"Logout realizado por {nome}");
         }
     }
