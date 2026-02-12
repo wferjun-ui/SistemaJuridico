@@ -1,11 +1,13 @@
 using Dapper;
 using Microsoft.Data.Sqlite;
+using SistemaJuridico.Infrastructure;
 
 namespace SistemaJuridico.Services
 {
     public class DatabaseVersionService
     {
         private readonly DatabaseService _db;
+        private readonly LoggerService _logger = new();
 
         public DatabaseVersionService(DatabaseService db)
         {
@@ -104,19 +106,33 @@ CREATE TABLE IF NOT EXISTS itens_saude (
 
         private void AtualizarParaV3_LockMultiusuario(SqliteConnection conn)
         {
-            try
-            {
-                conn.Execute("ALTER TABLE processos ADD COLUMN lock_usuario TEXT;");
-            }
-            catch { }
+            ExecutarAlterTableIgnorandoColunaExistente(
+                conn,
+                "ALTER TABLE processos ADD COLUMN lock_usuario TEXT;",
+                "lock_usuario");
 
-            try
-            {
-                conn.Execute("ALTER TABLE processos ADD COLUMN lock_timestamp TEXT;");
-            }
-            catch { }
+            ExecutarAlterTableIgnorandoColunaExistente(
+                conn,
+                "ALTER TABLE processos ADD COLUMN lock_timestamp TEXT;",
+                "lock_timestamp");
 
             DefinirVersao(conn, 3);
+        }
+
+        private void ExecutarAlterTableIgnorandoColunaExistente(
+            SqliteConnection conn,
+            string sql,
+            string coluna)
+        {
+            try
+            {
+                conn.Execute(sql);
+            }
+            catch (SqliteException ex) when (
+                ex.Message.Contains("duplicate column name", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.Warn($"Coluna '{coluna}' já existe em 'processos'. Migração ignorada.");
+            }
         }
 
         // =========================
