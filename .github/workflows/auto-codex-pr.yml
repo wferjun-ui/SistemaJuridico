@@ -1,75 +1,42 @@
-name: Auto Codex PR
+name: auto-codex-pr
 
 on:
+  push:
+    branches-ignore:
+      - main
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pull-requests: write
 
 jobs:
-  auto-pr:
+  create-pr:
     runs-on: ubuntu-latest
-
+    if: github.ref_type == 'branch'
     steps:
-      - name: Checkout código
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Instalar Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Instalar dependências
-        run: |
-          pip install openai PyGithub
-
-      - name: Executar IA
+      - name: Criar PR para main (se ainda não existir)
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
-          REPO_NAME: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH_NAME: ${{ github.ref_name }}
+        shell: bash
         run: |
-          cat <<EOF > script.py
-import os
-from openai import OpenAI
-from github import Github
+          if [ "$BRANCH_NAME" = "main" ]; then
+            echo "Branch main não gera PR automático"
+            exit 0
+          fi
 
-client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-g = Github(os.environ["GITHUB_PAT"])
+          existing_pr=$(gh pr list --base main --head "$BRANCH_NAME" --state open --json number --jq '.[0].number')
+          if [ -n "$existing_pr" ] && [ "$existing_pr" != "null" ]; then
+            echo "PR já existente #$existing_pr para $BRANCH_NAME"
+            exit 0
+          fi
 
-repo = g.get_repo(os.environ["REPO_NAME"])
-
-prompt = "Analise o projeto e gere melhorias simples"
-
-response = client.responses.create(
-    model="gpt-5-codex",
-    input=prompt
-)
-
-conteudo = response.output_text
-
-main_branch = repo.get_branch("main").commit.sha
-branch_name = "codex-auto-branch"
-
-try:
-    repo.get_branch(branch_name)
-except:
-    repo.create_git_ref(ref=f"refs/heads/{branch_name}", sha=main_branch)
-
-repo.create_file(
-    "codex_output.txt",
-    "Arquivo gerado pela IA",
-    conteudo,
-    branch=branch_name
-)
-
-repo.create_pull(
-    title="PR automática criada pela IA",
-    body="Gerada automaticamente",
-    head=branch_name,
-    base="main"
-)
-EOF
-
-          python script.py
+          gh pr create \
+            --base main \
+            --head "$BRANCH_NAME" \
+            --title "chore: auto PR da branch $BRANCH_NAME" \
+            --body "PR criado automaticamente pelo workflow auto-codex-pr."
