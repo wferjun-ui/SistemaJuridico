@@ -2,41 +2,186 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SistemaJuridico.Models;
 using SistemaJuridico.Services;
+using System.Collections.ObjectModel;
+using System.Text.RegularExpressions;
 using System.Windows;
 
 namespace SistemaJuridico.ViewModels
 {
     public partial class CadastroProcessoViewModel : ObservableObject
     {
-        private readonly ProcessService _service;
+        private static readonly Regex CnjRegex = new(@"^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$", RegexOptions.Compiled);
+
+        private readonly ProcessService _processService;
+        private readonly ItemSaudeService _itemSaudeService;
 
         public Processo NovoProcesso { get; set; } = new();
 
+        public ObservableCollection<ReuCadastroViewModel> Reus { get; } = new();
+        public ObservableCollection<SaudeItemCadastroViewModel> Medicamentos { get; } = new();
+        public ObservableCollection<SaudeItemCadastroViewModel> Terapias { get; } = new();
+        public ObservableCollection<SaudeItemCadastroViewModel> Cirurgias { get; } = new();
+        public ObservableCollection<SaudeItemCadastroViewModel> OutrosSaude { get; } = new();
+
+        public ObservableCollection<string> SugestoesMedicamentos { get; } = new();
+        public ObservableCollection<string> SugestoesTerapias { get; } = new();
+        public ObservableCollection<string> SugestoesCirurgias { get; } = new();
+        public ObservableCollection<string> SugestoesOutros { get; } = new();
+
+        public List<string> TiposProcessoDisponiveis { get; } = new() { "Saúde", "Cível", "Criminal", "Outros" };
+
+        [ObservableProperty]
+        private bool _isSaving;
+
+        [ObservableProperty]
+        private string _selectedTipoProcesso = "Saúde";
+
+        [ObservableProperty]
+        private string _novoReu = string.Empty;
+
+        [ObservableProperty]
+        private bool _temRepresentante = true;
+
+        [ObservableProperty]
+        private string _statusMensagem = "Preencha os dados obrigatórios para salvar o processo.";
+
+        public bool IsProcessoSaude => string.Equals(SelectedTipoProcesso, "Saúde", StringComparison.OrdinalIgnoreCase);
+
         public Action? FecharTela { get; set; }
 
-        public CadastroProcessoViewModel(ProcessService service)
+        public CadastroProcessoViewModel(ProcessService processService, ItemSaudeService itemSaudeService)
         {
-            _service = service;
+            _processService = processService;
+            _itemSaudeService = itemSaudeService;
 
             NovoProcesso.StatusFase = "Conhecimento";
-            NovoProcesso.UltimaAtualizacao =
-                DateTime.Now.ToString("dd/MM/yyyy");
+            NovoProcesso.UltimaAtualizacao = DateTime.Now.ToString("dd/MM/yyyy");
+            NovoProcesso.TipoProcesso = SelectedTipoProcesso;
+            NovoProcesso.SemRepresentante = false;
+
+            Reus.Add(new ReuCadastroViewModel());
+            AdicionarSaudeItem("Medicamento", Medicamentos);
+            AdicionarSaudeItem("Terapia", Terapias);
+            AdicionarSaudeItem("Cirurgia", Cirurgias);
+            AdicionarSaudeItem("Outros", OutrosSaude);
+
+            CarregarSugestoesSaude();
+        }
+
+        partial void OnTemRepresentanteChanged(bool value)
+        {
+            NovoProcesso.SemRepresentante = !value;
+
+            if (!value)
+                NovoProcesso.Representante = "Não possui";
+            else if (NovoProcesso.Representante == "Não possui")
+                NovoProcesso.Representante = string.Empty;
+
+            OnPropertyChanged(nameof(NovoProcesso));
+        }
+
+        partial void OnSelectedTipoProcessoChanged(string value)
+        {
+            NovoProcesso.TipoProcesso = value;
+            OnPropertyChanged(nameof(IsProcessoSaude));
         }
 
         [RelayCommand]
-        private void Salvar()
+        private void AdicionarReu()
         {
-            if (string.IsNullOrWhiteSpace(NovoProcesso.Numero))
+            if (!string.IsNullOrWhiteSpace(NovoReu))
             {
-                System.Windows.MessageBox.Show("Número obrigatório.");
+                Reus.Add(new ReuCadastroViewModel { Nome = NovoReu.Trim() });
+                NovoReu = string.Empty;
                 return;
             }
 
-            _service.CriarProcesso(NovoProcesso);
+            Reus.Add(new ReuCadastroViewModel());
+        }
 
-            System.Windows.MessageBox.Show("Processo criado.");
+        [RelayCommand]
+        private void RemoverReu(ReuCadastroViewModel? reu)
+        {
+            if (reu == null)
+                return;
 
-            FecharTela?.Invoke();
+            Reus.Remove(reu);
+
+            if (Reus.Count == 0)
+                Reus.Add(new ReuCadastroViewModel());
+        }
+
+        [RelayCommand]
+        private void AdicionarMedicamento() => AdicionarSaudeItem("Medicamento", Medicamentos);
+
+        [RelayCommand]
+        private void AdicionarTerapia() => AdicionarSaudeItem("Terapia", Terapias);
+
+        [RelayCommand]
+        private void AdicionarCirurgia() => AdicionarSaudeItem("Cirurgia", Cirurgias);
+
+        [RelayCommand]
+        private void AdicionarOutroSaude() => AdicionarSaudeItem("Outros", OutrosSaude);
+
+        [RelayCommand]
+        private void RemoverSaudeItem(SaudeItemCadastroViewModel? item)
+        {
+            if (item == null)
+                return;
+
+            var colecao = ObterColecaoPorTipo(item.Tipo);
+            colecao.Remove(item);
+
+            if (colecao.Count == 0)
+                AdicionarSaudeItem(item.Tipo, colecao);
+        }
+
+        [RelayCommand]
+        private async Task SalvarAsync()
+        {
+            if (IsSaving)
+                return;
+
+            var erro = ValidarFormulario();
+            if (erro != null)
+            {
+                StatusMensagem = erro;
+                MessageBox.Show(erro, "Validação", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                IsSaving = true;
+                StatusMensagem = "Salvando processo...";
+
+                NovoProcesso.Representante = TemRepresentante ? NovoProcesso.Representante.Trim() : "Não possui";
+                NovoProcesso.SemRepresentante = !TemRepresentante;
+                NovoProcesso.Classificacao = NovoProcesso.TipoProcesso;
+                NovoProcesso.UltimaAtualizacao = DateTime.Now.ToString("dd/MM/yyyy");
+
+                _processService.CriarProcesso(NovoProcesso);
+                _processService.SubstituirReus(NovoProcesso.Id, Reus.Where(r => !string.IsNullOrWhiteSpace(r.Nome)).Select(r => r.Nome.Trim()).ToList());
+
+                if (IsProcessoSaude)
+                {
+                    var itens = ObterItensSaudeParaPersistencia();
+                    _itemSaudeService.SubstituirItensProcesso(NovoProcesso.Id, itens);
+
+                    foreach (var item in itens)
+                        _itemSaudeService.RegistrarCatalogo(item.Tipo, item.Nome);
+                }
+
+                await Task.Delay(350);
+
+                StatusMensagem = "Processo criado com sucesso.";
+                MessageBox.Show("Processo criado.", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
+                FecharTela?.Invoke();
+            }
+            finally
+            {
+                IsSaving = false;
+            }
         }
 
         [RelayCommand]
@@ -44,6 +189,153 @@ namespace SistemaJuridico.ViewModels
         {
             FecharTela?.Invoke();
         }
+
+        private void AdicionarSaudeItem(string tipo, ObservableCollection<SaudeItemCadastroViewModel> destino)
+        {
+            destino.Add(new SaudeItemCadastroViewModel
+            {
+                Tipo = tipo,
+                Quantidade = "1"
+            });
+        }
+
+        private ObservableCollection<SaudeItemCadastroViewModel> ObterColecaoPorTipo(string tipo)
+        {
+            return tipo switch
+            {
+                "Medicamento" => Medicamentos,
+                "Terapia" => Terapias,
+                "Cirurgia" => Cirurgias,
+                _ => OutrosSaude
+            };
+        }
+
+        private void CarregarSugestoesSaude()
+        {
+            PopularSugestoes(SugestoesMedicamentos, "Medicamento");
+            PopularSugestoes(SugestoesTerapias, "Terapia");
+            PopularSugestoes(SugestoesCirurgias, "Cirurgia");
+            PopularSugestoes(SugestoesOutros, "Outros");
+        }
+
+        private void PopularSugestoes(ObservableCollection<string> destino, string tipo)
+        {
+            destino.Clear();
+
+            foreach (var nome in _itemSaudeService.ListarCatalogoPorTipo(tipo))
+                destino.Add(nome);
+        }
+
+        private string? ValidarFormulario()
+        {
+            if (!CnjRegex.IsMatch(NovoProcesso.Numero ?? string.Empty))
+                return "Número do processo inválido. Use o padrão CNJ: 0000000-00.0000.0.00.0000.";
+
+            if (string.IsNullOrWhiteSpace(NovoProcesso.Paciente))
+                return "O nome do paciente é obrigatório.";
+
+            if (TemRepresentante && string.IsNullOrWhiteSpace(NovoProcesso.Representante))
+                return "Informe o nome do genitor/representante ou desative essa opção.";
+
+            if (string.IsNullOrWhiteSpace(NovoProcesso.Juiz))
+                return "O nome do juiz é obrigatório.";
+
+            if (string.IsNullOrWhiteSpace(NovoProcesso.TipoProcesso))
+                return "Selecione o tipo de processo.";
+
+            if (Reus.All(r => string.IsNullOrWhiteSpace(r.Nome)))
+                return "Informe pelo menos um réu.";
+
+            if (!IsProcessoSaude)
+                return null;
+
+            if (ValidarColecaoSaude(Medicamentos, "Medicamentos", exigeLocal: false) is string erroMedicamento)
+                return erroMedicamento;
+
+            if (ValidarColecaoSaude(Terapias, "Terapias", exigeLocal: true) is string erroTerapia)
+                return erroTerapia;
+
+            if (ValidarColecaoSaude(Cirurgias, "Cirurgias", exigeLocal: false) is string erroCirurgia)
+                return erroCirurgia;
+
+            if (ValidarColecaoSaude(OutrosSaude, "Outros", exigeLocal: false) is string erroOutros)
+                return erroOutros;
+
+            return null;
+        }
+
+        private static string? ValidarColecaoSaude(
+            ObservableCollection<SaudeItemCadastroViewModel> itens,
+            string categoria,
+            bool exigeLocal)
+        {
+            if (itens.Count == 0)
+                return $"Informe pelo menos um item em {categoria}.";
+
+            foreach (var item in itens)
+            {
+                if (string.IsNullOrWhiteSpace(item.Nome))
+                    return $"Todos os itens de {categoria} devem ter nome.";
+
+                if (string.IsNullOrWhiteSpace(item.Quantidade))
+                    return $"Todos os itens de {categoria} devem ter quantidade prescrita.";
+
+                if (exigeLocal && string.IsNullOrWhiteSpace(item.Local))
+                    return $"Todos os itens de {categoria} devem informar o local de realização.";
+            }
+
+            return null;
+        }
+
+        private List<ItemSaude> ObterItensSaudeParaPersistencia()
+        {
+            var lista = new List<ItemSaude>();
+
+            lista.AddRange(ConverterParaItemSaude(Medicamentos));
+            lista.AddRange(ConverterParaItemSaude(Terapias));
+            lista.AddRange(ConverterParaItemSaude(Cirurgias));
+            lista.AddRange(ConverterParaItemSaude(OutrosSaude));
+
+            return lista;
+        }
+
+        private IEnumerable<ItemSaude> ConverterParaItemSaude(IEnumerable<SaudeItemCadastroViewModel> itens)
+        {
+            foreach (var item in itens)
+            {
+                yield return new ItemSaude
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    ProcessoId = NovoProcesso.Id,
+                    Tipo = item.Tipo,
+                    Nome = item.Nome.Trim(),
+                    Qtd = item.Quantidade.Trim(),
+                    Local = item.Local?.Trim() ?? string.Empty,
+                    Frequencia = item.Quantidade.Trim(),
+                    DataPrescricao = DateTime.Now.ToString("dd/MM/yyyy")
+                };
+            }
+        }
+    }
+
+    public partial class SaudeItemCadastroViewModel : ObservableObject
+    {
+        [ObservableProperty]
+        private string _tipo = string.Empty;
+
+        [ObservableProperty]
+        private string _nome = string.Empty;
+
+        [ObservableProperty]
+        private string _quantidade = string.Empty;
+
+        [ObservableProperty]
+        private string _local = string.Empty;
+    }
+
+    public partial class ReuCadastroViewModel : ObservableObject
+    {
+        [ObservableProperty]
+        private string _nome = string.Empty;
     }
 }
-

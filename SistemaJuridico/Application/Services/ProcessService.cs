@@ -177,7 +177,35 @@ namespace SistemaJuridico.Services
         public void CriarProcesso(Processo processo)
         {
             using var conn = _db.GetConnection();
-            conn.Execute("INSERT INTO processos (id, numero, paciente, juiz, classificacao, status_fase, ultima_atualizacao) VALUES (@Id, @Numero, @Paciente, @Juiz, @Classificacao, @StatusFase, @UltimaAtualizacao)", processo);
+            conn.Execute("""
+                INSERT INTO processos (
+                    id, numero, paciente, representante, sem_representante, juiz, tipo_processo, classificacao, status_fase, ultima_atualizacao
+                ) VALUES (
+                    @Id, @Numero, @Paciente, @Representante, @SemRepresentante, @Juiz, @TipoProcesso, @Classificacao, @StatusFase, @UltimaAtualizacao
+                )
+                """, processo);
+        }
+
+
+        public void SubstituirReus(string processoId, List<string> reus)
+        {
+            using var conn = _db.GetConnection();
+
+            conn.Execute("DELETE FROM processo_reus WHERE processo_id = @ProcessoId", new { ProcessoId = processoId });
+
+            foreach (var reu in reus.Where(r => !string.IsNullOrWhiteSpace(r)))
+            {
+                conn.Execute("""
+                    INSERT INTO processo_reus (id, processo_id, nome_reu)
+                    VALUES (@Id, @ProcessoId, @NomeReu)
+                """,
+                new
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    ProcessoId = processoId,
+                    NomeReu = reu.Trim()
+                });
+            }
         }
 
         public void AtualizarStatus(string processoId, string status)
