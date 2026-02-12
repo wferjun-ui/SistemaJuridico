@@ -1,6 +1,7 @@
 using SistemaJuridico.ViewModels;
 using System.Windows;
 using System.Windows.Input;
+using UserControl = System.Windows.Controls.UserControl;
 
 namespace SistemaJuridico.Views
 {
