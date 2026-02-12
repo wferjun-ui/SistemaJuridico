@@ -15,32 +15,37 @@
         <StackPanel DockPanel.Dock="Top"
                     Orientation="Horizontal"
                     Margin="0,0,0,8"
-                    HorizontalAlignment="Right"
-                    Spacing="8">
+                    HorizontalAlignment="Right">
 
             <Button Content="Adicionar"
                     Padding="10,4"
+                    Margin="0,0,8,0"
                     Command="{Binding AdicionarCommand}" />
 
             <Button Content="Remover"
                     Padding="10,4"
+                    Margin="0,0,8,0"
                     Command="{Binding RemoverCommand}" />
 
             <Button Content="Desnecessário"
                     Padding="10,4"
+                    Margin="0,0,8,0"
                     Command="{Binding AlternarDesnecessarioCommand}" />
 
             <Button Content="Bloqueio"
                     Padding="10,4"
+                    Margin="0,0,8,0"
                     Command="{Binding AlternarBloqueioCommand}" />
 
             <Button Content="Recarregar"
                     Padding="10,4"
+                    Margin="0,0,8,0"
                     Command="{Binding RecarregarCommand}" />
 
             <Button Content="Salvar"
                     Padding="14,4"
                     FontWeight="Bold"
+                    Margin="0,0,8,0"
                     Command="{Binding SalvarCommand}" />
 
             <Button Content="Fechar"
