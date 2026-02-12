@@ -262,3 +262,4 @@ jobs:
           files: |
             ${{ steps.package.outputs.exe_path }}
             ${{ steps.package.outputs.zip_path }}
+            ${{ steps.installer.outputs.installer_path }}

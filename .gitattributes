@@ -1,0 +1,8 @@
+# Resolve conflitos recorrentes no CI/empacotamento mantendo a versão da branch atual
+.github/workflows/build.yml merge=ours
+installer/*.iss merge=ours
+
+# Normalização básica de texto
+*.cs text eol=lf
+*.xaml text eol=lf
+*.yml text eol=lf
