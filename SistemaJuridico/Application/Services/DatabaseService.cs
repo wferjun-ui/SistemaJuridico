@@ -54,7 +54,6 @@ namespace SistemaJuridico.Services
         private void CriarTabelas(SqliteConnection conn)
         {
             conn.Execute(@"
-
 CREATE TABLE IF NOT EXISTS usuarios(
     id TEXT PRIMARY KEY,
     username TEXT UNIQUE,
@@ -76,8 +75,59 @@ CREATE TABLE IF NOT EXISTS processos(
     juiz TEXT,
     classificacao TEXT,
     status_fase TEXT,
-@@ -143,97 +146,84 @@ CREATE TABLE IF NOT EXISTS contas(
-    observacoes TEXT
+    ultima_atualizacao TEXT,
+    observacao_fixa TEXT,
+    cache_proximo_prazo TEXT,
+    situacao_rascunho TEXT DEFAULT 'Concluído',
+    motivo_rascunho TEXT,
+    usuario_rascunho TEXT,
+    lock_usuario TEXT,
+    lock_timestamp TEXT
+);
+
+CREATE TABLE IF NOT EXISTS contas(
+    id TEXT PRIMARY KEY,
+    processo_id TEXT,
+    data_movimentacao TEXT,
+    tipo_lancamento TEXT,
+    historico TEXT,
+    mov_processo TEXT,
+    num_nf_alvara TEXT,
+    valor_alvara REAL,
+    valor_conta REAL,
+    observacoes TEXT,
+    responsavel TEXT,
+    status_conta TEXT
+);
+
+CREATE TABLE IF NOT EXISTS verificacoes(
+    id TEXT PRIMARY KEY,
+    processo_id TEXT,
+    data_hora TEXT,
+    status_processo TEXT,
+    responsavel TEXT,
+    diligencia_pendente INTEGER,
+    pendencias_descricao TEXT,
+    diligencia_realizada INTEGER,
+    diligencia_descricao TEXT,
+    prazo_diligencia TEXT,
+    proximo_prazo_padrao TEXT,
+    data_notificacao TEXT,
+    alteracoes_texto TEXT,
+    itens_snapshot_json TEXT
+);
+
+CREATE TABLE IF NOT EXISTS itens_saude(
+    id TEXT PRIMARY KEY,
+    processo_id TEXT,
+    tipo TEXT,
+    nome TEXT,
+    qtd TEXT,
+    frequencia TEXT,
+    local TEXT,
+    data_prescricao TEXT,
+    is_desnecessario INTEGER,
+    tem_bloqueio INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS diligencias(
@@ -87,7 +137,8 @@ CREATE TABLE IF NOT EXISTS diligencias(
     data_criacao TEXT,
     data_conclusao TEXT,
     concluida INTEGER,
-    responsavel TEXT
+    responsavel TEXT,
+    prazo TEXT
 );
 
 CREATE TABLE IF NOT EXISTS historico(
@@ -99,6 +150,19 @@ CREATE TABLE IF NOT EXISTS historico(
     detalhes TEXT
 );
 
+CREATE TABLE IF NOT EXISTS audit_log(
+    id TEXT PRIMARY KEY,
+    data_hora TEXT,
+    usuario TEXT,
+    acao TEXT,
+    entidade TEXT,
+    entidade_id TEXT,
+    detalhes TEXT
+);
+
+CREATE TABLE IF NOT EXISTS schema_version(
+    versao INTEGER
+);
 ");
         }
 

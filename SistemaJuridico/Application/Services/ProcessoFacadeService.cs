@@ -27,7 +27,12 @@ namespace SistemaJuridico.Services
         public ProcessoFacadeService(
             ProcessService processService,
             ContaService contaService,
-@@ -35,50 +36,60 @@ namespace SistemaJuridico.Services
+            DiligenciaService diligenciaService,
+            HistoricoService historicoService,
+            ItemSaudeService itemSaudeService,
+            VerificacaoService verificacaoService,
+            AuditService auditService)
+        {
             _processService = processService;
             _contaService = contaService;
             _diligenciaService = diligenciaService;
@@ -51,6 +56,11 @@ namespace SistemaJuridico.Services
         public List<Processo> ListarProcessos()
         {
             return _processService.ListarProcessos();
+        }
+
+        public Task<List<Processo>> ListarProcessosAsync()
+        {
+            return Task.FromResult(ListarProcessos());
         }
 
         public Task<ProcessoCompletoDTO> ObterProcessoCompletoAsync(int processoId)

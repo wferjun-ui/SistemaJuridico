@@ -8,4 +8,5 @@ namespace SistemaJuridico.Views
         {
             InitializeComponent();
         }
-  
+    }
+}

@@ -17,8 +17,8 @@ namespace SistemaJuridico.ViewModels
 
         public CadastroUsuarioViewModel()
         {
-            _auth = new AuthService(App.DB);
-            _autorizacao = new AutorizacaoService(App.DB);
+            _auth = new AuthService(new DatabaseService().ConnectionString);
+            _autorizacao = new AutorizacaoService(new DatabaseService());
         }
 
         [RelayCommand]

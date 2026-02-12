@@ -17,13 +17,11 @@ namespace SistemaJuridico.Services
 
                     page.Header().Column(header =>
                     {
-                        header.Item().Text("RELATÓRIO DO PROCESSO")
+                        header.Item().AlignCenter().Text("RELATÓRIO DO PROCESSO")
                             .FontSize(18)
-                            .Bold()
-                            .AlignCenter();
+                            .Bold();
 
-                        header.Item().Text($"Processo nº {modelo.Processo.Numero}")
-                            .AlignCenter();
+                        header.Item().AlignCenter().Text($"Processo nº {modelo.Processo.Numero}");
 
                         header.Item().LineHorizontal(1);
                     });

@@ -9,3 +9,4 @@ namespace SistemaJuridico.Models
         public int IsAdmin => Perfil == "Admin" ? 1 : 0;
         public string Nome => Username;
     }
+}
