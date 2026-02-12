@@ -50,7 +50,7 @@ namespace SistemaJuridico.ViewModels
             Processo = _processService
                 .ListarProcessos()
                 .FirstOrDefault(x => x.Id == processoId)
-                ?? throw new InvalidOperationException($"Processo não encontrado: {processoId}");
+                ?? new Processo { Id = processoId };
 
             ValidarLock();
 
@@ -169,10 +169,8 @@ namespace SistemaJuridico.ViewModels
                 .ListarProcessos()
                 .FirstOrDefault(x => x.Id == processoId.ToString());
 
-            if (processoEncontrado == null)
-                throw new InvalidOperationException($"Processo não encontrado: {processoId}");
-
-            Processo = processoEncontrado;
+            if (processoEncontrado != null)
+                Processo = processoEncontrado;
 
             CarregarContas();
             CarregarItensSaude();
