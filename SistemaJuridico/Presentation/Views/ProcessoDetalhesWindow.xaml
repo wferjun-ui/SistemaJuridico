@@ -4,12 +4,11 @@
         xmlns:views="clr-namespace:SistemaJuridico.Views"
         x:Name="RootWindow"
         Title="Detalhes do Processo"
-        Height="600"
-        Width="900"
+        Height="660"
+        Width="1200"
         WindowStartupLocation="CenterScreen">
 
     <Window.Resources>
-
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
         <Style x:Key="CampoBloqueavel" TargetType="Control">
@@ -21,11 +20,9 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-
     </Window.Resources>
 
     <Grid Margin="15">
-
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -36,20 +33,20 @@
                 Padding="8"
                 Margin="0 0 0 10"
                 Visibility="{Binding ModoSomenteLeitura, Converter={StaticResource BoolToVis}}">
-
             <TextBlock Text="{Binding UsuarioEditandoTexto}"
                        FontWeight="Bold"
                        Foreground="DarkOrange"/>
         </Border>
 
-        <ScrollViewer Grid.Row="1">
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="340"/>
+            </Grid.ColumnDefinitions>
 
-            <TabControl>
-
+            <TabControl Grid.Column="0" Margin="0,0,12,0">
                 <TabItem Header="Dados">
-
                     <Grid Margin="10">
-
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="180"/>
                             <ColumnDefinition Width="*"/>
@@ -65,82 +62,113 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Text="Número:" VerticalAlignment="Center"/>
+                        <TextBox Grid.Column="1" Text="{Binding Processo.Numero}" Style="{StaticResource CampoBloqueavel}"/>
 
-                        <TextBox Grid.Column="1"
-                                 Text="{Binding Processo.Numero}"
-                                 Style="{StaticResource CampoBloqueavel}"/>
+                        <TextBlock Grid.Row="1" Text="Paciente:" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Processo.Paciente}" Style="{StaticResource CampoBloqueavel}"/>
 
-                        <TextBlock Grid.Row="1"
-                                   Text="Paciente:"
-                                   VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="2" Text="Juiz:" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Processo.Juiz}" Style="{StaticResource CampoBloqueavel}"/>
 
-                        <TextBox Grid.Row="1"
-                                 Grid.Column="1"
-                                 Text="{Binding Processo.Paciente}"
-                                 Style="{StaticResource CampoBloqueavel}"/>
+                        <TextBlock Grid.Row="3" Text="Classificação:" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding Processo.Classificacao}" Style="{StaticResource CampoBloqueavel}"/>
 
-                        <TextBlock Grid.Row="2"
-                                   Text="Juiz:"
-                                   VerticalAlignment="Center"/>
-
-                        <TextBox Grid.Row="2"
-                                 Grid.Column="1"
-                                 Text="{Binding Processo.Juiz}"
-                                 Style="{StaticResource CampoBloqueavel}"/>
-
-                        <TextBlock Grid.Row="3"
-                                   Text="Classificação:"
-                                   VerticalAlignment="Center"/>
-
-                        <TextBox Grid.Row="3"
-                                 Grid.Column="1"
-                                 Text="{Binding Processo.Classificacao}"
-                                 Style="{StaticResource CampoBloqueavel}"/>
-
-                        <TextBlock Grid.Row="4"
-                                   Text="Fase:"
-                                   VerticalAlignment="Center"/>
-
+                        <TextBlock Grid.Row="4" Text="Fase:" VerticalAlignment="Center"/>
                         <ComboBox Grid.Row="4"
                                   Grid.Column="1"
                                   SelectedValuePath="Content"
                                   SelectedValue="{Binding Processo.StatusFase, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                   Style="{StaticResource CampoBloqueavel}">
-
                             <ComboBoxItem Content="Conhecimento"/>
                             <ComboBoxItem Content="Execução"/>
                             <ComboBoxItem Content="Arquivado"/>
-
                         </ComboBox>
 
-                        <TextBlock Grid.Row="5"
-                                   Text="Observações:"
-                                   VerticalAlignment="Top"/>
-
+                        <TextBlock Grid.Row="5" Text="Observações:" VerticalAlignment="Top"/>
                         <TextBox Grid.Row="5"
                                  Grid.Column="1"
                                  Text="{Binding Processo.ObservacaoFixa}"
                                  AcceptsReturn="True"
                                  VerticalScrollBarVisibility="Auto"
                                  Style="{StaticResource CampoBloqueavel}"/>
-
                     </Grid>
+                </TabItem>
 
+                <TabItem Header="Verificações">
+                    <DockPanel Margin="10">
+                        <Button Content="Nova verificação"
+                                DockPanel.Dock="Top"
+                                Width="160"
+                                Margin="0,0,0,8"
+                                HorizontalAlignment="Left"
+                                Command="{Binding NovaVerificacaoCommand}"/>
+                        <DataGrid ItemsSource="{Binding Verificacoes}"
+                                  AutoGenerateColumns="False"
+                                  IsReadOnly="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Data" Binding="{Binding DataHora}" Width="140"/>
+                                <DataGridTextColumn Header="Status" Binding="{Binding StatusProcesso}" Width="*"/>
+                                <DataGridTextColumn Header="Responsável" Binding="{Binding Responsavel}" Width="180"/>
+                                <DataGridTextColumn Header="Pendência" Binding="{Binding PendenciaDescricao}" Width="250"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
                 </TabItem>
 
                 <TabItem Header="Contas">
                     <views:ContasView ProcessoId="{Binding Processo.Id}" />
                 </TabItem>
 
+                <TabItem Header="Histórico">
+                    <DataGrid Margin="10"
+                              ItemsSource="{Binding Historicos}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Data/Hora" Binding="{Binding DataHora}" Width="130"/>
+                            <DataGridTextColumn Header="Ação" Binding="{Binding Acao}" Width="220"/>
+                            <DataGridTextColumn Header="Usuário" Binding="{Binding Usuario}" Width="190"/>
+                            <DataGridTextColumn Header="Detalhes" Binding="{Binding Detalhes}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </TabItem>
             </TabControl>
 
-        </ScrollViewer>
+            <Border Grid.Column="1" Background="#FFF" BorderBrush="#DDD" BorderThickness="1" CornerRadius="8" Padding="12">
+                <StackPanel>
+                    <TextBlock Text="Resumo do Processo" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
 
-        <StackPanel Grid.Row="2"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Right"
-                    Margin="0 10 0 0">
+                    <TextBlock Text="Paciente" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding Processo.Paciente}" Margin="0,0,0,8"/>
 
+                    <TextBlock Text="Juiz" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding Processo.Juiz}" Margin="0,0,0,8"/>
+
+                    <TextBlock Text="Número" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding Processo.Numero}" Margin="0,0,0,8"/>
+
+                    <TextBlock Text="Saldo de contas a prestar" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding TotalContasAPrestar, StringFormat=R$ {0:N2}}" Margin="0,0,0,8"/>
+
+                    <TextBlock Text="Última verificação" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding UltimaVerificacaoData}" Margin="0,0,0,8"/>
+
+                    <TextBlock Text="Último responsável" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding UltimaVerificacaoResponsavel}" Margin="0,0,0,8"/>
+
+                    <TextBlock Text="Hash do processo" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding HashProcesso}" Margin="0,0,0,8"/>
+
+                    <TextBlock Text="Data da prescrição (90 dias)" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding DataPrescricao}" Margin="0,0,0,8"/>
+
+                    <TextBlock Text="Status da atualização" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding PrescricaoStatus}" Foreground="DarkRed"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 10 0 0">
             <Button Content="Salvar rascunho"
                     Width="140"
                     Margin="5"
@@ -157,8 +185,6 @@
                     Width="100"
                     Margin="5"
                     Click="Fechar_Click"/>
-
         </StackPanel>
-
     </Grid>
 </Window>
