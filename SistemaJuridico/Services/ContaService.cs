@@ -35,6 +35,12 @@ namespace SistemaJuridico.Services
                 ORDER BY data_movimentacao
             ", new { id = processoId }).ToList();
         }
+               public List<Conta> ListarTodas()
+        {
+            using var conn = _db.GetConnection();
+            return conn.Query<Conta>("SELECT id as Id, processo_id as ProcessoId, tipo_lancamento as TipoLancamento, historico as Historico, data_movimentacao as DataMovimentacao, mov_processo as MovProcesso, num_nf_alvara as NumNfAlvara, valor_alvara as ValorAlvara, valor_conta as ValorConta, status_conta as StatusConta, responsavel as Responsavel, observacoes as Observacoes FROM contas").ToList();
+        }
+
 
         public void Inserir(Conta conta)
         {
