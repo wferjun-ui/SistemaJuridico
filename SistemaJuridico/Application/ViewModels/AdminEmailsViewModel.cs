@@ -38,7 +38,7 @@ namespace SistemaJuridico.ViewModels
         {
             if (!App.Session.IsAdmin())
             {
-                MessageBox.Show("Apenas administradores podem alterar e-mails autorizados.");
+                System.Windows.MessageBox.Show("Apenas administradores podem alterar e-mails autorizados.");
                 return;
             }
 
@@ -50,7 +50,7 @@ namespace SistemaJuridico.ViewModels
 
             if (!incluido)
             {
-                MessageBox.Show("E-mail já cadastrado ou inválido.");
+                System.Windows.MessageBox.Show("E-mail já cadastrado ou inválido.");
                 return;
             }
 

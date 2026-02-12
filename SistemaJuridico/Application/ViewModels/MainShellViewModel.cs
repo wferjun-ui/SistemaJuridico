@@ -38,22 +38,22 @@ namespace SistemaJuridico.ViewModels
             {
                 if (!IsAdmin)
                 {
-                    MessageBox.Show("Apenas administradores podem acessar este recurso.");
+                    System.Windows.MessageBox.Show("Apenas administradores podem acessar este recurso.");
                     return;
                 }
 
-                new AdminEmailsWindow { Owner = Application.Current.MainWindow }.ShowDialog();
+                new AdminEmailsWindow { Owner = System.Windows.Application.Current.MainWindow }.ShowDialog();
             });
 
             OpenCadastroUsuarioCommand = new RelayCommand(() =>
             {
                 if (!IsAdmin)
                 {
-                    MessageBox.Show("Apenas administradores podem acessar este recurso.");
+                    System.Windows.MessageBox.Show("Apenas administradores podem acessar este recurso.");
                     return;
                 }
 
-                new CadastroUsuarioWindow { Owner = Application.Current.MainWindow }.ShowDialog();
+                new CadastroUsuarioWindow { Owner = System.Windows.Application.Current.MainWindow }.ShowDialog();
             });
         }
 
