@@ -1,0 +1,26 @@
+name: AI Code Agent
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  ai-review:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Ler regras do projeto
+      run: cat .codex/rules.md
+
+    - name: Simular chamada IA
+      run: |
+        echo "Aqui você chamaria API do ChatGPT ou Codex"
