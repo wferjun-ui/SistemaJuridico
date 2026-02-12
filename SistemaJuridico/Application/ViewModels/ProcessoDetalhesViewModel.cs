@@ -237,7 +237,7 @@ namespace SistemaJuridico.ViewModels
 
             _processService.MarcarRascunho(_processoId, motivo);
 
-            MessageBox.Show("Rascunho salvo.");
+            System.Windows.MessageBox.Show("Rascunho salvo.");
         }
 
         [RelayCommand]
@@ -245,7 +245,7 @@ namespace SistemaJuridico.ViewModels
         {
             _processService.MarcarConcluido(_processoId);
 
-            MessageBox.Show("Edição concluída.");
+            System.Windows.MessageBox.Show("Edição concluída.");
         }
 
         // ========================
@@ -278,7 +278,7 @@ namespace SistemaJuridico.ViewModels
                 descricao,
                 ItensSaude.ToList());
 
-            MessageBox.Show("Verificação registrada.");
+            System.Windows.MessageBox.Show("Verificação registrada.");
 
             CarregarVerificacoes();
             CarregarItensSaude();
@@ -302,7 +302,7 @@ namespace SistemaJuridico.ViewModels
 
             var tela = new DiligenciaEditorWindow(vm)
             {
-                Owner = Application.Current.MainWindow
+                Owner = System.Windows.Application.Current.MainWindow
             };
 
             tela.ShowDialog();
@@ -360,11 +360,11 @@ namespace SistemaJuridico.ViewModels
                 new PdfRelatorioProcessoService()
                     .GerarPdf(modelo, salvar.FileName);
 
-                MessageBox.Show("Relatório gerado com sucesso.");
+                System.Windows.MessageBox.Show("Relatório gerado com sucesso.");
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Erro ao gerar relatório: " + ex.Message);
+                System.Windows.MessageBox.Show("Erro ao gerar relatório: " + ex.Message);
             }
         }
 
@@ -396,7 +396,7 @@ namespace SistemaJuridico.ViewModels
             if (ModoSomenteLeitura)
                 return true;
 
-            var r = MessageBox.Show(
+            var r = System.Windows.MessageBox.Show(
                 "Deseja sair sem salvar?",
                 "Confirmação",
                 MessageBoxButton.YesNo);

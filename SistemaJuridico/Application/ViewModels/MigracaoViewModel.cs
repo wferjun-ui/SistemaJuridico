@@ -56,7 +56,7 @@ namespace SistemaJuridico.ViewModels
 
         private void SelecionarArquivo()
         {
-            var dialog = new OpenFileDialog
+            var dialog = new Microsoft.Win32.OpenFileDialog
             {
                 Filter = "JSON (*.json)|*.json"
             };
@@ -69,7 +69,7 @@ namespace SistemaJuridico.ViewModels
         {
             if (!File.Exists(CaminhoArquivo))
             {
-                MessageBox.Show("Selecione um arquivo JSON válido.");
+                System.Windows.MessageBox.Show("Selecione um arquivo JSON válido.");
                 return;
             }
 
@@ -80,19 +80,19 @@ namespace SistemaJuridico.ViewModels
             {
                 var resultado = _workflow.ExecutarMigracao(CaminhoArquivo);
 
-                Application.Current.Dispatcher.Invoke(() =>
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
                 {
                     Relatorio = resultado.Relatorio;
 
                     if (resultado.Sucesso)
                     {
-                        MessageBox.Show("Migração concluída com sucesso.");
+                        System.Windows.MessageBox.Show("Migração concluída com sucesso.");
 
                         MigracaoConcluidaComSucesso?.Invoke();
                     }
                     else
                     {
-                        MessageBox.Show("Migração concluída com inconsistências. Verifique o relatório.");
+                        System.Windows.MessageBox.Show("Migração concluída com inconsistências. Verifique o relatório.");
                     }
                 });
             });

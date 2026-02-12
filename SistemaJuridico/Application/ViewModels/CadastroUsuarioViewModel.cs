@@ -26,7 +26,7 @@ namespace SistemaJuridico.ViewModels
         {
             if (!App.Session.IsAdmin())
             {
-                MessageBox.Show("Apenas administradores podem criar usuários.");
+                System.Windows.MessageBox.Show("Apenas administradores podem criar usuários.");
                 return;
             }
 
@@ -34,24 +34,24 @@ namespace SistemaJuridico.ViewModels
                 string.IsNullOrWhiteSpace(Email) ||
                 string.IsNullOrWhiteSpace(Senha))
             {
-                MessageBox.Show("Preencha usuário, e-mail e senha.");
+                System.Windows.MessageBox.Show("Preencha usuário, e-mail e senha.");
                 return;
             }
 
             if (!_autorizacao.EmailAutorizado(Email.Trim()))
             {
-                MessageBox.Show("E-mail não autorizado.");
+                System.Windows.MessageBox.Show("E-mail não autorizado.");
                 return;
             }
 
             try
             {
                 _auth.CriarUsuario(Username, Email, Senha, Perfil);
-                MessageBox.Show("Usuário criado.");
+                System.Windows.MessageBox.Show("Usuário criado.");
             }
             catch (System.Exception ex)
             {
-                MessageBox.Show($"Erro ao criar usuário: {ex.Message}");
+                System.Windows.MessageBox.Show($"Erro ao criar usuário: {ex.Message}");
             }
         }
     }

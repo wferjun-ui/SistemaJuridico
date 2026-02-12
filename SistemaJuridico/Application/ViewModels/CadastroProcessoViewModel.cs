@@ -28,13 +28,13 @@ namespace SistemaJuridico.ViewModels
         {
             if (string.IsNullOrWhiteSpace(NovoProcesso.Numero))
             {
-                MessageBox.Show("Número obrigatório.");
+                System.Windows.MessageBox.Show("Número obrigatório.");
                 return;
             }
 
             _service.CriarProcesso(NovoProcesso);
 
-            MessageBox.Show("Processo criado.");
+            System.Windows.MessageBox.Show("Processo criado.");
 
             FecharTela?.Invoke();
         }
