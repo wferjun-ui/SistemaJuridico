@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using SistemaJuridico.Infrastructure;
 using SistemaJuridico.Models;
 using SistemaJuridico.Services;
 using SistemaJuridico.Views;
@@ -15,10 +16,12 @@ namespace SistemaJuridico.ViewModels
         private readonly ContaService _contaService;
         private readonly ItemSaudeService _itemSaudeService;
         private readonly VerificacaoService _verificacaoService;
+        private readonly LoggerService _logger = new();
 
         private readonly string _processoId;
 
         private System.Windows.Threading.DispatcherTimer? _lockTimer;
+        private bool _lockAdquirido;
 
         public Processo Processo { get; private set; }
 
@@ -85,6 +88,7 @@ namespace SistemaJuridico.ViewModels
                     return;
                 }
 
+                _lockAdquirido = true;
                 IniciarHeartbeat();
             }
         }
@@ -102,9 +106,12 @@ namespace SistemaJuridico.ViewModels
                 {
                     _processService.RenovarLock(_processoId);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // evita crash se rede cair
+                    _logger.Error("Falha ao renovar lock do processo", ex);
+                    ModoSomenteLeitura = true;
+                    UsuarioEditandoTexto = "Não foi possível renovar o lock. Reabra o processo.";
+                    _lockTimer?.Stop();
                 }
             };
 
@@ -113,12 +120,25 @@ namespace SistemaJuridico.ViewModels
 
         public void LiberarLock()
         {
+            _lockTimer?.Stop();
+
+            if (!_lockAdquirido)
+                return;
+
+            TentarLiberarLock();
+        }
+
+        private void TentarLiberarLock()
+        {
             try
             {
-                _lockTimer?.Stop();
                 _processService.LiberarLock(_processoId);
+                _lockAdquirido = false;
             }
-            catch { }
+            catch (Exception ex)
+            {
+                _logger.Error("Falha ao liberar lock do processo", ex);
+            }
         }
 
         // ========================
