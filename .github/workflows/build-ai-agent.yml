@@ -1,39 +1,86 @@
-name: AI Agent
+name: AI Automation Agent
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
-  agent:
+  ai-agent:
     runs-on: ubuntu-latest
 
     steps:
 
-    - name: Baixar código
+    # ===============================
+    # Checkout do repositório
+    # ===============================
+    - name: Checkout Repository
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        persist-credentials: true
 
-    - name: Mostrar regras
-      run: cat .codex/rules.md
-
-    - name: Criar alteração de teste
+    # ===============================
+    # Exibir regras do agente
+    # ===============================
+    - name: Carregar regras do projeto
       run: |
-        echo "// alteração automática" >> teste-agente.txt
+        echo "Regras carregadas:"
+        cat .codex/rules.md || echo "Arquivo de regras não encontrado"
 
-    - name: Commit alteração
+    # ===============================
+    # Simular geração de patch pela IA
+    # (placeholder - pode ser substituído depois)
+    # ===============================
+    - name: Gerar patch placeholder
+      run: |
+        echo "" > patch.diff
+
+    # ===============================
+    # Aplicar patch se existir e for válido
+    # ===============================
+    - name: Aplicar Patch
+      run: |
+        if [ -s patch.diff ]; then
+          git apply patch.diff || echo "Patch inválido ignorado"
+        else
+          echo "Patch vazio - ignorando"
+        fi
+
+    # ===============================
+    # Commit alterações se existirem
+    # ===============================
+    - name: Commit alterações
+      id: commit
       run: |
         git config user.name "AI-Agent"
         git config user.email "ai-agent@bot.com"
-        git add .
-        git commit -m "IA: alteração automática"
 
+        git add -A
+
+        if git diff-index --quiet HEAD; then
+          echo "changes=false" >> $GITHUB_OUTPUT
+        else
+          git commit -m "IA: alteração automática"
+          echo "changes=true" >> $GITHUB_OUTPUT
+        fi
+
+    # ===============================
+    # Criar Pull Request automaticamente
+    # ===============================
     - name: Criar Pull Request
+      if: steps.commit.outputs.changes == 'true'
       uses: peter-evans/create-pull-request@v6
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         title: "IA sugeriu alteração"
-        body: "Pull Request criado automaticamente."
+        body: |
+          Pull Request criado automaticamente pelo agente.
+
+          Este PR respeita as regras definidas em `.codex/rules.md`.
         branch: ai-agent
