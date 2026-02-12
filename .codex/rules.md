@@ -1,25 +1,29 @@
-# Regras Arquiteturais do SistemaJuridico
+# Regras Arquiteturais – SistemaJuridico
 
-## Obrigatório
-
-- Usar MVVM manual
-- Usar ServiceLocator próprio
-- Não usar Microsoft.Extensions.DependencyInjection
-- Sempre retornar arquivos completos
-- Não criar novas camadas sem autorização
-- Manter compatibilidade com multiusuário
+## Arquitetura Geral
+- Padrão MVVM manual deve ser preservado.
+- Não usar Microsoft.Extensions.DependencyInjection.
+- A implementação atual de ServiceLocator deve permanecer compatível.
+- Manter compatibilidade com multiusuário e lock de edição.
 
 ## WPF
-
-- Nunca duplicar partial classes
-- Nunca duplicar InitializeComponent
-- Evitar múltiplos XAML para mesma classe
+- Não duplicar partial classes nem InitializeComponent.
+- Cada XAML deve mapear para exatamente uma classe code-behind.
+- Mudar namespace só com justificativa.
 
 ## Navegação
-
-- Apenas UMA View controla cada Window
-- Usar NavigationCoordinatorService
+- NavigationCoordinatorService deve orquestrar navegação.
+- Somente uma View controla uma Window.
+- Não criar janelas “host” redundantes.
 
 ## Multiusuário
+- Bloqueios devem ser gerenciados por ProcessoEdicaoEstadoService.
+- Locks devem ser liberados ao fechar View.
 
-- Locks obrigatórios via ProcessoEdicaoEstadoService
+## Código
+- Sempre retornar arquivos completos nas respostas.
+- Não sugerir refatoração massiva sem autorização.
+
+## Pull Requests
+- O título deve indicar “Automated fix” ou “IA assistida”.
+- O corpo deve explicar a intenção e listar arquivos afetados.
