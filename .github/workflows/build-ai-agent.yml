@@ -1,9 +1,6 @@
-name: AI Automation Agent
+name: AI Agent
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
@@ -11,76 +8,32 @@ permissions:
   pull-requests: write
 
 jobs:
-  ai-agent:
+  agent:
     runs-on: ubuntu-latest
 
     steps:
 
-    # 1) Checkout completo
-    - name: Checkout Repository
+    - name: Baixar código
       uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        persist-credentials: true
 
-    # 2) Carregar regras
-    - name: Carregar Regras
-      id: load-rules
+    - name: Mostrar regras
+      run: cat .codex/rules.md
+
+    - name: Criar alteração de teste
       run: |
-        echo "Regras:"
-        cat .codex/rules.md
+        echo "// alteração automática" >> teste-agente.txt
 
-    # 3) Gerar Contexto para IA
-    - name: Preparar Contexto para IA
-      id: context
+    - name: Commit alteração
       run: |
-        echo "::notice file=.codex/rules.md::Regras carregadas"
-        # Exemplos de contexto que uma ação Invoke AI poderia usar
-        ls -R . > repo_files.txt
+        git config user.name "AI-Agent"
+        git config user.email "ai-agent@bot.com"
+        git add .
+        git commit -m "IA: alteração automática"
 
-    # 4) Chamada à IA (OpenAI / ChatGPT / Codex)
-    - name: Chamar API da IA para gerar patch
-      id: openai
-      run: |
-        # Placeholder: Aqui você chama sua integração de IA para gerar patch
-        # Exemplo de comando curl para OpenAI (depende da sua implementação)
-        echo "PATCH_CONTENT_PLACEHOLDER" > patch.diff
-
-    # 5) Aplicar patch gerado pela IA
-    - name: Aplicar Patch
-      id: apply-patch
-      run: |
-        if [ -f patch.diff ]; then
-          git apply patch.diff
-        else
-          echo "Nenhum patch gerado"
-        fi
-
-    # 6) Commitar alterações
-    - name: Commit Local
-      id: git-commit
-      run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        git add -A
-        if git diff-index --quiet HEAD; then
-          echo "Nenhuma mudança para commitar"
-          echo "::set-output name=changes::false"
-        else
-          git commit -m "Automated fix by IA agent"
-          echo "::set-output name=changes::true"
-        fi
-
-    # 7) Criar ou Atualizar Pull Request
-    - name: Create Pull Request
-      if: steps.git-commit.outputs.changes == 'true'
-      uses: peter-evans/create-pull-request@v8
+    - name: Criar Pull Request
+      uses: peter-evans/create-pull-request@v6
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        commit-message: "Automated patch by IA"
-        title: "IA assistida: automated patch"
-        body: |
-          This Pull Request contains changes suggested by the automated agent,
-          respecting the project rules in .codex/rules.md.
-        branch: auto-ia-fixes
-        base: main
+        title: "IA sugeriu alteração"
+        body: "Pull Request criado automaticamente."
+        branch: ai-agent
