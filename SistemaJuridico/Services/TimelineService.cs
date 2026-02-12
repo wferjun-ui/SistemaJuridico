@@ -2,6 +2,7 @@ using SistemaJuridico.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace SistemaJuridico.Services
 {
@@ -31,7 +32,6 @@ namespace SistemaJuridico.Services
         {
             var eventos = new List<TimelineEventoDTO>();
 
-            // Histórico
             foreach (var h in _historicoService.ListarPorProcesso(processoId))
             {
                 eventos.Add(new TimelineEventoDTO
@@ -44,7 +44,6 @@ namespace SistemaJuridico.Services
                 });
             }
 
-            // Verificações
             foreach (var v in _verificacaoService.ListarPorProcesso(processoId))
             {
                 eventos.Add(new TimelineEventoDTO
@@ -58,7 +57,6 @@ namespace SistemaJuridico.Services
                 });
             }
 
-            // Diligências
             foreach (var d in _diligenciaService.ListarPorProcesso(processoId))
             {
                 eventos.Add(new TimelineEventoDTO
@@ -71,7 +69,6 @@ namespace SistemaJuridico.Services
                 });
             }
 
-            // Contas
             foreach (var c in _contaService.ListarPorProcesso(processoId))
             {
                 eventos.Add(new TimelineEventoDTO
@@ -84,7 +81,6 @@ namespace SistemaJuridico.Services
                 });
             }
 
-            // Auditoria
             foreach (var a in _auditService.ListarPorProcesso(processoId))
             {
                 eventos.Add(new TimelineEventoDTO
@@ -97,9 +93,12 @@ namespace SistemaJuridico.Services
                 });
             }
 
-            return eventos
-                .OrderByDescending(x => x.DataHora)
-                .ToList();
+            return eventos.OrderByDescending(x => x.DataHora).ToList();
+        }
+
+        public Task<List<TimelineEventoDTO>> ObterTimelineAsync(string processoId)
+        {
+            return Task.FromResult(ObterTimeline(processoId));
         }
     }
 }
