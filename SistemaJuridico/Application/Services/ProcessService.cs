@@ -1,5 +1,6 @@
 using Dapper;
 using SistemaJuridico.Models;
+using System.Globalization;
 
 namespace SistemaJuridico.Services
 {
@@ -57,15 +58,21 @@ namespace SistemaJuridico.Services
         {
             using var conn = _db.GetConnection();
 
+            var usuarioAtual = App.Session.UsuarioAtual?.Email;
+            if (string.IsNullOrWhiteSpace(usuarioAtual))
+                return;
+
             conn.Execute("""
                 UPDATE processos
                 SET lock_timestamp = @data
                 WHERE id = @id
+                  AND lock_usuario = @usuario
             """,
             new
             {
                 data = DateTime.UtcNow.ToString("o"),
-                id = processoId
+                id = processoId,
+                usuario = usuarioAtual
             });
         }
 
@@ -107,10 +114,14 @@ namespace SistemaJuridico.Services
             if (string.IsNullOrWhiteSpace(p.LockTimestamp))
                 return true;
 
-            if (!DateTime.TryParse(p.LockTimestamp, out var data))
+            if (!DateTimeOffset.TryParse(
+                    p.LockTimestamp,
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.AssumeUniversal,
+                    out var data))
                 return true;
 
-            return DateTime.UtcNow - data > _timeout;
+            return DateTimeOffset.UtcNow - data > _timeout;
         }
 
         // ========================
@@ -144,7 +155,8 @@ namespace SistemaJuridico.Services
 
             LiberarLock(processoId);
         }
-public void CriarProcesso(Processo processo)
+
+        public void CriarProcesso(Processo processo)
         {
             using var conn = _db.GetConnection();
             conn.Execute("INSERT INTO processos (id, numero, paciente, juiz, classificacao, status_fase, ultima_atualizacao) VALUES (@Id, @Numero, @Paciente, @Juiz, @Classificacao, @StatusFase, @UltimaAtualizacao)", processo);
