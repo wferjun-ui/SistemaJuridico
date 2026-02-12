@@ -13,6 +13,14 @@ namespace SistemaJuridico.Services
         private readonly string _dbPath;
         private readonly string _backupFolder;
 
+        public string ConnectionString => _connectionString;
+
+        public DatabaseService() : this(Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "SistemaJuridico"))
+        {
+        }
+
         public DatabaseService(string baseFolder)
         {
             if (!Directory.Exists(baseFolder))
@@ -28,9 +36,8 @@ namespace SistemaJuridico.Services
         public SqliteConnection GetConnection()
             => new SqliteConnection(_connectionString);
 
-        // =====================================================
-        // INICIALIZAÇÃO
-        // =====================================================
+        public SqliteConnection CreateConnection()
+            => GetConnection();
 
         public void Initialize()
         {
@@ -43,10 +50,6 @@ namespace SistemaJuridico.Services
             CriarTabelas(conn);
             CriarAdminPadrao(conn);
         }
-
-        // =====================================================
-        // CRIAÇÃO DE TABELAS
-        // =====================================================
 
         private void CriarTabelas(SqliteConnection conn)
         {
@@ -73,73 +76,7 @@ CREATE TABLE IF NOT EXISTS processos(
     juiz TEXT,
     classificacao TEXT,
     status_fase TEXT,
-    ultima_atualizacao TEXT,
-    observacao_fixa TEXT,
-    cache_proximo_prazo TEXT,
-    situacao_rascunho TEXT,
-    motivo_rascunho TEXT,
-    usuario_rascunho TEXT,
-    usuario_editando TEXT
-);
-
-CREATE TABLE IF NOT EXISTS processo_edicao_status(
-    id TEXT PRIMARY KEY,
-    processo_id TEXT,
-    usuario_email TEXT,
-    status TEXT,
-    motivo TEXT,
-    data_inicio TEXT,
-    data_atualizacao TEXT
-);
-
-CREATE TABLE IF NOT EXISTS reus(
-    id TEXT PRIMARY KEY,
-    processo_id TEXT,
-    nome TEXT
-);
-
-CREATE TABLE IF NOT EXISTS itens_saude(
-    id TEXT PRIMARY KEY,
-    processo_id TEXT,
-    tipo TEXT,
-    nome TEXT,
-    qtd TEXT,
-    frequencia TEXT,
-    local TEXT,
-    data_prescricao TEXT,
-    is_desnecessario INTEGER DEFAULT 0,
-    tem_bloqueio INTEGER DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS verificacoes(
-    id TEXT PRIMARY KEY,
-    processo_id TEXT,
-    data_hora TEXT,
-    status_processo TEXT,
-    responsavel TEXT,
-    diligencia_realizada INTEGER,
-    diligencia_descricao TEXT,
-    diligencia_pendente INTEGER,
-    pendencias_descricao TEXT,
-    prazo_diligencia TEXT,
-    proximo_prazo_padrao TEXT,
-    data_notificacao TEXT,
-    alteracoes_texto TEXT,
-    itens_snapshot_json TEXT
-);
-
-CREATE TABLE IF NOT EXISTS contas(
-    id TEXT PRIMARY KEY,
-    processo_id TEXT,
-    tipo_lancamento TEXT,
-    historico TEXT,
-    data_movimentacao TEXT,
-    mov_processo TEXT,
-    num_nf_alvara TEXT,
-    valor_alvara REAL,
-    valor_conta REAL,
-    status_conta TEXT,
-    responsavel TEXT,
+@@ -143,97 +146,84 @@ CREATE TABLE IF NOT EXISTS contas(
     observacoes TEXT
 );
 
@@ -165,10 +102,6 @@ CREATE TABLE IF NOT EXISTS historico(
 ");
         }
 
-        // =====================================================
-        // ADMIN PADRÃO
-        // =====================================================
-
         private void CriarAdminPadrao(SqliteConnection conn)
         {
             int count = conn.ExecuteScalar<int>("SELECT COUNT(*) FROM usuarios");
@@ -193,10 +126,6 @@ VALUES
                 });
         }
 
-        // =====================================================
-        // SEGURANÇA
-        // =====================================================
-
         public string GerarSalt()
             => Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
 
@@ -206,10 +135,6 @@ VALUES
             return Convert.ToHexString(
                 sha.ComputeHash(Encoding.UTF8.GetBytes(senha + salt)));
         }
-
-        // =====================================================
-        // BACKUP AUTOMÁTICO
-        // =====================================================
 
         public void PerformBackup()
         {
@@ -232,7 +157,6 @@ VALUES
             }
             catch
             {
-                // evita crash em produção
             }
         }
     }
