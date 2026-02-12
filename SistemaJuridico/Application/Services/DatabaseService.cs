@@ -2,6 +2,7 @@ using Dapper;
 using Microsoft.Data.Sqlite;
 using System;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -62,6 +63,7 @@ namespace SistemaJuridico.Services
             conn.Execute("PRAGMA foreign_keys=ON;");
 
             CriarTabelas(conn);
+            GarantirEstruturaAtualizada(conn);
             CriarAdminPadrao(conn);
         }
 
@@ -97,6 +99,20 @@ CREATE TABLE IF NOT EXISTS processos(
     usuario_rascunho TEXT,
     lock_usuario TEXT,
     lock_timestamp TEXT
+);
+
+
+CREATE TABLE IF NOT EXISTS processo_reus(
+    id TEXT PRIMARY KEY,
+    processo_id TEXT,
+    nome_reu TEXT
+);
+
+CREATE TABLE IF NOT EXISTS catalogo_itens_saude(
+    id TEXT PRIMARY KEY,
+    tipo TEXT,
+    nome TEXT,
+    UNIQUE(tipo, nome)
 );
 
 CREATE TABLE IF NOT EXISTS contas(
@@ -178,6 +194,30 @@ CREATE TABLE IF NOT EXISTS schema_version(
     versao INTEGER
 );
 ");
+        }
+
+
+        private void GarantirEstruturaAtualizada(SqliteConnection conn)
+        {
+            AdicionarColunaSeNaoExistir(conn, "processos", "representante", "TEXT");
+            AdicionarColunaSeNaoExistir(conn, "processos", "sem_representante", "INTEGER DEFAULT 0");
+            AdicionarColunaSeNaoExistir(conn, "processos", "tipo_processo", "TEXT");
+        }
+
+        private void AdicionarColunaSeNaoExistir(
+            SqliteConnection conn,
+            string tabela,
+            string coluna,
+            string definicao)
+        {
+            var colunas = conn.Query($"PRAGMA table_info({tabela});")
+                .Select(c => (string)c.name)
+                .ToList();
+
+            if (colunas.Any(c => string.Equals(c, coluna, StringComparison.OrdinalIgnoreCase)))
+                return;
+
+            conn.Execute($"ALTER TABLE {tabela} ADD COLUMN {coluna} {definicao}");
         }
 
         private void CriarAdminPadrao(SqliteConnection conn)

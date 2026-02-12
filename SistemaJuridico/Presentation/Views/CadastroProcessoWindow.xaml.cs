@@ -1,7 +1,6 @@
-using SistemaJuridico.Services;
+using SistemaJuridico.Infrastructure;
 using SistemaJuridico.ViewModels;
 using System.Windows;
-using UserControl = System.Windows.Controls.UserControl;
 
 namespace SistemaJuridico.Views
 {
@@ -11,15 +10,12 @@ namespace SistemaJuridico.Views
         {
             InitializeComponent();
 
-            var db = new DatabaseService();
-            var service = new ProcessService(db);
-
-            var vm = new CadastroProcessoViewModel(service);
+            var vm = new CadastroProcessoViewModel(
+                ServiceLocator.ProcessService,
+                ServiceLocator.ItemSaudeService);
 
             vm.FecharTela = Close;
-
             DataContext = vm;
         }
     }
 }
-
