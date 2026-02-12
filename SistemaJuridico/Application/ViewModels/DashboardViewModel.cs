@@ -14,10 +14,9 @@ namespace SistemaJuridico.ViewModels
         private readonly ContaService _contaService;
 
         public ObservableCollection<ProcessoResumoVM> Processos { get; } = new();
-
-        // =========================
-        // INDICADORES GLOBAIS
-        // =========================
+        public ObservableCollection<Processo> ProcessosRascunho { get; } = new();
+        public ObservableCollection<Processo> ProcessosPendentes { get; } = new();
+        public ObservableCollection<string> ProcessosBloqueados { get; } = new();
 
         [ObservableProperty]
         private decimal _saldoTotalPendente;
@@ -31,6 +30,9 @@ namespace SistemaJuridico.ViewModels
         [ObservableProperty]
         private int _totalBloqueados;
 
+        [ObservableProperty]
+        private string _usuarioLogadoTexto = "";
+
         public DashboardViewModel()
         {
             var db = new DatabaseService();
@@ -41,20 +43,20 @@ namespace SistemaJuridico.ViewModels
             Carregar();
         }
 
-        // =========================
-        // CARREGAR DASHBOARD
-        // =========================
-
         [RelayCommand]
         private void Carregar()
         {
             Processos.Clear();
+            ProcessosRascunho.Clear();
+            ProcessosPendentes.Clear();
+            ProcessosBloqueados.Clear();
 
             decimal saldoGlobal = 0;
             int rascunhos = 0;
             int bloqueados = 0;
 
             var atual = App.Session.UsuarioAtual?.Email;
+            UsuarioLogadoTexto = $"Logado como: {atual ?? "(não identificado)"}";
 
             foreach (var p in _service.ListarProcessos())
             {
@@ -63,11 +65,20 @@ namespace SistemaJuridico.ViewModels
                 saldoGlobal += resumo.saldoPendente;
 
                 if (p.SituacaoRascunho == "Rascunho")
+                {
                     rascunhos++;
+                    ProcessosRascunho.Add(p);
+                }
 
-                if (p.SituacaoRascunho == "Em edição"
-                    && p.UsuarioRascunho != atual)
+                if (resumo.diligenciaPendente)
+                    ProcessosPendentes.Add(p);
+
+                var usuarioLock = _service.UsuarioEditando(p.Id);
+                if (!string.IsNullOrWhiteSpace(usuarioLock) && usuarioLock != atual)
+                {
                     bloqueados++;
+                    ProcessosBloqueados.Add($"{p.Numero} - {usuarioLock}");
+                }
 
                 Processos.Add(new ProcessoResumoVM
                 {
@@ -98,10 +109,6 @@ namespace SistemaJuridico.ViewModels
                 : conta.DataMovimentacao;
         }
 
-        // =========================
-        // ABRIR PROCESSO
-        // =========================
-
         [RelayCommand]
         private void AbrirProcesso(ProcessoResumoVM processo)
         {
@@ -114,10 +121,6 @@ namespace SistemaJuridico.ViewModels
             Carregar();
         }
     }
-
-    // =========================
-    // VM AUXILIAR
-    // =========================
 
     public class ProcessoResumoVM
     {
