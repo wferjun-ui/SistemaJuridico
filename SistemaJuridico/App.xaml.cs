@@ -7,7 +7,7 @@ using SistemaJuridico.Infrastructure;
 
 namespace SistemaJuridico
 {
-    public partial class App : Application
+    public partial class App : System.Windows.Application
     {
         private ServiceLocator _serviceLocator;
 
