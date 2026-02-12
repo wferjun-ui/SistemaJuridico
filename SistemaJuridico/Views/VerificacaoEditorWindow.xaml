@@ -15,12 +15,12 @@
         <StackPanel DockPanel.Dock="Bottom"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
-                    Margin="0,10,0,0"
-                    Spacing="8">
+                    Margin="0,10,0,0">
 
             <Button Content="Salvar"
                     Padding="16,6"
                     FontWeight="Bold"
+                    Margin="0,0,8,0"
                     Command="{Binding SalvarCommand}" />
 
             <Button Content="Cancelar"
@@ -30,30 +30,30 @@
 
         <!-- Conteúdo -->
         <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="10">
+            <StackPanel>
 
                 <!-- Status / Responsável -->
-                <GroupBox Header="Status do Processo">
+                <GroupBox Header="Status do Processo" Margin="0,0,0,10">
                     <Grid Margin="8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
-                        <StackPanel Grid.Column="0" Spacing="4">
-                            <TextBlock Text="Status"/>
+                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                            <TextBlock Text="Status" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding StatusProcesso, UpdateSourceTrigger=PropertyChanged}"/>
                         </StackPanel>
 
-                        <StackPanel Grid.Column="1" Spacing="4">
-                            <TextBlock Text="Responsável"/>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Responsável" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding Responsavel, UpdateSourceTrigger=PropertyChanged}"/>
                         </StackPanel>
                     </Grid>
                 </GroupBox>
 
                 <!-- Descrição -->
-                <GroupBox Header="Descrição da Verificação">
+                <GroupBox Header="Descrição da Verificação" Margin="0,0,0,10">
                     <TextBox Margin="8"
                              AcceptsReturn="True"
                              Height="80"
@@ -62,31 +62,34 @@
                 </GroupBox>
 
                 <!-- Diligência -->
-                <GroupBox Header="Diligência">
-                    <StackPanel Margin="8" Spacing="6">
+                <GroupBox Header="Diligência" Margin="0,0,0,10">
+                    <StackPanel Margin="8">
 
                         <CheckBox Content="Diligência realizada"
+                                  Margin="0,0,0,6"
                                   IsChecked="{Binding DiligenciaRealizada}" />
 
-                        <TextBlock Text="Descrição da diligência"/>
+                        <TextBlock Text="Descrição da diligência" Margin="0,0,0,4"/>
                         <TextBox AcceptsReturn="True"
                                  Height="70"
+                                 Margin="0,0,0,6"
                                  TextWrapping="Wrap"
                                  Text="{Binding DescricaoDiligencia, UpdateSourceTrigger=PropertyChanged}"/>
 
-                        <TextBlock Text="Prazo da diligência"/>
+                        <TextBlock Text="Prazo da diligência" Margin="0,0,0,4"/>
                         <TextBox Text="{Binding PrazoDiligencia, UpdateSourceTrigger=PropertyChanged}"/>
                     </StackPanel>
                 </GroupBox>
 
                 <!-- Pendências -->
-                <GroupBox Header="Pendências">
-                    <StackPanel Margin="8" Spacing="6">
+                <GroupBox Header="Pendências" Margin="0,0,0,10">
+                    <StackPanel Margin="8">
 
                         <CheckBox Content="Possui pendências"
+                                  Margin="0,0,0,6"
                                   IsChecked="{Binding PossuiPendencias}" />
 
-                        <TextBlock Text="Descrição das pendências"/>
+                        <TextBlock Text="Descrição das pendências" Margin="0,0,0,4"/>
                         <TextBox AcceptsReturn="True"
                                  Height="70"
                                  TextWrapping="Wrap"
@@ -102,13 +105,13 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
-                        <StackPanel Grid.Column="0" Spacing="4">
-                            <TextBlock Text="Próximo prazo padrão"/>
+                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                            <TextBlock Text="Próximo prazo padrão" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding ProximoPrazoPadrao, UpdateSourceTrigger=PropertyChanged}"/>
                         </StackPanel>
 
-                        <StackPanel Grid.Column="1" Spacing="4">
-                            <TextBlock Text="Data de notificação"/>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Data de notificação" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding DataNotificacao, UpdateSourceTrigger=PropertyChanged}"/>
                         </StackPanel>
                     </Grid>
