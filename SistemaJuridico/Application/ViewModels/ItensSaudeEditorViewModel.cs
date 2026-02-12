@@ -93,7 +93,7 @@ namespace SistemaJuridico.ViewModels
             if (ItemSelecionado == null)
                 return;
 
-            var r = MessageBox.Show(
+            var r = System.Windows.MessageBox.Show(
                 "Deseja excluir o item?",
                 "Confirmação",
                 MessageBoxButton.YesNo);
@@ -122,7 +122,7 @@ namespace SistemaJuridico.ViewModels
                     _itemService.Atualizar(vm.Model);
             }
 
-            MessageBox.Show("Itens salvos com sucesso.");
+            System.Windows.MessageBox.Show("Itens salvos com sucesso.");
         }
 
         // ======================

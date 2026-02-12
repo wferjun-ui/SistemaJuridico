@@ -73,7 +73,7 @@ namespace SistemaJuridico.ViewModels
         {
             if (string.IsNullOrWhiteSpace(StatusProcesso))
             {
-                MessageBox.Show("Informe o status do processo.");
+                System.Windows.MessageBox.Show("Informe o status do processo.");
                 return;
             }
 
@@ -92,7 +92,7 @@ namespace SistemaJuridico.ViewModels
                 itensSnapshot: _itensSnapshot
             );
 
-            MessageBox.Show("Verificação registrada.");
+            System.Windows.MessageBox.Show("Verificação registrada.");
             FecharSolicitado?.Invoke();
         }
 

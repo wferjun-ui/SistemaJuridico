@@ -64,7 +64,7 @@ namespace SistemaJuridico.ViewModels
         {
             if (string.IsNullOrWhiteSpace(EdicaoConta.Tipo))
             {
-                MessageBox.Show("Tipo obrigatório");
+                System.Windows.MessageBox.Show("Tipo obrigatório");
                 return;
             }
 
@@ -84,7 +84,7 @@ namespace SistemaJuridico.ViewModels
 
             if (!ContaSelecionada.PodeEditar)
             {
-                MessageBox.Show("Conta já fechada.");
+                System.Windows.MessageBox.Show("Conta já fechada.");
                 return;
             }
 
@@ -105,7 +105,7 @@ namespace SistemaJuridico.ViewModels
         {
             if (ContaSelecionada == null) return;
 
-            if (MessageBox.Show("Excluir conta?",
+            if (System.Windows.MessageBox.Show("Excluir conta?",
                 "Confirma",
                 MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
