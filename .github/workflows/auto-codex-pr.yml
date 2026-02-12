@@ -21,7 +21,8 @@ jobs:
           python-version: '3.11'
 
       - name: Instalar dependências
-        run: pip install openai PyGithub
+        run: |
+          pip install openai PyGithub
 
       - name: Executar IA
         env:
@@ -29,7 +30,7 @@ jobs:
           GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
           REPO_NAME: ${{ github.repository }}
         run: |
-          python << 'EOF'
+          cat <<EOF > script.py
 import os
 from openai import OpenAI
 from github import Github
@@ -70,3 +71,5 @@ repo.create_pull(
     base="main"
 )
 EOF
+
+          python script.py
