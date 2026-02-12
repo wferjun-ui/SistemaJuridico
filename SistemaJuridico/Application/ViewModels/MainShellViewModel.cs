@@ -1,5 +1,7 @@
 using SistemaJuridico.Infrastructure;
 using SistemaJuridico.Services;
+using SistemaJuridico.Views;
+using System.Windows;
 
 namespace SistemaJuridico.ViewModels
 {
@@ -11,6 +13,10 @@ namespace SistemaJuridico.ViewModels
         public RelayCommand OpenProcessosCommand { get; }
         public RelayCommand OpenContasCommand { get; }
         public RelayCommand OpenAuditoriaCommand { get; }
+        public RelayCommand OpenAdminEmailsCommand { get; }
+        public RelayCommand OpenCadastroUsuarioCommand { get; }
+
+        public bool IsAdmin => App.Session.IsAdmin();
 
         public MainShellViewModel(NavigationCoordinatorService navigator)
         {
@@ -27,6 +33,28 @@ namespace SistemaJuridico.ViewModels
 
             OpenAuditoriaCommand = new RelayCommand(() =>
                 _navigator.Navigate(NavigationKey.Auditoria));
+
+            OpenAdminEmailsCommand = new RelayCommand(() =>
+            {
+                if (!IsAdmin)
+                {
+                    MessageBox.Show("Apenas administradores podem acessar este recurso.");
+                    return;
+                }
+
+                new AdminEmailsWindow { Owner = Application.Current.MainWindow }.ShowDialog();
+            });
+
+            OpenCadastroUsuarioCommand = new RelayCommand(() =>
+            {
+                if (!IsAdmin)
+                {
+                    MessageBox.Show("Apenas administradores podem acessar este recurso.");
+                    return;
+                }
+
+                new CadastroUsuarioWindow { Owner = Application.Current.MainWindow }.ShowDialog();
+            });
         }
 
         public void LoadInitialView()

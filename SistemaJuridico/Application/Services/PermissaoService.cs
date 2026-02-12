@@ -1,4 +1,6 @@
 using SistemaJuridico.Models;
+using System;
+using System.Linq;
 
 namespace SistemaJuridico.Services
 {
@@ -53,7 +55,7 @@ namespace SistemaJuridico.Services
             if (UsuarioAtual == null)
                 return false;
 
-            return perfis.Contains(UsuarioAtual.Perfil);
+            return perfis.Any(p => string.Equals(p, UsuarioAtual.Perfil, StringComparison.OrdinalIgnoreCase));
         }
     }
 }

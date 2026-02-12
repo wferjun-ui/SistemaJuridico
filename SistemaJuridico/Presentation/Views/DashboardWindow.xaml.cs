@@ -9,8 +9,6 @@ namespace SistemaJuridico.Views
     {
         private DashboardViewModel VM => (DashboardViewModel)DataContext;
 
-        public string Usuario =>
-            $"Logado como: {App.Session.UsuarioAtual?.Email}";
 
         public DashboardWindow()
         {

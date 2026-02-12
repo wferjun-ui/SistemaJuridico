@@ -26,7 +26,7 @@ namespace SistemaJuridico.ViewModels
         {
             using var conn = new DatabaseService().GetConnection();
 
-            var lista = conn.Query<string>("SELECT email FROM emails_autorizados");
+            var lista = conn.Query<string>("SELECT email FROM emails_autorizados ORDER BY email");
 
             Emails.Clear();
             foreach (var e in lista)
@@ -36,14 +36,26 @@ namespace SistemaJuridico.ViewModels
         [RelayCommand]
         private void Adicionar()
         {
+            if (!App.Session.IsAdmin())
+            {
+                MessageBox.Show("Apenas administradores podem alterar e-mails autorizados.");
+                return;
+            }
+
             if (string.IsNullOrWhiteSpace(NovoEmail))
                 return;
 
-            _service.AdicionarEmail(NovoEmail);
+            var email = NovoEmail.Trim();
+            var incluido = _service.AdicionarEmail(email);
 
-            Emails.Add(NovoEmail);
+            if (!incluido)
+            {
+                MessageBox.Show("E-mail já cadastrado ou inválido.");
+                return;
+            }
+
+            Emails.Add(email);
             NovoEmail = "";
         }
     }
 }
-
