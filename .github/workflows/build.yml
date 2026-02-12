@@ -17,6 +17,12 @@ jobs:
       with:
         dotnet-version: 8.0.x
 
+    # 🔥 Força versão correta MaterialDesign
+    - name: Garantir versões MaterialDesign
+      run: |
+        dotnet add SistemaJuridico/SistemaJuridico.csproj package MaterialDesignColors --version 3.1.0
+        dotnet add SistemaJuridico/SistemaJuridico.csproj package MaterialDesignThemes --version 5.1.0
+
     - name: Restaurar dependências
       run: dotnet restore SistemaJuridico/SistemaJuridico.csproj
 
