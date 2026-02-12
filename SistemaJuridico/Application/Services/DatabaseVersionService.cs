@@ -70,9 +70,20 @@ CREATE TABLE IF NOT EXISTS schema_version (
 
         private void AtualizarParaV1(SqliteConnection conn)
         {
-            conn.Execute("ALTER TABLE processos ADD COLUMN situacao_rascunho TEXT DEFAULT 'Concluído';");
-            conn.Execute("ALTER TABLE processos ADD COLUMN motivo_rascunho TEXT;");
-            conn.Execute("ALTER TABLE processos ADD COLUMN usuario_rascunho TEXT;");
+            ExecutarAlterTableIgnorandoColunaExistente(
+                conn,
+                "ALTER TABLE processos ADD COLUMN situacao_rascunho TEXT DEFAULT 'Concluído';",
+                "situacao_rascunho");
+
+            ExecutarAlterTableIgnorandoColunaExistente(
+                conn,
+                "ALTER TABLE processos ADD COLUMN motivo_rascunho TEXT;",
+                "motivo_rascunho");
+
+            ExecutarAlterTableIgnorandoColunaExistente(
+                conn,
+                "ALTER TABLE processos ADD COLUMN usuario_rascunho TEXT;",
+                "usuario_rascunho");
 
             DefinirVersao(conn, 1);
         }
