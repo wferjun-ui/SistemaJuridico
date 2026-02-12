@@ -2,13 +2,15 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SistemaJuridico.Services;
 using SistemaJuridico.Views;
-using System.Windows;
+using System;
 
 namespace SistemaJuridico.ViewModels
 {
     public partial class LoginViewModel : ObservableObject
     {
         private readonly AuthService _auth;
+
+        public event EventHandler? LoginSucesso;
 
         [ObservableProperty]
         private string usuario = "";
@@ -28,17 +30,17 @@ namespace SistemaJuridico.ViewModels
 
             if (user == null)
             {
-                MessageBox.Show("Usuário ou senha inválidos.");
+                System.Windows.MessageBox.Show("Usuário ou senha inválidos.");
                 return;
             }
 
             App.Session.SetUsuario(user);
+            LoginSucesso?.Invoke(this, EventArgs.Empty);
 
             var dash = new DashboardWindow();
             dash.Show();
 
-            Application.Current.MainWindow?.Close();
+            System.Windows.Application.Current.MainWindow?.Close();
         }
     }
 }
-
