@@ -23,6 +23,7 @@ namespace SistemaJuridico.Services
 
         public void Navigate<TView, TViewModel>(ViewFactoryService factory)
             where TView : UserControl, new()
+            where TViewModel : class
         {
             var view = factory.CreateView<TView, TViewModel>();
             Navigate(view);
