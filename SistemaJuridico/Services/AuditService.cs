@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Dapper;
 using SistemaJuridico.Models;
 
@@ -23,17 +24,7 @@ namespace SistemaJuridico.Services
                 using var conn = _db.GetConnection();
 
                 conn.Execute(@"
-INSERT INTO audit_log (
-    id,
-    data_hora,
-    usuario,
-    acao,
-    entidade,
-    entidade_id,
-    detalhes
-)
-VALUES (
-    @id,
+@@ -37,38 +38,45 @@ VALUES (
     @data,
     @usuario,
     @acao,
@@ -59,6 +50,13 @@ VALUES (
         }
 
         // ⭐ NOVO MÉTODO — BLOCO 9
+        public Task<List<AuditLog>> ObterLogsAsync(string? processoId = null)
+        {
+            if (string.IsNullOrWhiteSpace(processoId))
+                return Task.FromResult(new List<AuditLog>());
+            return Task.FromResult(ListarPorProcesso(processoId));
+        }
+
         public List<AuditLog> ListarPorProcesso(string processoId)
         {
             using var conn = _db.GetConnection();
