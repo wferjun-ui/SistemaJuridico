@@ -125,8 +125,16 @@ namespace SistemaJuridico.ViewModels
             if (!_lockAdquirido)
                 return;
 
-            _processService.LiberarLock(_processoId);
-            _lockAdquirido = false;
+            try
+            {
+                _lockTimer?.Stop();
+
+                if (_lockAdquirido)
+                {
+                    _processService.LiberarLock(_processoId);
+                    _lockAdquirido = false;
+                }
+            }
         }
 
         // ========================
