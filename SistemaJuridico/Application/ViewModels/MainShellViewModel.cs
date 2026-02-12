@@ -13,6 +13,7 @@ namespace SistemaJuridico.ViewModels
         public RelayCommand OpenContasCommand { get; }
         public RelayCommand OpenAuditoriaCommand { get; }
         public RelayCommand OpenAdminCommand { get; }
+        public RelayCommand OpenCadastroUsuarioCommand { get; }
 
         public bool IsAdmin => App.Session.IsAdmin();
 

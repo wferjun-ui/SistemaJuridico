@@ -122,6 +122,41 @@ namespace SistemaJuridico.Services
                 new { Id = id, Valor = bloqueado ? 1 : 0 });
         }
 
+
+        public List<string> ListarCatalogoPorTipo(string tipo)
+        {
+            using var conn = _database.CreateConnection();
+
+            return conn.Query<string>(
+                @"SELECT DISTINCT nome
+                  FROM catalogo_itens_saude
+                  WHERE tipo = @Tipo
+                 UNION
+                SELECT DISTINCT nome
+                  FROM itens_saude
+                  WHERE tipo = @Tipo
+                 ORDER BY nome",
+                new { Tipo = tipo }).ToList();
+        }
+
+        public void RegistrarCatalogo(string tipo, string nome)
+        {
+            if (string.IsNullOrWhiteSpace(tipo) || string.IsNullOrWhiteSpace(nome))
+                return;
+
+            using var conn = _database.CreateConnection();
+
+            conn.Execute(
+                @"INSERT OR IGNORE INTO catalogo_itens_saude (id, tipo, nome)
+                  VALUES (@Id, @Tipo, @Nome)",
+                new
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Tipo = tipo.Trim(),
+                    Nome = nome.Trim()
+                });
+        }
+
         public void SubstituirItensProcesso(string processoId, List<ItemSaude> itens)
         {
             using var conn = _database.CreateConnection();

@@ -6,6 +6,9 @@ namespace SistemaJuridico.Models
         public string Numero { get; set; } = "";
         public bool IsAntigo { get; set; }
         public string Paciente { get; set; } = "";
+        public string Representante { get; set; } = "";
+        public bool SemRepresentante { get; set; }
+        public string TipoProcesso { get; set; } = "";
         public string Juiz { get; set; } = "";
         public string Classificacao { get; set; } = "";
         public string StatusFase { get; set; } = "Conhecimento";
