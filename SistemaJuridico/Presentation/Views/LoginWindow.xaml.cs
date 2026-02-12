@@ -1,6 +1,5 @@
 using SistemaJuridico.ViewModels;
 using System.Windows;
-using UserControl = System.Windows.Controls.UserControl;
 
 namespace SistemaJuridico.Views
 {
@@ -9,15 +8,11 @@ namespace SistemaJuridico.Views
         public LoginWindow()
         {
             InitializeComponent();
-
-            var vm = new LoginViewModel();
-            DataContext = vm;
-
             PwdBox.PasswordChanged += (s, e) =>
             {
-                vm.Senha = PwdBox.Password;
+                if (DataContext is LoginViewModel vm)
+                    vm.Senha = PwdBox.Password;
             };
         }
     }
 }
-
