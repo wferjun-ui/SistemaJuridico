@@ -115,6 +115,48 @@ LIMIT 1",
             }
         }
 
+        public List<Usuario> ListarUsuarios()
+        {
+            using var conn = new SqliteConnection(_connectionString);
+
+            return conn.Query<Usuario>(@"
+SELECT id, username, email, perfil
+FROM usuarios
+ORDER BY username").ToList();
+        }
+
+        public void AlterarPerfil(string usuarioId, string perfil)
+        {
+            if (string.IsNullOrWhiteSpace(usuarioId) || string.IsNullOrWhiteSpace(perfil))
+                throw new InvalidOperationException("Usuário e perfil são obrigatórios.");
+
+            using var conn = new SqliteConnection(_connectionString);
+            conn.Execute("UPDATE usuarios SET perfil=@perfil WHERE id=@id", new { id = usuarioId, perfil = perfil.Trim() });
+        }
+
+        public void AlterarSenha(string usuarioId, string novaSenha)
+        {
+            if (string.IsNullOrWhiteSpace(usuarioId) || string.IsNullOrWhiteSpace(novaSenha))
+                throw new InvalidOperationException("Usuário e senha são obrigatórios.");
+
+            using var conn = new SqliteConnection(_connectionString);
+            var salt = GerarSalt();
+            var hash = HashSenha(novaSenha.Trim(), salt);
+
+            conn.Execute(
+                "UPDATE usuarios SET password_hash=@hash, salt=@salt WHERE id=@id",
+                new { id = usuarioId, hash, salt });
+        }
+
+        public void ExcluirUsuario(string usuarioId)
+        {
+            if (string.IsNullOrWhiteSpace(usuarioId))
+                throw new InvalidOperationException("Usuário inválido.");
+
+            using var conn = new SqliteConnection(_connectionString);
+            conn.Execute("DELETE FROM usuarios WHERE id=@id", new { id = usuarioId });
+        }
+
         public void Logout()
         {
             var nome = SessaoUsuarioService.Instance.NomeUsuario;

@@ -35,7 +35,7 @@ namespace SistemaJuridico.ViewModels
         {
             if (string.IsNullOrWhiteSpace(Descricao))
             {
-                MessageBox.Show("Informe a descrição.");
+                System.Windows.MessageBox.Show("Informe a descrição.");
                 return;
             }
 

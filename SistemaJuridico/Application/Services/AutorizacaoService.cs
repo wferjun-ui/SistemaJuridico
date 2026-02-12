@@ -51,5 +51,20 @@ VALUES(@id,@e)",
 
             return linhas > 0;
         }
+
+        public bool RemoverEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return false;
+
+            using var conn = _db.GetConnection();
+
+            var linhas = conn.Execute(
+                "DELETE FROM emails_autorizados WHERE lower(email)=lower(@e)",
+                new { e = email.Trim() });
+
+            return linhas > 0;
+        }
+
     }
 }

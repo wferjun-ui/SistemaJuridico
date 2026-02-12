@@ -28,7 +28,8 @@ namespace SistemaJuridico.Services
                     data_criacao as DataCriacao,
                     data_conclusao as DataConclusao,
                     concluida as Concluida,
-                    responsavel as Responsavel
+                    responsavel as Responsavel,
+                    prazo as Prazo
                 FROM diligencias
                 WHERE processo_id=@id
                 ORDER BY data_criacao DESC
@@ -50,7 +51,8 @@ namespace SistemaJuridico.Services
                     descricao,
                     data_criacao,
                     concluida,
-                    responsavel
+                    responsavel,
+                    prazo
                 )
                 VALUES (
                     @Id,
@@ -58,7 +60,8 @@ namespace SistemaJuridico.Services
                     @Descricao,
                     @DataCriacao,
                     @Concluida,
-                    @Responsavel
+                    @Responsavel,
+                    @Prazo
                 )
             ", diligencia);
         }
