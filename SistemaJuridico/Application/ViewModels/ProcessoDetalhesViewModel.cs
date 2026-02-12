@@ -5,8 +5,11 @@ using SistemaJuridico.Models;
 using SistemaJuridico.Services;
 using SistemaJuridico.Views;
 using System.Collections.ObjectModel;
-using System.Windows;
+using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace SistemaJuridico.ViewModels
 {
@@ -18,11 +21,13 @@ namespace SistemaJuridico.ViewModels
         private readonly VerificacaoService _verificacaoService;
         private readonly HistoricoService _historicoService;
         private readonly LoggerService _logger = new();
-
         private readonly string _processoId;
 
         private System.Windows.Threading.DispatcherTimer? _lockTimer;
         private bool _lockAdquirido;
+        private DateTime? _ultimaVerificacaoDate;
+        private string _ultimaVerificacaoData = "Sem verificação";
+        private string _ultimaVerificacaoResponsavel = "N/D";
 
         public Processo Processo { get; private set; }
 
@@ -38,14 +43,11 @@ namespace SistemaJuridico.ViewModels
         [ObservableProperty]
         private string _usuarioEditandoTexto = "";
 
-        public ProcessoDetalhesViewModel(
-            string processoId,
-            ProcessService processService)
+        public ProcessoDetalhesViewModel(string processoId, ProcessService processService)
         {
             _processService = processService;
 
             var db = new DatabaseService();
-
             _contaService = new ContaService(db);
             _itemSaudeService = new ItemSaudeService(db);
             _verificacaoService = new VerificacaoService(db);
@@ -59,17 +61,56 @@ namespace SistemaJuridico.ViewModels
                 ?? new Processo { Id = processoId };
 
             ValidarLock();
+            RecarregarTudo();
+        }
 
+        public decimal TotalContasAPrestar => Contas
+            .Where(c => !string.Equals(c.StatusConta, "fechada", StringComparison.OrdinalIgnoreCase))
+            .Sum(c => c.ValorConta);
+
+        public string UltimaVerificacaoData => _ultimaVerificacaoData;
+
+        public string UltimaVerificacaoResponsavel => _ultimaVerificacaoResponsavel;
+
+        public string HashProcesso
+        {
+            get
+            {
+                var dados = $"{Processo.Id}|{Processo.Numero}|{Processo.Paciente}|{Processo.Juiz}|{Processo.StatusFase}";
+                var hash = SHA256.HashData(Encoding.UTF8.GetBytes(dados));
+                return Convert.ToHexString(hash)[..16];
+            }
+        }
+
+        public string DataPrescricao => _ultimaVerificacaoDate?.AddDays(90).ToString("dd/MM/yyyy") ?? "Sem base";
+
+        public string PrescricaoStatus
+        {
+            get
+            {
+                if (_ultimaVerificacaoDate is null)
+                    return "Atualização pendente";
+
+                var dias = (_ultimaVerificacaoDate.Value.AddDays(90).Date - DateTime.Today).Days;
+
+                if (dias < 0)
+                    return "Atualização vencida";
+
+                if (dias <= 7)
+                    return $"Atualizar em {dias} dia(s)";
+
+                return "Em dia";
+            }
+        }
+
+        private void RecarregarTudo()
+        {
             CarregarContas();
             CarregarItensSaude();
             CarregarVerificacoes();
             CarregarDiligencias();
             CarregarHistorico();
         }
-
-        // ========================
-        // LOCK MULTIUSUÁRIO
-        // ========================
 
         private void ValidarLock()
         {
@@ -79,22 +120,20 @@ namespace SistemaJuridico.ViewModels
             if (usuario != null && usuario != atual)
             {
                 ModoSomenteLeitura = true;
-                UsuarioEditandoTexto =
-                    $"Processo em edição por {usuario}";
+                UsuarioEditandoTexto = $"Processo em edição por {usuario}";
+                return;
             }
-            else
-            {
-                var lockObtido = _processService.TentarLock(_processoId);
-                if (!lockObtido)
-                {
-                    ModoSomenteLeitura = true;
-                    UsuarioEditandoTexto = "Processo em edição por outro usuário.";
-                    return;
-                }
 
-                _lockAdquirido = true;
-                IniciarHeartbeat();
+            var lockObtido = _processService.TentarLock(_processoId);
+            if (!lockObtido)
+            {
+                ModoSomenteLeitura = true;
+                UsuarioEditandoTexto = "Processo em edição por outro usuário.";
+                return;
             }
+
+            _lockAdquirido = true;
+            IniciarHeartbeat();
         }
 
         private void IniciarHeartbeat()
@@ -131,23 +170,14 @@ namespace SistemaJuridico.ViewModels
 
             try
             {
-                _lockTimer?.Stop();
-
-                if (_lockAdquirido)
-                {
-                    _processService.LiberarLock(_processoId);
-                    _lockAdquirido = false;
-                }
+                _processService.LiberarLock(_processoId);
+                _lockAdquirido = false;
             }
             catch (Exception ex)
             {
                 _logger.Error("Falha ao liberar lock do processo", ex);
             }
         }
-
-        // ========================
-        // LOADERS
-        // ========================
 
         private void CarregarContas()
         {
@@ -162,7 +192,6 @@ namespace SistemaJuridico.ViewModels
         private void CarregarItensSaude()
         {
             ItensSaude.Clear();
-
             foreach (var item in _itemSaudeService.ListarPorProcesso(_processoId))
                 ItensSaude.Add(item);
         }
@@ -171,10 +200,12 @@ namespace SistemaJuridico.ViewModels
         {
             Verificacoes.Clear();
 
-            foreach (var v in _verificacaoService
-                         .ListarPorProcesso(_processoId)
-                         .OrderByDescending(x => x.DataHora))
-            {
+            var verificacoes = _verificacaoService
+                .ListarPorProcesso(_processoId)
+                .OrderByDescending(v => ParseData(v.DataHora) ?? DateTime.MinValue)
+                .ToList();
+
+            foreach (var v in verificacoes)
                 Verificacoes.Add(v);
             }
 
@@ -184,13 +215,25 @@ namespace SistemaJuridico.ViewModels
             OnPropertyChanged(nameof(PrescricaoStatus));
         }
 
+        private static DateTime? ParseData(string? valor)
+        {
+            if (string.IsNullOrWhiteSpace(valor))
+                return null;
+
+            if (DateTime.TryParse(valor, out var parsed))
+                return parsed;
+
+            var formatos = new[] { "dd/MM/yyyy", "dd/MM/yyyy HH:mm", "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss" };
+            if (DateTime.TryParseExact(valor, formatos, CultureInfo.InvariantCulture, DateTimeStyles.None, out var exato))
+                return exato;
+
+            return null;
+        }
+
         private void CarregarDiligencias()
         {
             Diligencias.Clear();
-
-            var lista = new DiligenciaService(new DatabaseService())
-                .ListarPorProcesso(_processoId);
-
+            var lista = new DiligenciaService(new DatabaseService()).ListarPorProcesso(_processoId);
             foreach (var d in lista)
                 Diligencias.Add(d);
         }
@@ -282,14 +325,28 @@ namespace SistemaJuridico.ViewModels
             Contas.Clear();
             foreach (var conta in processo.Contas)
                 Contas.Add(conta);
+            OnPropertyChanged(nameof(TotalContasAPrestar));
 
             ItensSaude.Clear();
             foreach (var item in processo.ItensSaude)
                 ItensSaude.Add(item);
 
             Verificacoes.Clear();
-            foreach (var verificacao in processo.Verificacoes.OrderByDescending(x => x.DataHora))
+            var verificacoes = processo.Verificacoes
+                .OrderByDescending(v => ParseData(v.DataHora) ?? DateTime.MinValue)
+                .ToList();
+
+            foreach (var verificacao in verificacoes)
                 Verificacoes.Add(verificacao);
+
+            var ultima = verificacoes.FirstOrDefault();
+            _ultimaVerificacaoData = ultima?.DataHora ?? "Sem verificação";
+            _ultimaVerificacaoResponsavel = string.IsNullOrWhiteSpace(ultima?.Responsavel) ? "N/D" : ultima.Responsavel;
+            _ultimaVerificacaoDate = ParseData(ultima?.DataHora);
+            OnPropertyChanged(nameof(UltimaVerificacaoData));
+            OnPropertyChanged(nameof(UltimaVerificacaoResponsavel));
+            OnPropertyChanged(nameof(DataPrescricao));
+            OnPropertyChanged(nameof(PrescricaoStatus));
 
             Diligencias.Clear();
             foreach (var diligencia in processo.Diligencias)
@@ -299,35 +356,26 @@ namespace SistemaJuridico.ViewModels
 
             return Task.CompletedTask;
         }
-        // ========================
-        // COMANDOS
-        // ========================
 
         [RelayCommand]
         private void SalvarRascunho()
         {
-            var motivo = Microsoft.VisualBasic.Interaction.InputBox(
-                "Informe o motivo do rascunho:");
-
+            var motivo = Microsoft.VisualBasic.Interaction.InputBox("Informe o motivo do rascunho:");
             if (string.IsNullOrWhiteSpace(motivo))
                 return;
 
             _processService.MarcarRascunho(_processoId, motivo);
-
             System.Windows.MessageBox.Show("Rascunho salvo.");
+            CarregarHistorico();
         }
 
         [RelayCommand]
         private void ConcluirEdicao()
         {
             _processService.MarcarConcluido(_processoId);
-
             System.Windows.MessageBox.Show("Edição concluída.");
+            CarregarHistorico();
         }
-
-        // ========================
-        // VERIFICAÇÕES
-        // ========================
 
         [RelayCommand]
         private void NovaVerificacao()
@@ -336,25 +384,14 @@ namespace SistemaJuridico.ViewModels
                 return;
 
             var facade = new VerificacaoFacadeService();
-
-            var status = Microsoft.VisualBasic.Interaction.InputBox(
-                "Informe o status do processo:");
-
+            var status = Microsoft.VisualBasic.Interaction.InputBox("Informe o status do processo:");
             if (string.IsNullOrWhiteSpace(status))
                 return;
 
-            var descricao = Microsoft.VisualBasic.Interaction.InputBox(
-                "Descrição da verificação:");
-
+            var descricao = Microsoft.VisualBasic.Interaction.InputBox("Descrição da verificação:");
             var responsavel = App.Session.UsuarioAtual?.Nome ?? "Sistema";
 
-            facade.CriarVerificacao(
-                _processoId,
-                status,
-                responsavel,
-                descricao,
-                ItensSaude.ToList());
-
+            facade.CriarVerificacao(_processoId, status, responsavel, descricao, ItensSaude.ToList());
             System.Windows.MessageBox.Show("Verificação registrada.");
 
             CarregarVerificacoes();
@@ -365,29 +402,19 @@ namespace SistemaJuridico.ViewModels
             OnPropertyChanged(nameof(PrescricaoStatus));
         }
 
-        // ========================
-        // DILIGÊNCIAS
-        // ========================
-
         [RelayCommand]
         private void NovaDiligencia()
         {
             if (ModoSomenteLeitura)
                 return;
 
-            var facade = CriarFacade();
-
-            var vm = new DiligenciaEditorViewModel(
-                _processoId,
-                facade);
-
+            var vm = new DiligenciaEditorViewModel(_processoId, CriarFacade());
             var tela = new DiligenciaEditorWindow(vm)
             {
                 Owner = System.Windows.Application.Current.MainWindow
             };
 
             tela.ShowDialog();
-
             CarregarDiligencias();
             CarregarHistorico();
         }
@@ -395,12 +422,10 @@ namespace SistemaJuridico.ViewModels
         [RelayCommand]
         private void ConcluirDiligencia(Diligencia d)
         {
-            if (d == null) return;
+            if (d == null)
+                return;
 
-            var facade = CriarFacade();
-
-            facade.ConcluirDiligencia(d.Id, _processoId);
-
+            CriarFacade().ConcluirDiligencia(d.Id, _processoId);
             CarregarDiligencias();
             CarregarHistorico();
         }
@@ -408,19 +433,13 @@ namespace SistemaJuridico.ViewModels
         [RelayCommand]
         private void ReabrirDiligencia(Diligencia d)
         {
-            if (d == null) return;
+            if (d == null)
+                return;
 
-            var facade = CriarFacade();
-
-            facade.ReabrirDiligencia(d.Id, _processoId);
-
+            CriarFacade().ReabrirDiligencia(d.Id, _processoId);
             CarregarDiligencias();
             CarregarHistorico();
         }
-
-        // ========================
-        // RELATÓRIO PDF
-        // ========================
 
         [RelayCommand]
         private void GerarRelatorio()
@@ -428,9 +447,7 @@ namespace SistemaJuridico.ViewModels
             try
             {
                 var db = new DatabaseService();
-
-                var modelo = new RelatorioProcessoService(db)
-                    .GerarModelo(_processoId);
+                var modelo = new RelatorioProcessoService(db).GerarModelo(_processoId);
 
                 var salvar = new Microsoft.Win32.SaveFileDialog
                 {
@@ -441,9 +458,7 @@ namespace SistemaJuridico.ViewModels
                 if (salvar.ShowDialog() != true)
                     return;
 
-                new PdfRelatorioProcessoService()
-                    .GerarPdf(modelo, salvar.FileName);
-
+                new PdfRelatorioProcessoService().GerarPdf(modelo, salvar.FileName);
                 System.Windows.MessageBox.Show("Relatório gerado com sucesso.");
             }
             catch (Exception ex)
@@ -452,28 +467,18 @@ namespace SistemaJuridico.ViewModels
             }
         }
 
-        // ========================
-        // FACADE
-        // ========================
-
- private ProcessoFacadeService CriarFacade()
-{
-    var db = new DatabaseService();
-
-    return new ProcessoFacadeService(
-        _processService,
-        new ContaService(db),
-        new DiligenciaService(db),
-        new HistoricoService(db),
-        new ItemSaudeService(db),
-        new VerificacaoService(db),
-        new AuditService(db) // ⭐ NOVO — auditoria
-    );
-}
-
-        // ========================
-        // CONTROLE FECHAMENTO
-        // ========================
+        private ProcessoFacadeService CriarFacade()
+        {
+            var db = new DatabaseService();
+            return new ProcessoFacadeService(
+                _processService,
+                new ContaService(db),
+                new DiligenciaService(db),
+                new HistoricoService(db),
+                new ItemSaudeService(db),
+                new VerificacaoService(db),
+                new AuditService(db));
+        }
 
         public bool PodeFechar()
         {
