@@ -19,6 +19,7 @@ namespace SistemaJuridico.ViewModels
         private readonly string _processoId;
 
         private System.Windows.Threading.DispatcherTimer? _lockTimer;
+        private bool _lockAdquirido;
 
         public Processo Processo { get; private set; }
 
@@ -85,6 +86,7 @@ namespace SistemaJuridico.ViewModels
                     return;
                 }
 
+                _lockAdquirido = true;
                 IniciarHeartbeat();
             }
         }
@@ -116,7 +118,12 @@ namespace SistemaJuridico.ViewModels
             try
             {
                 _lockTimer?.Stop();
-                _processService.LiberarLock(_processoId);
+
+                if (_lockAdquirido)
+                {
+                    _processService.LiberarLock(_processoId);
+                    _lockAdquirido = false;
+                }
             }
             catch { }
         }
