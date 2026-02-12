@@ -1,36 +1,45 @@
-public string Inicializar()
+using System;
+using System.IO;
+using System.Windows.Forms;
+
+namespace SistemaJuridico.Services
 {
-    var caminhoDb = ConfigService.ObterCaminhoBanco();
-
-    if (string.IsNullOrEmpty(caminhoDb))
+    public class InicializacaoSistemaService
     {
-        caminhoDb = SelecionarPastaBanco();
+        // =========================
+        // INICIALIZAÇÃO PRINCIPAL
+        // =========================
+        public string Inicializar()
+        {
+            var caminhoDb = ConfigService.ObterCaminhoBanco();
 
-        if (string.IsNullOrEmpty(caminhoDb))
-            throw new Exception("Banco não configurado.");
+            if (string.IsNullOrEmpty(caminhoDb))
+            {
+                caminhoDb = SelecionarPastaBanco();
 
-        ConfigService.SalvarCaminhoBanco(caminhoDb);
-    }
+                if (string.IsNullOrEmpty(caminhoDb))
+                    throw new Exception("Banco não configurado.");
 
-    // Inicializa banco base
-    var db = new DatabaseService(Path.GetDirectoryName(caminhoDb)!);
-    db.Initialize();
+                ConfigService.SalvarCaminhoBanco(caminhoDb);
+            }
 
-    // ⭐ AQUI entra o versionamento
-    var versionador = new DatabaseVersionService(db);
-    versionador.GarantirAtualizacao();
+            // Inicializa banco base
+            var db = new DatabaseService(Path.GetDirectoryName(caminhoDb)!);
+            db.Initialize();
 
-    // Importação automática
-    ImportarSeExistirJson(db);
+            // Versionamento
+            var versionador = new DatabaseVersionService(db);
+            versionador.GarantirAtualizacao();
 
-    return caminhoDb;
-}
+            // Importação automática
+            ImportarSeExistirJson(db);
 
+            return caminhoDb;
+        }
 
         // =========================
         // SELECIONAR PASTA
         // =========================
-
         private string SelecionarPastaBanco()
         {
             using var dialog = new FolderBrowserDialog();
@@ -49,7 +58,6 @@ public string Inicializar()
         // =========================
         // IMPORTAÇÃO AUTOMÁTICA
         // =========================
-
         private void ImportarSeExistirJson(DatabaseService db)
         {
             var pasta = ConfigService.ObterCaminhoBanco();
@@ -62,7 +70,6 @@ public string Inicializar()
                 return;
 
             var importer = new ImportacaoJsonService(db);
-
             importer.ImportarArquivo(jsonPath);
         }
     }
