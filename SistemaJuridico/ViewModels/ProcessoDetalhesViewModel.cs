@@ -5,6 +5,7 @@ using SistemaJuridico.Services;
 using SistemaJuridico.Views;
 using System.Collections.ObjectModel;
 using System.Windows;
+using System.Threading.Tasks;
 
 namespace SistemaJuridico.ViewModels
 {
@@ -154,7 +155,15 @@ namespace SistemaJuridico.ViewModels
             foreach (var d in lista)
                 Diligencias.Add(d);
         }
+ public Task CarregarAsync(int processoId)
+        {
+            return Task.CompletedTask;
+        }
 
+        public Task CarregarAsync(ProcessoCompletoDTO processo)
+        {
+            return Task.CompletedTask;
+        }
         // ========================
         // COMANDOS
         // ========================
