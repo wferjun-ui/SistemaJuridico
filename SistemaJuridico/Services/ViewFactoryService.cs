@@ -13,6 +13,7 @@ namespace SistemaJuridico.Services
 
         public UserControl CreateView<TView, TViewModel>()
             where TView : UserControl, new()
+            where TViewModel : class
         {
             var view = new TView();
 
