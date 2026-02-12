@@ -21,6 +21,10 @@ namespace SistemaJuridico.ViewModels
         [ObservableProperty]
         private Conta _edicaoConta = new();
 
+        public ContasViewModel() : this(string.Empty)
+        {
+        }
+
         public ContasViewModel(string processoId)
         {
             _processoId = processoId;
@@ -36,6 +40,9 @@ namespace SistemaJuridico.ViewModels
         {
             Contas.Clear();
 
+            if (string.IsNullOrWhiteSpace(_processoId))
+                return;
+
             foreach (var c in _service.ListarPorProcesso(_processoId))
                 Contas.Add(c);
         }
@@ -43,6 +50,9 @@ namespace SistemaJuridico.ViewModels
         [RelayCommand]
         private void NovaConta()
         {
+            if (string.IsNullOrWhiteSpace(_processoId))
+                return;
+
             EdicaoConta = new Conta
             {
                 ProcessoId = _processoId

@@ -18,7 +18,7 @@
             <!-- Financeiro -->
             <GroupBox Header="Financeiro">
                 <StackPanel>
-                    <TextBlock Text="{Binding SaldoPendenteTotal,
+                    <TextBlock Text="{Binding SaldoTotalPendente,
                         StringFormat=Saldo pendente total: R$ {0:N2}}"/>
 
                     <TextBlock Text="{Binding UltimaMovimentacaoTexto,

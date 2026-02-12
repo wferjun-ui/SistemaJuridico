@@ -31,6 +31,18 @@
                         Margin="5"
                         Command="{Binding OpenContasCommand}"/>
 
+                <Button Content="Auditoria"
+                        Margin="5"
+                        Command="{Binding OpenAuditoriaCommand}"/>
+
+                <Button Content="Admin - E-mails"
+                        Margin="5"
+                        Command="{Binding OpenAdminEmailsCommand}"/>
+
+                <Button Content="Admin - Usuários"
+                        Margin="5"
+                        Command="{Binding OpenCadastroUsuarioCommand}"/>
+
             </StackPanel>
         </Border>
 

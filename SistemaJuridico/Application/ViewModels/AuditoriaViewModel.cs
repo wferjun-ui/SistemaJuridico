@@ -16,15 +16,20 @@ namespace SistemaJuridico.ViewModels
         public DateTime? DataInicial { get; set; }
         public DateTime? DataFinal { get; set; }
         public string? UsuarioFiltro { get; set; }
-        public int? ProcessoIdFiltro { get; set; }
+        public string? ProcessoIdFiltro { get; set; }
 
         public RelayCommand FiltrarCommand { get; }
+
+        public AuditoriaViewModel() : this(new AuditService(new DatabaseService()))
+        {
+        }
 
         public AuditoriaViewModel(AuditService auditService)
         {
             _auditService = auditService;
 
             FiltrarCommand = new RelayCommand(async () => await CarregarAsync());
+            _ = CarregarAsync();
         }
 
         public async Task CarregarAsync()

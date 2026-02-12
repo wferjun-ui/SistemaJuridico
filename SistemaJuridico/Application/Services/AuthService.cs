@@ -41,6 +41,9 @@ namespace SistemaJuridico.Services
 
         public Usuario? Login(string usuarioOuEmail, string senha)
         {
+            if (string.IsNullOrWhiteSpace(usuarioOuEmail) || string.IsNullOrWhiteSpace(senha))
+                return null;
+
             using var conn = new SqliteConnection(_connectionString);
 
             var registro = conn.QueryFirstOrDefault<UsuarioLoginRegistro>(@"
@@ -49,7 +52,7 @@ FROM usuarios
 WHERE lower(username) = lower(@usuarioOuEmail)
    OR lower(email) = lower(@usuarioOuEmail)
 LIMIT 1",
-                new { usuarioOuEmail });
+                new { usuarioOuEmail = usuarioOuEmail.Trim() });
 
             if (registro == null)
             {
@@ -80,14 +83,36 @@ LIMIT 1",
 
         public bool CriarUsuario(string username, string email, string senha, string perfil)
         {
+            if (string.IsNullOrWhiteSpace(username) ||
+                string.IsNullOrWhiteSpace(email) ||
+                string.IsNullOrWhiteSpace(senha) ||
+                string.IsNullOrWhiteSpace(perfil))
+                throw new InvalidOperationException("Todos os campos do usuário são obrigatórios.");
+
             using var conn = new SqliteConnection(_connectionString);
             var id = Guid.NewGuid().ToString();
             var salt = GerarSalt();
             var hash = HashSenha(senha, salt);
 
-            conn.Execute(@"INSERT INTO usuarios (id, username, email, perfil, password_hash, salt) VALUES (@id, @username, @email, @perfil, @hash, @salt)",
-                new { id, username, email, perfil, hash, salt });
-            return true;
+            try
+            {
+                var linhas = conn.Execute(@"INSERT INTO usuarios (id, username, email, perfil, password_hash, salt) VALUES (@id, @username, @email, @perfil, @hash, @salt)",
+                    new
+                    {
+                        id,
+                        username = username.Trim(),
+                        email = email.Trim(),
+                        perfil = perfil.Trim(),
+                        hash,
+                        salt
+                    });
+
+                return linhas > 0;
+            }
+            catch (SqliteException ex) when (ex.SqliteErrorCode == 19)
+            {
+                throw new InvalidOperationException("Usuário ou e-mail já cadastrado.");
+            }
         }
 
         public void Logout()

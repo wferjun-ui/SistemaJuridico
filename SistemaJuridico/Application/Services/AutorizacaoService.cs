@@ -14,28 +14,42 @@ namespace SistemaJuridico.Services
 
         public bool EmailAutorizado(string email)
         {
+            if (string.IsNullOrWhiteSpace(email))
+                return false;
+
             using var conn = _db.GetConnection();
 
             var count = conn.ExecuteScalar<int>(
                 "SELECT COUNT(*) FROM emails_autorizados WHERE lower(email)=lower(@e)",
-                new { e = email });
+                new { e = email.Trim() });
 
             return count > 0;
         }
 
-        public void AdicionarEmail(string email)
+        public bool AdicionarEmail(string email)
         {
+            if (string.IsNullOrWhiteSpace(email))
+                return false;
+
             using var conn = _db.GetConnection();
 
-            conn.Execute(@"
+            var existe = conn.ExecuteScalar<int>(
+                "SELECT COUNT(*) FROM emails_autorizados WHERE lower(email)=lower(@e)",
+                new { e = email.Trim() });
+
+            if (existe > 0)
+                return false;
+
+            var linhas = conn.Execute(@"
 INSERT INTO emails_autorizados(id,email)
 VALUES(@id,@e)",
                 new
                 {
                     id = Guid.NewGuid().ToString(),
-                    e = email
+                    e = email.Trim()
                 });
+
+            return linhas > 0;
         }
     }
 }
-
