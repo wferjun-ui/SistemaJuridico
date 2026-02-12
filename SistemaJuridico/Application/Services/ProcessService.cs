@@ -76,17 +76,35 @@ namespace SistemaJuridico.Services
             });
         }
 
-        public void LiberarLock(string processoId)
+        public void LiberarLock(string processoId, bool forcar = false)
         {
             using var conn = _db.GetConnection();
+
+            if (forcar)
+            {
+                conn.Execute("""
+                    UPDATE processos
+                    SET lock_usuario = NULL,
+                        lock_timestamp = NULL
+                    WHERE id = @id
+                """,
+                new { id = processoId });
+
+                return;
+            }
+
+            var usuarioAtual = App.Session.UsuarioAtual?.Email;
+            if (string.IsNullOrWhiteSpace(usuarioAtual))
+                return;
 
             conn.Execute("""
                 UPDATE processos
                 SET lock_usuario = NULL,
                     lock_timestamp = NULL
                 WHERE id = @id
+                  AND lock_usuario = @usuario
             """,
-            new { id = processoId });
+            new { id = processoId, usuario = usuarioAtual });
         }
 
         public string? UsuarioEditando(string processoId)
@@ -102,7 +120,7 @@ namespace SistemaJuridico.Services
 
             if (LockExpirado(processo))
             {
-                LiberarLock(processoId);
+                LiberarLock(processoId, forcar: true);
                 return null;
             }
 

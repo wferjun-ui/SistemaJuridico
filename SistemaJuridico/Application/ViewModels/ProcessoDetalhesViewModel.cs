@@ -49,7 +49,8 @@ namespace SistemaJuridico.ViewModels
 
             Processo = _processService
                 .ListarProcessos()
-                .First(x => x.Id == processoId);
+                .FirstOrDefault(x => x.Id == processoId)
+                ?? new Processo { Id = processoId };
 
             ValidarLock();
 
@@ -76,7 +77,14 @@ namespace SistemaJuridico.ViewModels
             }
             else
             {
-                _processService.TentarLock(_processoId);
+                var lockObtido = _processService.TentarLock(_processoId);
+                if (!lockObtido)
+                {
+                    ModoSomenteLeitura = true;
+                    UsuarioEditandoTexto = "Processo em edição por outro usuário.";
+                    return;
+                }
+
                 IniciarHeartbeat();
             }
         }
@@ -155,13 +163,43 @@ namespace SistemaJuridico.ViewModels
             foreach (var d in lista)
                 Diligencias.Add(d);
         }
- public Task CarregarAsync(int processoId)
+        public Task CarregarAsync(int processoId)
         {
+            var processoEncontrado = _processService
+                .ListarProcessos()
+                .FirstOrDefault(x => x.Id == processoId.ToString());
+
+            if (processoEncontrado != null)
+                Processo = processoEncontrado;
+
+            CarregarContas();
+            CarregarItensSaude();
+            CarregarVerificacoes();
+            CarregarDiligencias();
+
             return Task.CompletedTask;
         }
 
         public Task CarregarAsync(ProcessoCompletoDTO processo)
         {
+            Processo = processo.Processo;
+
+            Contas.Clear();
+            foreach (var conta in processo.Contas)
+                Contas.Add(conta);
+
+            ItensSaude.Clear();
+            foreach (var item in processo.ItensSaude)
+                ItensSaude.Add(item);
+
+            Verificacoes.Clear();
+            foreach (var verificacao in processo.Verificacoes.OrderByDescending(x => x.DataHora))
+                Verificacoes.Add(verificacao);
+
+            Diligencias.Clear();
+            foreach (var diligencia in processo.Diligencias)
+                Diligencias.Add(diligencia);
+
             return Task.CompletedTask;
         }
         // ========================
