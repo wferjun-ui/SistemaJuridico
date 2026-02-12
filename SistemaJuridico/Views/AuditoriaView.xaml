@@ -17,13 +17,11 @@
 
             <TextBox Width="150"
                      Margin="5,0"
-                     Text="{Binding UsuarioFiltro}"
-                     PlaceholderText="Usuário"/>
+                     Text="{Binding UsuarioFiltro}"/>
 
             <TextBox Width="120"
                      Margin="5,0"
-                     Text="{Binding ProcessoIdFiltro}"
-                     PlaceholderText="Processo"/>
+                     Text="{Binding ProcessoIdFiltro}"/>
 
             <Button Content="Filtrar"
                     Margin="10,0"
