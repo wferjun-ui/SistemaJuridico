@@ -5,10 +5,11 @@ using SistemaJuridico.Services;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Windows;
-using Microsoft.Win32;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using System.IO;
+using System.Text.Json;
 
 namespace SistemaJuridico.ViewModels
 {
@@ -37,6 +38,12 @@ namespace SistemaJuridico.ViewModels
         [ObservableProperty]
         private string _tipoLancamentoSelecionado = "Alvará";
 
+        [ObservableProperty]
+        private string _modoMovimentoConta = "Anexo";
+
+        [ObservableProperty]
+        private string _movimentoContaDigitado = string.Empty;
+
         public bool PodeCadastrar => _appState.PodeCadastrarContas;
         public bool PodeEditar => _appState.PodeEditarContas;
         public bool PodeExcluir => _appState.PodeExcluirContas;
@@ -47,6 +54,9 @@ namespace SistemaJuridico.ViewModels
         public bool IsCampoMovimentoVisivel => IsAlvara;
         public bool IsCampoNfAlvaraVisivel => IsAlvara;
         public bool ExibirCampoTerapiaManual => IsTratamento && string.Equals(EdicaoConta.TerapiaMedicamentoNome, "OUTRO", StringComparison.OrdinalIgnoreCase);
+        public bool ExibirFormularioContas => PodeCadastrar;
+        public bool IsMovimentoOpcional => !IsAlvara;
+        public bool ExibirCampoMovimentoDigitado => IsMovimentoOpcional && string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase);
 
         public ContasViewModel() : this(string.Empty)
         {
@@ -64,6 +74,7 @@ namespace SistemaJuridico.ViewModels
             _auditService = new AuditService(db);
 
             Carregar();
+            CarregarRascunhos();
             NovaConta();
         }
 
@@ -76,8 +87,27 @@ namespace SistemaJuridico.ViewModels
             OnPropertyChanged(nameof(IsCampoMovimentoVisivel));
             OnPropertyChanged(nameof(IsCampoNfAlvaraVisivel));
             OnPropertyChanged(nameof(ExibirCampoTerapiaManual));
+            OnPropertyChanged(nameof(ExibirFormularioContas));
+            OnPropertyChanged(nameof(IsMovimentoOpcional));
+            OnPropertyChanged(nameof(ExibirCampoMovimentoDigitado));
         }
 
+
+        partial void OnModoMovimentoContaChanged(string value)
+        {
+            if (IsMovimentoOpcional)
+                EdicaoConta.MovProcesso = string.Equals(value, "Digitar", StringComparison.OrdinalIgnoreCase)
+                    ? MovimentoContaDigitado
+                    : "Anexo";
+
+            OnPropertyChanged(nameof(ExibirCampoMovimentoDigitado));
+        }
+
+        partial void OnMovimentoContaDigitadoChanged(string value)
+        {
+            if (IsMovimentoOpcional && string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase))
+                EdicaoConta.MovProcesso = value;
+        }
         partial void OnTipoLancamentoSelecionadoChanged(string value)
         {
             EdicaoConta.TipoLancamento = value;
@@ -89,6 +119,8 @@ namespace SistemaJuridico.ViewModels
             OnPropertyChanged(nameof(IsCampoMovimentoVisivel));
             OnPropertyChanged(nameof(IsCampoNfAlvaraVisivel));
             OnPropertyChanged(nameof(ExibirCampoTerapiaManual));
+            OnPropertyChanged(nameof(IsMovimentoOpcional));
+            OnPropertyChanged(nameof(ExibirCampoMovimentoDigitado));
             OnPropertyChanged(nameof(ValorAlvaraTexto));
             OnPropertyChanged(nameof(ValorContaTexto));
         }
@@ -137,6 +169,8 @@ namespace SistemaJuridico.ViewModels
                 TipoLancamento = "Alvará"
             };
             TipoLancamentoSelecionado = "Alvará";
+            ModoMovimentoConta = "Anexo";
+            MovimentoContaDigitado = string.Empty;
             TerapiaManual = string.Empty;
         }
 
@@ -160,6 +194,7 @@ namespace SistemaJuridico.ViewModels
                 EdicaoConta.Id = Guid.NewGuid().ToString();
 
             ContasRascunho.Add(CloneConta(EdicaoConta));
+            PersistirRascunhos();
             NovaConta();
         }
 
@@ -170,12 +205,14 @@ namespace SistemaJuridico.ViewModels
                 return;
 
             ContasRascunho.Remove(conta);
+            PersistirRascunhos();
         }
 
         [RelayCommand]
         private void LimparRascunhos()
         {
             ContasRascunho.Clear();
+            PersistirRascunhos();
         }
 
         [RelayCommand]
@@ -205,6 +242,7 @@ namespace SistemaJuridico.ViewModels
             }
 
             ContasRascunho.Clear();
+            PersistirRascunhos();
             Carregar();
         }
 
@@ -228,6 +266,13 @@ namespace SistemaJuridico.ViewModels
 
             EdicaoConta = CloneConta(ContaSelecionada);
             TipoLancamentoSelecionado = EdicaoConta.TipoLancamento;
+            if (IsMovimentoOpcional)
+            {
+                var mov = EdicaoConta.MovProcesso ?? string.Empty;
+                var isAnexo = string.Equals(mov, "Anexo", StringComparison.OrdinalIgnoreCase);
+                ModoMovimentoConta = isAnexo ? "Anexo" : "Digitar";
+                MovimentoContaDigitado = isAnexo ? string.Empty : mov;
+            }
         }
 
         [RelayCommand]
@@ -290,11 +335,11 @@ namespace SistemaJuridico.ViewModels
         {
             if (HistoricoContas.Count == 0)
             {
-                MessageBox.Show("Não há contas para exportar.");
+                System.Windows.MessageBox.Show("Não há contas para exportar.");
                 return;
             }
 
-            var dlg = new SaveFileDialog
+            var dlg = new Microsoft.Win32.SaveFileDialog
             {
                 Filter = "Arquivo PDF (*.pdf)|*.pdf",
                 FileName = $"prestacao-contas-{DateTime.Now:yyyyMMdd-HHmm}.pdf"
@@ -307,6 +352,11 @@ namespace SistemaJuridico.ViewModels
             {
                 container.Page(page =>
                 {
+                    var totalCreditos = HistoricoContas.Sum(x => x.Conta.ValorAlvara);
+                    var totalDebitos = HistoricoContas.Sum(x => x.Conta.ValorConta);
+                    var saldoFinal = totalCreditos - totalDebitos;
+
+                    page.Size(PageSizes.A4.Landscape());
                     page.Margin(28);
                     page.Header().Column(col =>
                     {
@@ -343,15 +393,34 @@ namespace SistemaJuridico.ViewModels
                             table.Cell().Text(linha.Conta.DataMovimentacao);
                             table.Cell().Text(linha.Conta.TipoLancamento);
                             table.Cell().Text(linha.Conta.Historico);
-                            table.Cell().AlignRight().Text(linha.Conta.ValorAlvara.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR")));
-                            table.Cell().AlignRight().Text(linha.Conta.ValorConta.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR")));
-                            table.Cell().AlignRight().Text(linha.SaldoParcial.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR")));
+                            table.Cell().AlignRight().Text(t =>
+                            {
+                                var cor = linha.Conta.ValorAlvara > 0 ? Colors.Green.Darken1 : Colors.Grey.Medium;
+                                t.Span(linha.Conta.ValorAlvara.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))).FontColor(cor);
+                            });
+                            table.Cell().AlignRight().Text(t =>
+                            {
+                                var cor = linha.Conta.ValorConta > 0 ? Colors.Red.Darken1 : Colors.Grey.Medium;
+                                t.Span(linha.Conta.ValorConta.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))).FontColor(cor);
+                            });
+                            table.Cell().AlignRight().Text(linha.SaldoParcial.ToString("C", CultureInfo.GetCultureInfo("pt-BR")));
                         }
+                    });
+
+                    page.Footer().PaddingTop(10).Column(col =>
+                    {
+                        col.Item().LineHorizontal(1);
+                        col.Item().PaddingTop(6).Row(r =>
+                        {
+                            r.RelativeItem().Text($"Total de Créditos: {totalCreditos.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))}").FontColor(Colors.Green.Darken2);
+                            r.RelativeItem().AlignCenter().Text($"Total de Débitos: {totalDebitos.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))}").FontColor(Colors.Red.Darken2);
+                            r.RelativeItem().AlignRight().Text($"Saldo Final: {saldoFinal.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))}").Bold();
+                        });
                     });
                 });
             }).GeneratePdf(dlg.FileName);
 
-            MessageBox.Show("PDF de prestação de contas gerado com sucesso.");
+            System.Windows.MessageBox.Show("PDF de prestação de contas gerado com sucesso.");
         }
 
         [RelayCommand]
@@ -387,9 +456,9 @@ namespace SistemaJuridico.ViewModels
 
             if (IsAlvara)
             {
-                if (string.IsNullOrWhiteSpace(conta.MovProcesso))
+                if (string.IsNullOrWhiteSpace(conta.MovProcesso) || string.Equals(conta.MovProcesso, "Anexo", StringComparison.OrdinalIgnoreCase))
                 {
-                    System.Windows.MessageBox.Show("Movimento processual é obrigatório para Alvará.");
+                    System.Windows.MessageBox.Show("Movimento processual digitado é obrigatório para Alvará.");
                     return false;
                 }
 
@@ -401,6 +470,9 @@ namespace SistemaJuridico.ViewModels
             }
             else
             {
+                if (string.IsNullOrWhiteSpace(conta.MovProcesso))
+                    conta.MovProcesso = "Anexo";
+
                 if (conta.ValorConta <= 0)
                 {
                     System.Windows.MessageBox.Show("Valor da Conta deve ser maior que zero.");
@@ -422,6 +494,8 @@ namespace SistemaJuridico.ViewModels
             if (string.Equals(conta.TipoLancamento, "Alvará", StringComparison.OrdinalIgnoreCase))
             {
                 conta.ValorConta = 0m;
+                if (string.Equals(conta.MovProcesso, "Anexo", StringComparison.OrdinalIgnoreCase))
+                    conta.MovProcesso = null;
                 conta.TerapiaMedicamentoNome = null;
                 conta.Quantidade = null;
                 conta.MesReferencia = null;
@@ -502,6 +576,39 @@ namespace SistemaJuridico.ViewModels
                 Responsavel = origem.Responsavel,
                 Observacoes = origem.Observacoes
             };
+        }
+
+        private void CarregarRascunhos()
+        {
+            ContasRascunho.Clear();
+
+            var caminho = ObterCaminhoRascunho();
+            if (!File.Exists(caminho))
+                return;
+
+            var conteudo = File.ReadAllText(caminho);
+            var itens = JsonSerializer.Deserialize<List<Conta>>(conteudo) ?? new List<Conta>();
+            foreach (var item in itens)
+                ContasRascunho.Add(item);
+        }
+
+        private void PersistirRascunhos()
+        {
+            var caminho = ObterCaminhoRascunho();
+            var pasta = Path.GetDirectoryName(caminho);
+            if (!string.IsNullOrWhiteSpace(pasta))
+                Directory.CreateDirectory(pasta);
+
+            var json = JsonSerializer.Serialize(ContasRascunho.ToList());
+            File.WriteAllText(caminho, json);
+        }
+
+        private string ObterCaminhoRascunho()
+        {
+            var basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SistemaJuridico", "contas-rascunho");
+            var usuario = App.Session.UsuarioAtual?.Id ?? "anonimo";
+            var processo = string.IsNullOrWhiteSpace(_processoId) ? "sem-processo" : _processoId;
+            return Path.Combine(basePath, $"{usuario}-{processo}.json");
         }
     }
 
