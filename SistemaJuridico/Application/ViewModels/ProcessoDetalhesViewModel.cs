@@ -22,6 +22,7 @@ namespace SistemaJuridico.ViewModels
         private readonly HistoricoService _historicoService;
         private readonly LoggerService _logger = new();
         private readonly string _processoId;
+        private readonly AppStateViewModel _appState = AppStateViewModel.Instance;
 
         private System.Windows.Threading.DispatcherTimer? _lockTimer;
         private bool _lockAdquirido;
@@ -43,6 +44,11 @@ namespace SistemaJuridico.ViewModels
         [ObservableProperty]
         private string _usuarioEditandoTexto = "";
 
+        partial void OnModoSomenteLeituraChanged(bool value)
+        {
+            OnPropertyChanged(nameof(PodeEditarProcesso));
+        }
+
         public ProcessoDetalhesViewModel(string processoId, ProcessService processService)
         {
             _processService = processService;
@@ -60,9 +66,13 @@ namespace SistemaJuridico.ViewModels
                 .FirstOrDefault(x => x.Id == processoId)
                 ?? new Processo { Id = processoId };
 
+            _appState.DefinirContexto(App.Session.UsuarioAtual, Processo);
             ValidarLock();
             RecarregarTudo();
         }
+
+        public bool PodeAcessarAbaVerificacao => _appState.PodeAcessarVerificacao;
+        public bool PodeEditarProcesso => _appState.PodeEditarProcesso && !ModoSomenteLeitura;
 
         public decimal TotalContasAPrestar => Contas
             .Where(c => !string.Equals(c.StatusConta, "fechada", StringComparison.OrdinalIgnoreCase))
@@ -121,6 +131,7 @@ namespace SistemaJuridico.ViewModels
             {
                 ModoSomenteLeitura = true;
                 UsuarioEditandoTexto = $"Processo em edição por {usuario}";
+                OnPropertyChanged(nameof(PodeEditarProcesso));
                 return;
             }
 
@@ -129,10 +140,12 @@ namespace SistemaJuridico.ViewModels
             {
                 ModoSomenteLeitura = true;
                 UsuarioEditandoTexto = "Processo em edição por outro usuário.";
+                OnPropertyChanged(nameof(PodeEditarProcesso));
                 return;
             }
 
             _lockAdquirido = true;
+            OnPropertyChanged(nameof(PodeEditarProcesso));
             IniciarHeartbeat();
         }
 
@@ -186,6 +199,7 @@ namespace SistemaJuridico.ViewModels
             foreach (var c in _contaService.ListarPorProcesso(_processoId))
                 Contas.Add(c);
 
+            _appState.AtualizarContas(Contas);
             OnPropertyChanged(nameof(TotalContasAPrestar));
         }
 
@@ -207,6 +221,8 @@ namespace SistemaJuridico.ViewModels
 
             foreach (var v in verificacoes)
                 Verificacoes.Add(v);
+
+            _appState.AtualizarVerificacoes(verificacoes);
 
             var ultima = verificacoes.FirstOrDefault();
             _ultimaVerificacaoData = ultima?.DataHora ?? "Sem verificação";
@@ -331,7 +347,7 @@ namespace SistemaJuridico.ViewModels
         [RelayCommand]
         private void NovaVerificacao()
         {
-            if (ModoSomenteLeitura)
+            if (ModoSomenteLeitura || !_appState.PodeAcessarVerificacao)
                 return;
 
             var facade = new VerificacaoFacadeService();

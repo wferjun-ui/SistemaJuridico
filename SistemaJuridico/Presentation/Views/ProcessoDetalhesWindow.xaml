@@ -58,7 +58,7 @@
             </Grid.ColumnDefinitions>
 
             <TabControl Grid.Column="0" Margin="0,0,12,0">
-                <TabItem Header="Dados">
+                <TabItem Header="Cadastro">
                     <Grid Margin="10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="180"/>
@@ -75,23 +75,23 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Text="Número:" VerticalAlignment="Center"/>
-                        <TextBox Grid.Column="1" Text="{Binding Processo.Numero}" Style="{StaticResource CampoBloqueavel}"/>
+                        <TextBox Grid.Column="1" Text="{Binding Processo.Numero}" IsEnabled="{Binding PodeEditarProcesso}"/>
 
                         <TextBlock Grid.Row="1" Text="Paciente:" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Processo.Paciente}" Style="{StaticResource CampoBloqueavel}"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Processo.Paciente}" IsEnabled="{Binding PodeEditarProcesso}"/>
 
                         <TextBlock Grid.Row="2" Text="Juiz:" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Processo.Juiz}" Style="{StaticResource CampoBloqueavel}"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Processo.Juiz}" IsEnabled="{Binding PodeEditarProcesso}"/>
 
                         <TextBlock Grid.Row="3" Text="Classificação:" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding Processo.Classificacao}" Style="{StaticResource CampoBloqueavel}"/>
+                        <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding Processo.Classificacao}" IsEnabled="{Binding PodeEditarProcesso}"/>
 
                         <TextBlock Grid.Row="4" Text="Fase:" VerticalAlignment="Center"/>
                         <ComboBox Grid.Row="4"
                                   Grid.Column="1"
                                   SelectedValuePath="Content"
                                   SelectedValue="{Binding Processo.StatusFase, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                  Style="{StaticResource CampoBloqueavel}">
+                                  IsEnabled="{Binding PodeEditarProcesso}">
                             <ComboBoxItem Content="Conhecimento"/>
                             <ComboBoxItem Content="Execução"/>
                             <ComboBoxItem Content="Arquivado"/>
@@ -103,11 +103,11 @@
                                  Text="{Binding Processo.ObservacaoFixa}"
                                  AcceptsReturn="True"
                                  VerticalScrollBarVisibility="Auto"
-                                 Style="{StaticResource CampoBloqueavel}"/>
+                                 IsEnabled="{Binding PodeEditarProcesso}"/>
                     </Grid>
                 </TabItem>
 
-                <TabItem Header="Verificações">
+                <TabItem Header="Verificação" Visibility="{Binding PodeAcessarAbaVerificacao, Converter={StaticResource BoolToVis}}">
                     <DockPanel Margin="10">
                         <Button Content="Nova verificação"
                                 DockPanel.Dock="Top"
