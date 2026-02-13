@@ -275,7 +275,7 @@ namespace SistemaJuridico.Services
             using var conn = _db.GetConnection();
 
             var saldo = conn.ExecuteScalar<decimal?>("""
-                SELECT SUM(valor_conta)
+                SELECT CAST(COALESCE(SUM(valor_conta), 0.0) AS REAL)
                 FROM contas
                 WHERE processo_id = @id
                 AND status_conta != 'fechado'

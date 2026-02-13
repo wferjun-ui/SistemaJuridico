@@ -65,12 +65,12 @@ SELECT
         LIMIT 1
     ) as ResponsavelUltimaVerificacao,
     (
-        SELECT IFNULL(SUM(c.valor_conta), 0)
+        SELECT CAST(COALESCE(SUM(c.valor_conta), 0.0) AS REAL)
         FROM contas c
         WHERE c.processo_id = p.id
     ) as TotalDebito,
     (
-        SELECT IFNULL(SUM(c.valor_alvara), 0)
+        SELECT CAST(COALESCE(SUM(c.valor_alvara), 0.0) AS REAL)
         FROM contas c
         WHERE c.processo_id = p.id
     ) as TotalCredito
