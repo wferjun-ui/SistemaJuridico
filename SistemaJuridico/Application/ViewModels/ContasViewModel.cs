@@ -5,6 +5,10 @@ using SistemaJuridico.Services;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Windows;
+using Microsoft.Win32;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 
 namespace SistemaJuridico.ViewModels
 {
@@ -40,6 +44,8 @@ namespace SistemaJuridico.ViewModels
         public bool IsTratamento => string.Equals(EdicaoConta.TipoLancamento, "Tratamento", StringComparison.OrdinalIgnoreCase);
         public bool IsDespesaGeral => string.Equals(EdicaoConta.TipoLancamento, "Despesa Geral", StringComparison.OrdinalIgnoreCase);
         public bool IsValorContaHabilitado => !IsAlvara;
+        public bool IsCampoMovimentoVisivel => IsAlvara;
+        public bool IsCampoNfAlvaraVisivel => IsAlvara;
         public bool ExibirCampoTerapiaManual => IsTratamento && string.Equals(EdicaoConta.TerapiaMedicamentoNome, "OUTRO", StringComparison.OrdinalIgnoreCase);
 
         public ContasViewModel() : this(string.Empty)
@@ -67,6 +73,8 @@ namespace SistemaJuridico.ViewModels
             OnPropertyChanged(nameof(IsTratamento));
             OnPropertyChanged(nameof(IsDespesaGeral));
             OnPropertyChanged(nameof(IsValorContaHabilitado));
+            OnPropertyChanged(nameof(IsCampoMovimentoVisivel));
+            OnPropertyChanged(nameof(IsCampoNfAlvaraVisivel));
             OnPropertyChanged(nameof(ExibirCampoTerapiaManual));
         }
 
@@ -78,6 +86,8 @@ namespace SistemaJuridico.ViewModels
             OnPropertyChanged(nameof(IsTratamento));
             OnPropertyChanged(nameof(IsDespesaGeral));
             OnPropertyChanged(nameof(IsValorContaHabilitado));
+            OnPropertyChanged(nameof(IsCampoMovimentoVisivel));
+            OnPropertyChanged(nameof(IsCampoNfAlvaraVisivel));
             OnPropertyChanged(nameof(ExibirCampoTerapiaManual));
             OnPropertyChanged(nameof(ValorAlvaraTexto));
             OnPropertyChanged(nameof(ValorContaTexto));
@@ -272,6 +282,76 @@ namespace SistemaJuridico.ViewModels
                     $"Conta {ContaSelecionada.Id} removida");
                 Carregar();
             }
+        }
+
+
+        [RelayCommand]
+        private void ExportarPrestacaoContasPdf()
+        {
+            if (HistoricoContas.Count == 0)
+            {
+                MessageBox.Show("Não há contas para exportar.");
+                return;
+            }
+
+            var dlg = new SaveFileDialog
+            {
+                Filter = "Arquivo PDF (*.pdf)|*.pdf",
+                FileName = $"prestacao-contas-{DateTime.Now:yyyyMMdd-HHmm}.pdf"
+            };
+
+            if (dlg.ShowDialog() != true)
+                return;
+
+            Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Margin(28);
+                    page.Header().Column(col =>
+                    {
+                        col.Item().Text("Prestação de Contas").Bold().FontSize(18);
+                        col.Item().Text($"Processo: {_processoId}");
+                        col.Item().Text($"Gerado em {DateTime.Now:dd/MM/yyyy HH:mm}");
+                        col.Item().PaddingTop(6).LineHorizontal(1);
+                    });
+
+                    page.Content().Table(table =>
+                    {
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.RelativeColumn(1.2f);
+                            columns.RelativeColumn(1.4f);
+                            columns.RelativeColumn(2.6f);
+                            columns.RelativeColumn(1.3f);
+                            columns.RelativeColumn(1.3f);
+                            columns.RelativeColumn(1.4f);
+                        });
+
+                        table.Header(h =>
+                        {
+                            h.Cell().Text("Data").Bold();
+                            h.Cell().Text("Tipo").Bold();
+                            h.Cell().Text("Histórico").Bold();
+                            h.Cell().AlignRight().Text("Entrada").Bold();
+                            h.Cell().AlignRight().Text("Saída").Bold();
+                            h.Cell().AlignRight().Text("Saldo").Bold();
+                        });
+
+                        foreach (var linha in HistoricoContas)
+                        {
+                            table.Cell().Text(linha.Conta.DataMovimentacao);
+                            table.Cell().Text(linha.Conta.TipoLancamento);
+                            table.Cell().Text(linha.Conta.Historico);
+                            table.Cell().AlignRight().Text(linha.Conta.ValorAlvara.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR")));
+                            table.Cell().AlignRight().Text(linha.Conta.ValorConta.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR")));
+                            table.Cell().AlignRight().Text(linha.SaldoParcial.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR")));
+                        }
+                    });
+                });
+            }).GeneratePdf(dlg.FileName);
+
+            MessageBox.Show("PDF de prestação de contas gerado com sucesso.");
         }
 
         [RelayCommand]

@@ -36,8 +36,6 @@ namespace SistemaJuridico.ViewModels
         [ObservableProperty]
         private string _selectedTipoProcesso = "Saúde";
 
-        [ObservableProperty]
-        private string _novoReu = string.Empty;
 
         [ObservableProperty]
         private bool _temRepresentante = true;
@@ -59,7 +57,7 @@ namespace SistemaJuridico.ViewModels
             NovoProcesso.TipoProcesso = SelectedTipoProcesso;
             NovoProcesso.SemRepresentante = false;
 
-            Reus.Add(new ReuCadastroViewModel());
+            Reus.Add(new ReuCadastroViewModel { IsFixo = true });
             AdicionarSaudeItem("Medicamento", Medicamentos);
             AdicionarSaudeItem("Terapia", Terapias);
             AdicionarSaudeItem("Cirurgia", Cirurgias);
@@ -89,13 +87,6 @@ namespace SistemaJuridico.ViewModels
         [RelayCommand]
         private void AdicionarReu()
         {
-            if (!string.IsNullOrWhiteSpace(NovoReu))
-            {
-                Reus.Add(new ReuCadastroViewModel { Nome = NovoReu.Trim() });
-                NovoReu = string.Empty;
-                return;
-            }
-
             Reus.Add(new ReuCadastroViewModel());
         }
 
@@ -105,10 +96,14 @@ namespace SistemaJuridico.ViewModels
             if (reu == null)
                 return;
 
-            Reus.Remove(reu);
+            if (reu.IsFixo)
+            {
+                reu.IsAtivo = false;
+                reu.Nome = string.Empty;
+                return;
+            }
 
-            if (Reus.Count == 0)
-                Reus.Add(new ReuCadastroViewModel());
+            Reus.Remove(reu);
         }
 
         [RelayCommand]
@@ -161,7 +156,7 @@ namespace SistemaJuridico.ViewModels
                 NovoProcesso.UltimaAtualizacao = DateTime.Now.ToString("dd/MM/yyyy");
 
                 _processService.CriarProcesso(NovoProcesso);
-                _processService.SubstituirReus(NovoProcesso.Id, Reus.Where(r => !string.IsNullOrWhiteSpace(r.Nome)).Select(r => r.Nome.Trim()).ToList());
+                _processService.SubstituirReus(NovoProcesso.Id, Reus.Where(r => r.IsAtivo && !string.IsNullOrWhiteSpace(r.Nome)).Select(r => r.Nome.Trim()).ToList());
 
                 if (IsProcessoSaude)
                 {
@@ -243,7 +238,7 @@ namespace SistemaJuridico.ViewModels
             if (string.IsNullOrWhiteSpace(NovoProcesso.TipoProcesso))
                 return "Selecione o tipo de processo.";
 
-            if (Reus.All(r => string.IsNullOrWhiteSpace(r.Nome)))
+            if (Reus.Where(r => r.IsAtivo).All(r => string.IsNullOrWhiteSpace(r.Nome)))
                 return "Informe pelo menos um réu.";
 
             if (!IsProcessoSaude)
@@ -269,10 +264,15 @@ namespace SistemaJuridico.ViewModels
             string categoria,
             bool exigeLocal)
         {
-            if (itens.Count == 0)
-                return $"Informe pelo menos um item em {categoria}.";
+            var preenchidos = itens.Where(item =>
+                !string.IsNullOrWhiteSpace(item.Nome) ||
+                !string.IsNullOrWhiteSpace(item.Quantidade) ||
+                !string.IsNullOrWhiteSpace(item.Local)).ToList();
 
-            foreach (var item in itens)
+            if (preenchidos.Count == 0)
+                return null;
+
+            foreach (var item in preenchidos)
             {
                 if (string.IsNullOrWhiteSpace(item.Nome))
                     return $"Todos os itens de {categoria} devem ter nome.";
@@ -303,6 +303,9 @@ namespace SistemaJuridico.ViewModels
         {
             foreach (var item in itens)
             {
+                if (string.IsNullOrWhiteSpace(item.Nome) && string.IsNullOrWhiteSpace(item.Quantidade) && string.IsNullOrWhiteSpace(item.Local))
+                    continue;
+
                 yield return new ItemSaude
                 {
                     Id = Guid.NewGuid().ToString(),
@@ -337,5 +340,11 @@ namespace SistemaJuridico.ViewModels
     {
         [ObservableProperty]
         private string _nome = string.Empty;
+
+        [ObservableProperty]
+        private bool _isFixo;
+
+        [ObservableProperty]
+        private bool _isAtivo = true;
     }
 }
