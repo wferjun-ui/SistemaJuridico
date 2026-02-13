@@ -1,0 +1,41 @@
+<Window x:Class="SistemaJuridico.Views.DebugConsoleWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Depuração em Tempo Real"
+        Width="980"
+        Height="520"
+        WindowStartupLocation="CenterOwner"
+        Background="#0B1220"
+        Foreground="#D1D5DB">
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <DockPanel LastChildFill="False" Margin="0,0,0,8">
+            <TextBlock Text="Logs e exceções em tempo real"
+                       FontSize="16"
+                       FontWeight="SemiBold"
+                       Foreground="#F8FAFC"
+                       DockPanel.Dock="Left"/>
+            <Button Content="Limpar"
+                    DockPanel.Dock="Right"
+                    Padding="10,4"
+                    Margin="8,0,0,0"
+                    Click="OnClearClick"/>
+        </DockPanel>
+
+        <Border Grid.Row="1" BorderBrush="#334155" BorderThickness="1" CornerRadius="8" Padding="8" Background="#111827">
+            <ListBox x:Name="LogList"
+                     ItemsSource="{Binding Entries}"
+                     Background="#111827"
+                     BorderThickness="0"
+                     Foreground="#D1D5DB"
+                     FontFamily="Consolas"
+                     FontSize="12"
+                     ScrollViewer.CanContentScroll="True"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+        </Border>
+    </Grid>
+</Window>

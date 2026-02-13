@@ -6,20 +6,21 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-
-                <materialDesign:BundledTheme BaseTheme="Light"
-                                             PrimaryColor="Blue"
-                                             SecondaryColor="Teal"/>
-
+                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Blue" SecondaryColor="Teal"/>
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml"/>
-
             </ResourceDictionary.MergedDictionaries>
+
+            <SolidColorBrush x:Key="PrimarySurfaceBrush" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="PrimaryBorderBrush" Color="#E2E8F0"/>
+            <SolidColorBrush x:Key="PrimaryButtonBrush" Color="#2563EB"/>
+            <SolidColorBrush x:Key="PrimaryButtonHoverBrush" Color="#1D4ED8"/>
 
             <Style TargetType="Window">
                 <Setter Property="FontFamily" Value="Segoe UI"/>
                 <Setter Property="FontSize" Value="14"/>
                 <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
                 <Setter Property="TextOptions.TextRenderingMode" Value="Auto"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
             </Style>
 
             <Style TargetType="Button">
@@ -28,6 +29,32 @@
                 <Setter Property="MinHeight" Value="36"/>
                 <Setter Property="MinWidth" Value="120"/>
                 <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="Background" Value="{StaticResource PrimaryButtonBrush}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource PrimaryButtonBrush}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="ButtonBorder"
+                                    CornerRadius="8"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="ButtonBorder" Property="Background" Value="{StaticResource PrimaryButtonHoverBrush}"/>
+                                    <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{StaticResource PrimaryButtonHoverBrush}"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.6"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
 
             <Style TargetType="Label">
