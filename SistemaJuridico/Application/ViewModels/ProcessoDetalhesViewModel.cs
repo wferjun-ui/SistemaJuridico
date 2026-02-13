@@ -20,8 +20,10 @@ namespace SistemaJuridico.ViewModels
         private readonly ItemSaudeService _itemSaudeService;
         private readonly VerificacaoService _verificacaoService;
         private readonly HistoricoService _historicoService;
+        private readonly AuditService _auditService;
         private readonly LoggerService _logger = new();
         private readonly string _processoId;
+        private readonly AppStateViewModel _appState = AppStateViewModel.Instance;
 
         private System.Windows.Threading.DispatcherTimer? _lockTimer;
         private bool _lockAdquirido;
@@ -43,6 +45,11 @@ namespace SistemaJuridico.ViewModels
         [ObservableProperty]
         private string _usuarioEditandoTexto = "";
 
+        partial void OnModoSomenteLeituraChanged(bool value)
+        {
+            OnPropertyChanged(nameof(PodeEditarProcesso));
+        }
+
         public ProcessoDetalhesViewModel(string processoId, ProcessService processService)
         {
             _processService = processService;
@@ -52,6 +59,7 @@ namespace SistemaJuridico.ViewModels
             _itemSaudeService = new ItemSaudeService(db);
             _verificacaoService = new VerificacaoService(db);
             _historicoService = new HistoricoService(db);
+            _auditService = new AuditService(db);
 
             _processoId = processoId;
 
@@ -60,9 +68,13 @@ namespace SistemaJuridico.ViewModels
                 .FirstOrDefault(x => x.Id == processoId)
                 ?? new Processo { Id = processoId };
 
+            _appState.DefinirContexto(App.Session.UsuarioAtual, Processo);
             ValidarLock();
             RecarregarTudo();
         }
+
+        public bool PodeAcessarAbaVerificacao => _appState.PodeAcessarVerificacao;
+        public bool PodeEditarProcesso => _appState.PodeEditarProcesso && !ModoSomenteLeitura;
 
         public decimal TotalContasAPrestar => Contas
             .Where(c => !string.Equals(c.StatusConta, "fechada", StringComparison.OrdinalIgnoreCase))
@@ -121,6 +133,7 @@ namespace SistemaJuridico.ViewModels
             {
                 ModoSomenteLeitura = true;
                 UsuarioEditandoTexto = $"Processo em edição por {usuario}";
+                OnPropertyChanged(nameof(PodeEditarProcesso));
                 return;
             }
 
@@ -129,10 +142,12 @@ namespace SistemaJuridico.ViewModels
             {
                 ModoSomenteLeitura = true;
                 UsuarioEditandoTexto = "Processo em edição por outro usuário.";
+                OnPropertyChanged(nameof(PodeEditarProcesso));
                 return;
             }
 
             _lockAdquirido = true;
+            OnPropertyChanged(nameof(PodeEditarProcesso));
             IniciarHeartbeat();
         }
 
@@ -186,6 +201,7 @@ namespace SistemaJuridico.ViewModels
             foreach (var c in _contaService.ListarPorProcesso(_processoId))
                 Contas.Add(c);
 
+            _appState.AtualizarContas(Contas);
             OnPropertyChanged(nameof(TotalContasAPrestar));
         }
 
@@ -207,6 +223,8 @@ namespace SistemaJuridico.ViewModels
 
             foreach (var v in verificacoes)
                 Verificacoes.Add(v);
+
+            _appState.AtualizarVerificacoes(verificacoes);
 
             var ultima = verificacoes.FirstOrDefault();
             _ultimaVerificacaoData = ultima?.DataHora ?? "Sem verificação";
@@ -331,7 +349,7 @@ namespace SistemaJuridico.ViewModels
         [RelayCommand]
         private void NovaVerificacao()
         {
-            if (ModoSomenteLeitura)
+            if (ModoSomenteLeitura || !_appState.PodeAcessarVerificacao)
                 return;
 
             var facade = new VerificacaoFacadeService();
@@ -390,6 +408,43 @@ namespace SistemaJuridico.ViewModels
             CriarFacade().ReabrirDiligencia(d.Id, _processoId);
             CarregarDiligencias();
             CarregarHistorico();
+        }
+
+
+        [RelayCommand]
+        private void SalvarProcesso()
+        {
+            if (!PodeEditarProcesso)
+                return;
+
+            _processService.AtualizarProcesso(Processo);
+            _historicoService.Registrar(_processoId, "Processo atualizado", $"Status: {Processo.StatusFase}");
+            _auditService.Registrar("Processo.Editado", "processo", _processoId, "Dados cadastrais atualizados");
+            System.Windows.MessageBox.Show("Processo atualizado com sucesso.");
+        }
+
+        [RelayCommand]
+        private void ExcluirProcesso()
+        {
+            if (!_appState.IsAdministrador)
+                return;
+
+            var confirmar = System.Windows.MessageBox.Show(
+                "Deseja excluir permanentemente este processo e todos os dados vinculados?",
+                "Confirmação",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (confirmar != MessageBoxResult.Yes)
+                return;
+
+            _processService.ExcluirProcesso(_processoId);
+            _auditService.Registrar("Processo.Excluido", "processo", _processoId, "Exclusão completa de processo");
+            System.Windows.MessageBox.Show("Processo excluído com sucesso.");
+            LiberarLock();
+
+            if (System.Windows.Application.Current.Windows.OfType<Window>().FirstOrDefault(w => w.DataContext == this) is Window w)
+                w.Close();
         }
 
         [RelayCommand]
