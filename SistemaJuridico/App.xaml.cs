@@ -6,6 +6,7 @@ using System;
 using System.IO;
 using System.Windows;
 using System.Windows.Threading;
+using QuestPDF.Infrastructure;
 using Forms = System.Windows.Forms;
 
 namespace SistemaJuridico
@@ -21,6 +22,8 @@ namespace SistemaJuridico
         {
             base.OnStartup(e);
             ShutdownMode = ShutdownMode.OnMainWindowClose;
+
+            QuestPDF.Settings.License = LicenseType.Community;
 
             RegistrarTratamentoGlobalExcecoes();
 
