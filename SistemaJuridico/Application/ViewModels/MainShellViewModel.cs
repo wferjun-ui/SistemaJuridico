@@ -14,6 +14,7 @@ namespace SistemaJuridico.ViewModels
         public RelayCommand OpenAuditoriaCommand { get; }
         public RelayCommand OpenAdminCommand { get; }
         public RelayCommand OpenCadastroUsuarioCommand { get; }
+        public RelayCommand OpenDebugConsoleCommand { get; }
 
         public bool IsAdmin => App.Session.IsAdmin();
 
@@ -54,6 +55,14 @@ namespace SistemaJuridico.ViewModels
                 }
 
                 new CadastroUsuarioWindow { Owner = System.Windows.Application.Current.MainWindow }.ShowDialog();
+            });
+
+            OpenDebugConsoleCommand = new RelayCommand(() =>
+            {
+                var owner = System.Windows.Application.Current.MainWindow;
+                var debugWindow = new DebugConsoleWindow { Owner = owner };
+                debugWindow.Show();
+                debugWindow.Activate();
             });
         }
 

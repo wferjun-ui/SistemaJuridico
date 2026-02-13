@@ -5,6 +5,7 @@ using SistemaJuridico.Views;
 using System;
 using System.IO;
 using System.Windows;
+using System.Windows.Threading;
 using Forms = System.Windows.Forms;
 
 namespace SistemaJuridico
@@ -12,6 +13,7 @@ namespace SistemaJuridico
     public partial class App : System.Windows.Application
     {
         private static DatabaseService? _database;
+        private static readonly LoggerService _logger = new();
         public static string DB => _database?.ConnectionString ?? string.Empty;
         public static SessionService Session { get; } = new();
 
@@ -19,6 +21,8 @@ namespace SistemaJuridico
         {
             base.OnStartup(e);
             ShutdownMode = ShutdownMode.OnMainWindowClose;
+
+            RegistrarTratamentoGlobalExcecoes();
 
             try
             {
@@ -46,6 +50,22 @@ namespace SistemaJuridico
                     MessageBoxImage.Error);
                 Shutdown();
             }
+        }
+
+
+        private void RegistrarTratamentoGlobalExcecoes()
+        {
+            DispatcherUnhandledException += (_, args) =>
+            {
+                _logger.Error("Exceção não tratada na UI", args.Exception);
+                args.Handled = false;
+            };
+
+            AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+            {
+                if (args.ExceptionObject is Exception ex)
+                    _logger.Error("Exceção não tratada no AppDomain", ex);
+            };
         }
 
         private static string GarantirPastaBanco()

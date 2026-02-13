@@ -38,6 +38,8 @@ namespace SistemaJuridico.Infrastructure
                 {
                     File.AppendAllText(ObterArquivoLog(), linha, Encoding.UTF8);
                 }
+
+                DebugConsoleService.Instance.Add(linha.TrimEnd());
             }
             catch
             {
