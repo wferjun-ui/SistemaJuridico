@@ -55,7 +55,7 @@ namespace SistemaJuridico.Infrastructure
             if (type == typeof(DatabaseService)) return Database;
 
             var ctor = type.GetConstructors()
-                .OrderBy(c => c.GetParameters().Length)
+                .OrderByDescending(c => c.GetParameters().Length)
                 .FirstOrDefault();
 
             if (ctor == null)

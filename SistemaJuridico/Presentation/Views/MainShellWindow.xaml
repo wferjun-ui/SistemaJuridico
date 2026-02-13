@@ -40,6 +40,11 @@
                             HorizontalContentAlignment="Left"
                             Command="{Binding OpenProcessosCommand}"/>
 
+                    <Button Content="Relatórios"
+                            Margin="0,4"
+                            HorizontalContentAlignment="Left"
+                            Command="{Binding OpenRelatoriosCommand}"/>
+
                     <Button Content="Auditoria"
                             Margin="0,4"
                             HorizontalContentAlignment="Left"

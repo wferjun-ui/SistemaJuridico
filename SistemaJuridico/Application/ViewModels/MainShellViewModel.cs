@@ -10,6 +10,7 @@ namespace SistemaJuridico.ViewModels
 
         public RelayCommand OpenDashboardCommand { get; }
         public RelayCommand OpenProcessosCommand { get; }
+        public RelayCommand OpenRelatoriosCommand { get; }
         public RelayCommand OpenAuditoriaCommand { get; }
         public RelayCommand OpenAdminCommand { get; }
         public RelayCommand OpenCadastroUsuarioCommand { get; }
@@ -25,6 +26,9 @@ namespace SistemaJuridico.ViewModels
 
             OpenProcessosCommand = new RelayCommand(() =>
                 _navigator.Navigate(NavigationKey.Processos));
+
+            OpenRelatoriosCommand = new RelayCommand(() =>
+                _navigator.Navigate(NavigationKey.Relatorios));
 
 
             OpenAuditoriaCommand = new RelayCommand(() =>
