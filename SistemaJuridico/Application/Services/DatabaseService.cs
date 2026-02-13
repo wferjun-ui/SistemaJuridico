@@ -202,6 +202,11 @@ CREATE TABLE IF NOT EXISTS schema_version(
             AdicionarColunaSeNaoExistir(conn, "processos", "representante", "TEXT");
             AdicionarColunaSeNaoExistir(conn, "processos", "sem_representante", "INTEGER DEFAULT 0");
             AdicionarColunaSeNaoExistir(conn, "processos", "tipo_processo", "TEXT");
+
+            AdicionarColunaSeNaoExistir(conn, "contas", "terapia_medicamento_nome", "TEXT");
+            AdicionarColunaSeNaoExistir(conn, "contas", "quantidade", "TEXT");
+            AdicionarColunaSeNaoExistir(conn, "contas", "mes_referencia", "TEXT");
+            AdicionarColunaSeNaoExistir(conn, "contas", "ano_referencia", "TEXT");
         }
 
         private void AdicionarColunaSeNaoExistir(
