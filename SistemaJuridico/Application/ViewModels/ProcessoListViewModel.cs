@@ -128,7 +128,7 @@ namespace SistemaJuridico.ViewModels
         public RelayCommand ProximaPaginaCommand { get; }
         public RelayCommand PaginaAnteriorCommand { get; }
 
-        public ProcessoListViewModel(ProcessoFacadeService processoService)
+        public ProcessoListViewModel()
         {
             _cacheService = new ProcessoCacheService(new DatabaseService());
 
