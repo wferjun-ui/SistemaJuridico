@@ -1,7 +1,5 @@
 using SistemaJuridico.ViewModels;
 using System.Windows;
-using System.Windows.Input;
-using UserControl = System.Windows.Controls.UserControl;
 
 namespace SistemaJuridico.Views
 {
@@ -9,37 +7,23 @@ namespace SistemaJuridico.Views
     {
         private DashboardViewModel VM => (DashboardViewModel)DataContext;
 
-
         public DashboardWindow()
         {
             InitializeComponent();
             DataContext = new DashboardViewModel();
         }
 
-        private void AbrirProcessoDoubleClick(object sender, MouseButtonEventArgs e)
-        {
-            if (VM.Processos == null)
-                return;
-
-            if (((System.Windows.Controls.DataGrid)sender).SelectedItem is ProcessoResumoVM proc)
-            {
-                VM.AbrirProcessoCommand.Execute(proc);
-            }
-        }
-
         private void NovoProcesso_Click(object sender, RoutedEventArgs e)
-            {
-        new CadastroProcessoWindow().ShowDialog();
-
-            ((DashboardViewModel)DataContext).CarregarCommand.Execute(null);
+        {
+            new CadastroProcessoWindow().ShowDialog();
+            VM.CarregarCommand.Execute(null);
         }
-
 
         private void AbrirEmails(object sender, RoutedEventArgs e)
         {
             if (!App.Session.IsAdmin())
             {
-                System.Windows.MessageBox.Show("Apenas admin.");
+                MessageBox.Show("Apenas admin.");
                 return;
             }
 

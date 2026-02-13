@@ -27,6 +27,10 @@ namespace SistemaJuridico.Services
                     num_nf_alvara as NumNfAlvara,
                     valor_alvara as ValorAlvara,
                     valor_conta as ValorConta,
+                    terapia_medicamento_nome as TerapiaMedicamentoNome,
+                    quantidade as Quantidade,
+                    mes_referencia as MesReferencia,
+                    ano_referencia as AnoReferencia,
                     status_conta as StatusConta,
                     responsavel as Responsavel,
                     observacoes as Observacoes
@@ -35,10 +39,29 @@ namespace SistemaJuridico.Services
                 ORDER BY data_movimentacao
             ", new { id = processoId }).ToList();
         }
-               public List<Conta> ListarTodas()
+
+        public List<Conta> ListarTodas()
         {
             using var conn = _db.GetConnection();
-            return conn.Query<Conta>("SELECT id as Id, processo_id as ProcessoId, tipo_lancamento as TipoLancamento, historico as Historico, data_movimentacao as DataMovimentacao, mov_processo as MovProcesso, num_nf_alvara as NumNfAlvara, valor_alvara as ValorAlvara, valor_conta as ValorConta, status_conta as StatusConta, responsavel as Responsavel, observacoes as Observacoes FROM contas").ToList();
+            return conn.Query<Conta>(@"
+SELECT
+    id as Id,
+    processo_id as ProcessoId,
+    tipo_lancamento as TipoLancamento,
+    historico as Historico,
+    data_movimentacao as DataMovimentacao,
+    mov_processo as MovProcesso,
+    num_nf_alvara as NumNfAlvara,
+    valor_alvara as ValorAlvara,
+    valor_conta as ValorConta,
+    terapia_medicamento_nome as TerapiaMedicamentoNome,
+    quantidade as Quantidade,
+    mes_referencia as MesReferencia,
+    ano_referencia as AnoReferencia,
+    status_conta as StatusConta,
+    responsavel as Responsavel,
+    observacoes as Observacoes
+FROM contas").ToList();
         }
 
 
@@ -52,6 +75,7 @@ namespace SistemaJuridico.Services
                     historico, data_movimentacao,
                     mov_processo, num_nf_alvara,
                     valor_alvara, valor_conta,
+                    terapia_medicamento_nome, quantidade, mes_referencia, ano_referencia,
                     status_conta, responsavel, observacoes
                 )
                 VALUES (
@@ -59,6 +83,7 @@ namespace SistemaJuridico.Services
                     @Historico, @DataMovimentacao,
                     @MovProcesso, @NumNfAlvara,
                     @ValorAlvara, @ValorConta,
+                    @TerapiaMedicamentoNome, @Quantidade, @MesReferencia, @AnoReferencia,
                     @StatusConta, @Responsavel, @Observacoes
                 )
             ", conta);
@@ -77,6 +102,10 @@ namespace SistemaJuridico.Services
                     num_nf_alvara=@NumNfAlvara,
                     valor_alvara=@ValorAlvara,
                     valor_conta=@ValorConta,
+                    terapia_medicamento_nome=@TerapiaMedicamentoNome,
+                    quantidade=@Quantidade,
+                    mes_referencia=@MesReferencia,
+                    ano_referencia=@AnoReferencia,
                     observacoes=@Observacoes
                 WHERE id=@Id
             ", conta);

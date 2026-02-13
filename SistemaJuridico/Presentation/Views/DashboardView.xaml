@@ -2,6 +2,10 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </UserControl.Resources>
+
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <Grid Margin="24">
             <Grid.RowDefinitions>
@@ -12,21 +16,16 @@
             </Grid.RowDefinitions>
 
             <StackPanel Grid.Row="0" Margin="0,0,0,18">
-                <TextBlock Text="Dashboard"
-                           FontSize="28"
-                           FontWeight="SemiBold"/>
-                <TextBlock Text="Acompanhe apenas processos com risco de prazo e status de salvamento."
-                           Opacity="0.72"
-                           Margin="0,4,0,0"/>
+                <TextBlock Text="Dashboard" FontSize="28" FontWeight="SemiBold"/>
+                <TextBlock Text="Acompanhe processos atrasados e próximos do prazo usando a última verificação." Opacity="0.72" Margin="0,4,0,0"/>
+                <TextBlock Text="Atualizando dados em segundo plano..." Visibility="{Binding CarregandoEmSegundoPlano, Converter={StaticResource BoolToVis}}" Margin="0,4,0,0" Foreground="#B45309"/>
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <Button Content="Atualizar" Width="100" Margin="0,0,8,0" Command="{Binding CarregarCommand}"/>
+                    <Button Content="Exportar PDF" Width="120" Command="{Binding ExportarResumoPdfCommand}"/>
+                </StackPanel>
             </StackPanel>
 
-            <Border Grid.Row="1"
-                    Margin="0,0,0,18"
-                    Padding="16"
-                    CornerRadius="12"
-                    BorderThickness="1"
-                    BorderBrush="#FFD9DEE7"
-                    Background="#FFF9FBFD">
+            <Border Grid.Row="1" Margin="0,0,0,18" Padding="16" CornerRadius="12" BorderThickness="1" BorderBrush="#FFD9DEE7" Background="#FFF9FBFD">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -35,80 +34,68 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0" Margin="0,0,12,0">
-                        <TextBlock Text="Atrasados"
-                                   FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding TotalAtrasados}"
-                                   FontSize="24"
-                                   FontWeight="Bold"/>
+                        <TextBlock Text="Atrasados" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding TotalAtrasados}" FontSize="24" FontWeight="Bold"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Margin="0,0,12,0">
-                        <TextBlock Text="A atrasar (7 dias)"
-                                   FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding TotalAAtrasar}"
-                                   FontSize="24"
-                                   FontWeight="Bold"/>
+                        <TextBlock Text="A atrasar (7 dias)" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding TotalAAtrasar}" FontSize="24" FontWeight="Bold"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="2">
-                        <TextBlock Text="Bloqueados"
-                                   FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding TotalBloqueados}"
-                                   FontSize="24"
-                                   FontWeight="Bold"/>
+                        <TextBlock Text="Bloqueados" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding TotalBloqueados}" FontSize="24" FontWeight="Bold"/>
                     </StackPanel>
                 </Grid>
             </Border>
 
             <GroupBox Grid.Row="2" Header="Processos atrasados" Margin="0,0,0,14">
-                <DataGrid ItemsSource="{Binding ProcessosAtrasados}"
-                          AutoGenerateColumns="False"
-                          CanUserAddRows="False"
-                          IsReadOnly="True"
-                          MinHeight="190"
-                          SelectionMode="Single">
+                <DataGrid ItemsSource="{Binding ProcessosAtrasados}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" MinHeight="190" SelectionMode="Single">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Processo" Binding="{Binding NumeroProcesso}" Width="130"/>
-                        <DataGridTextColumn Header="Diligência" Binding="{Binding DescricaoDiligencia}" Width="*"/>
+                        <DataGridTextColumn Header="Paciente" Binding="{Binding Paciente}" Width="180"/>
+                        <DataGridTextColumn Header="Juiz" Binding="{Binding Juiz}" Width="180"/>
+                        <DataGridTextColumn Header="Status" Binding="{Binding StatusCalculado}" Width="150"/>
                         <DataGridTextColumn Header="Prazo" Binding="{Binding PrazoTexto}" Width="110"/>
                         <DataGridTextColumn Header="Salvamento" Binding="{Binding StatusSalvamentoTexto}" Width="170"/>
-                        <DataGridTextColumn Header="Motivo do rascunho" Binding="{Binding MotivoRascunho}" Width="220"/>
+                        <DataGridTemplateColumn Header="Ação" Width="110">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Content="Abrir" Command="{Binding DataContext.AbrirProcessoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
             </GroupBox>
 
             <StackPanel Grid.Row="3">
                 <GroupBox Header="Processos a atrasar (próximos 7 dias)" Margin="0,0,0,14">
-                    <DataGrid ItemsSource="{Binding ProcessosAAtrasar}"
-                              AutoGenerateColumns="False"
-                              CanUserAddRows="False"
-                              IsReadOnly="True"
-                              MinHeight="190"
-                              SelectionMode="Single">
+                    <DataGrid ItemsSource="{Binding ProcessosAAtrasar}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" MinHeight="190" SelectionMode="Single">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Processo" Binding="{Binding NumeroProcesso}" Width="130"/>
-                            <DataGridTextColumn Header="Diligência" Binding="{Binding DescricaoDiligencia}" Width="*"/>
+                            <DataGridTextColumn Header="Paciente" Binding="{Binding Paciente}" Width="180"/>
+                            <DataGridTextColumn Header="Juiz" Binding="{Binding Juiz}" Width="180"/>
+                            <DataGridTextColumn Header="Status" Binding="{Binding StatusCalculado}" Width="150"/>
                             <DataGridTextColumn Header="Prazo" Binding="{Binding PrazoTexto}" Width="110"/>
                             <DataGridTextColumn Header="Salvamento" Binding="{Binding StatusSalvamentoTexto}" Width="170"/>
-                            <DataGridTextColumn Header="Motivo do rascunho" Binding="{Binding MotivoRascunho}" Width="220"/>
+                            <DataGridTemplateColumn Header="Ação" Width="110">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="Abrir" Command="{Binding DataContext.AbrirProcessoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
                 </GroupBox>
 
-                <Border Padding="14"
-                        CornerRadius="10"
-                        BorderThickness="1"
-                        BorderBrush="#FFE3E8EF"
-                        Background="#FFF9FBFD"
-                        Margin="0,0,0,14">
+                <Border Padding="14" CornerRadius="10" BorderThickness="1" BorderBrush="#FFE3E8EF" Background="#FFF9FBFD" Margin="0,0,0,14">
                     <StackPanel>
-                        <TextBlock Text="Status de alterações não salvas"
-                                   FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding ResumoRascunhosTexto}"
-                                   Margin="0,5,0,0"/>
-                        <TextBlock Text="{Binding UsuarioLogadoTexto}"
-                                   Margin="0,3,0,0"
-                                   Opacity="0.72"/>
+                        <TextBlock Text="Status de alterações não salvas" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding ResumoRascunhosTexto}" Margin="0,5,0,0"/>
+                        <TextBlock Text="{Binding UsuarioLogadoTexto}" Margin="0,3,0,0" Opacity="0.72"/>
                     </StackPanel>
                 </Border>
 
