@@ -18,9 +18,9 @@
         <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,8">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="2*"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -50,12 +50,12 @@
                     <TextBox Text="{Binding EdicaoConta.Responsavel, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
 
-                <StackPanel Grid.Row="1" Margin="0,0,8,6">
+                <StackPanel Grid.Row="1" Margin="0,0,8,6" Visibility="{Binding IsCampoMovimentoVisivel, Converter={StaticResource BoolToVis}}">
                     <TextBlock Text="Movimento processual" FontWeight="SemiBold"/>
                     <TextBox Text="{Binding EdicaoConta.MovProcesso, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsAlvara}"/>
                 </StackPanel>
 
-                <StackPanel Grid.Column="1" Grid.Row="1" Margin="8,0,8,6">
+                <StackPanel Grid.Column="1" Grid.Row="1" Margin="8,0,8,6" Visibility="{Binding IsCampoNfAlvaraVisivel, Converter={StaticResource BoolToVis}}">
                     <TextBlock Text="Nº NF / Alvará" FontWeight="SemiBold"/>
                     <TextBox Text="{Binding EdicaoConta.NumNfAlvara, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
@@ -102,24 +102,25 @@
             </Grid>
         </Border>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,8">
+        <WrapPanel Grid.Row="1" HorizontalAlignment="Right" Margin="0,0,0,8" ItemHeight="36">
             <Button Content="Adicionar ao rascunho" Command="{Binding AdicionarRascunhoCommand}" IsEnabled="{Binding PodeCadastrar}" Margin="4"/>
             <Button Content="Confirmar rascunhos" Command="{Binding ConfirmarRascunhosCommand}" IsEnabled="{Binding PodeCadastrar}" Margin="4"/>
             <Button Content="Limpar rascunhos" Command="{Binding LimparRascunhosCommand}" IsEnabled="{Binding PodeCadastrar}" Margin="4"/>
             <Button Content="Salvar edição" Command="{Binding SalvarEdicaoContaCommand}" IsEnabled="{Binding PodeEditar}" Margin="4"/>
             <Button Content="Editar" Command="{Binding EditarContaCommand}" IsEnabled="{Binding PodeEditar}" Margin="4"/>
             <Button Content="Excluir" Command="{Binding ExcluirContaCommand}" IsEnabled="{Binding PodeExcluir}" Margin="4"/>
-        </StackPanel>
+            <Button Content="Exportar PDF" Command="{Binding ExportarPrestacaoContasPdfCommand}" Margin="4"/>
+        </WrapPanel>
 
         <GroupBox Header="Rascunhos de contas" Grid.Row="2" Margin="0,0,0,8">
             <DataGrid ItemsSource="{Binding ContasRascunho}" AutoGenerateColumns="False" IsReadOnly="True">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Data" Binding="{Binding DataMovimentacao}" Width="110"/>
-                    <DataGridTextColumn Header="Tipo" Binding="{Binding TipoLancamento}" Width="120"/>
+                    <DataGridTextColumn Header="Data" Binding="{Binding DataMovimentacao}" Width="SizeToHeader"/>
+                    <DataGridTextColumn Header="Tipo" Binding="{Binding TipoLancamento}" Width="SizeToHeader"/>
                     <DataGridTextColumn Header="Histórico" Binding="{Binding Historico}" Width="*"/>
-                    <DataGridTextColumn Header="Entrada" Binding="{Binding ValorAlvara, StringFormat=R$ {0:N2}}" Width="110"/>
-                    <DataGridTextColumn Header="Saída" Binding="{Binding ValorConta, StringFormat=R$ {0:N2}}" Width="110"/>
-                    <DataGridTemplateColumn Header="Ações" Width="90">
+                    <DataGridTextColumn Header="Entrada" Binding="{Binding ValorAlvara, StringFormat=R$ {0:N2}}" Width="SizeToHeader"/>
+                    <DataGridTextColumn Header="Saída" Binding="{Binding ValorConta, StringFormat=R$ {0:N2}}" Width="SizeToHeader"/>
+                    <DataGridTemplateColumn Header="Ações" Width="SizeToCells">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Button Content="Remover" Command="{Binding DataContext.RemoverRascunhoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
@@ -133,13 +134,13 @@
         <GroupBox Header="Histórico de contas (saldo progressivo)" Grid.Row="3">
             <DataGrid ItemsSource="{Binding HistoricoContas}" SelectedItem="{Binding ContaSelecionada}" AutoGenerateColumns="False" IsReadOnly="True">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Data" Binding="{Binding Conta.DataMovimentacao}" Width="110"/>
-                    <DataGridTextColumn Header="Tipo" Binding="{Binding Conta.TipoLancamento}" Width="120"/>
-                    <DataGridTextColumn Header="Mov. Processo" Binding="{Binding Conta.MovProcesso}" Width="120"/>
+                    <DataGridTextColumn Header="Data" Binding="{Binding Conta.DataMovimentacao}" Width="SizeToHeader"/>
+                    <DataGridTextColumn Header="Tipo" Binding="{Binding Conta.TipoLancamento}" Width="SizeToHeader"/>
+                    <DataGridTextColumn Header="Mov. Processo" Binding="{Binding Conta.MovProcesso}" Width="SizeToHeader"/>
                     <DataGridTextColumn Header="Histórico" Binding="{Binding Conta.Historico}" Width="*"/>
-                    <DataGridTextColumn Header="Entrada" Binding="{Binding Conta.ValorAlvara, StringFormat=R$ {0:N2}}" Width="110"/>
-                    <DataGridTextColumn Header="Saída" Binding="{Binding Conta.ValorConta, StringFormat=R$ {0:N2}}" Width="110"/>
-                    <DataGridTextColumn Header="Saldo parcial" Binding="{Binding SaldoParcial, StringFormat=R$ {0:N2}}" Width="130"/>
+                    <DataGridTextColumn Header="Entrada" Binding="{Binding Conta.ValorAlvara, StringFormat=R$ {0:N2}}" Width="SizeToHeader"/>
+                    <DataGridTextColumn Header="Saída" Binding="{Binding Conta.ValorConta, StringFormat=R$ {0:N2}}" Width="SizeToHeader"/>
+                    <DataGridTextColumn Header="Saldo parcial" Binding="{Binding SaldoParcial, StringFormat=R$ {0:N2}}" Width="SizeToHeader"/>
                 </DataGrid.Columns>
             </DataGrid>
         </GroupBox>

@@ -28,11 +28,6 @@
             <Setter Property="Padding" Value="8,0"/>
             <Setter Property="BorderBrush" Value="#CBD5E1"/>
         </Style>
-        <Style TargetType="Button">
-            <Setter Property="Padding" Value="16,8"/>
-            <Setter Property="Margin" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
-        </Style>
         <Style x:Key="Card" TargetType="Border">
             <Setter Property="Background" Value="White"/>
             <Setter Property="CornerRadius" Value="10"/>
@@ -160,26 +155,32 @@
                                     BorderBrush="{StaticResource PrimaryBrush}"/>
                         </DockPanel>
 
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                            <TextBox Width="420"
-                                     Text="{Binding NovoReu, UpdateSourceTrigger=PropertyChanged}"
-                                     ToolTip="Digite um nome e clique em adicionar"/>
-                            <Button Content="Adicionar"
-                                    Margin="8,0,0,0"
-                                    Command="{Binding AdicionarReuCommand}"/>
-                        </StackPanel>
-
                         <ItemsControl ItemsSource="{Binding Reus}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <DockPanel Margin="0,4,0,4">
-                                        <Button DockPanel.Dock="Right"
-                                                Content="Remover"
+                                    <Grid Margin="0,4,0,4">
+                                        <Grid.Style>
+                                            <Style TargetType="Grid">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsAtivo}" Value="False">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Grid.Style>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Grid.Column="0" Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <Button Grid.Column="1"
+                                                Content="Desativar"
                                                 Margin="8,0,0,0"
+                                                MinWidth="110"
                                                 Command="{Binding DataContext.RemoverReuCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                 CommandParameter="{Binding}"/>
-                                        <TextBox Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged}"/>
-                                    </DockPanel>
+                                    </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>

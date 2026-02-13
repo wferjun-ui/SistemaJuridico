@@ -31,7 +31,7 @@ namespace SistemaJuridico.Services
         {
             using var conn = _db.GetConnection();
 
-            var itens = conn.Query<ProcessoResumoCacheItem>(@"
+            var itens = conn.Query<ProcessoResumoCacheItemRaw>(@"
 SELECT
     p.id as ProcessoId,
     p.numero as Numero,
@@ -75,7 +75,7 @@ SELECT
         WHERE c.processo_id = p.id
     ) as TotalCredito
 FROM processos p
-").ToList();
+").Select(x => x.ToCacheItem()).ToList();
 
             foreach (var item in itens)
             {
@@ -115,6 +115,47 @@ FROM processos p
         public ProcessoResumoCacheItem Clone()
         {
             return (ProcessoResumoCacheItem)MemberwiseClone();
+        }
+    }
+
+    internal class ProcessoResumoCacheItemRaw
+    {
+        public string ProcessoId { get; set; } = string.Empty;
+        public string Numero { get; set; } = string.Empty;
+        public string Paciente { get; set; } = string.Empty;
+        public string? Genitor { get; set; }
+        public string Juiz { get; set; } = string.Empty;
+        public string? TipoProcesso { get; set; }
+        public string StatusProcesso { get; set; } = string.Empty;
+        public string? StatusCalculado { get; set; }
+        public string? ResponsavelUltimaVerificacao { get; set; }
+        public string? PrazoCalculado { get; set; }
+        public string? PrazoVerificacao { get; set; }
+        public string SituacaoRascunho { get; set; } = "Concluído";
+        public string? MotivoRascunho { get; set; }
+        public double TotalDebito { get; set; }
+        public double TotalCredito { get; set; }
+
+        public ProcessoResumoCacheItem ToCacheItem()
+        {
+            return new ProcessoResumoCacheItem
+            {
+                ProcessoId = ProcessoId,
+                Numero = Numero,
+                Paciente = Paciente,
+                Genitor = Genitor,
+                Juiz = Juiz,
+                TipoProcesso = TipoProcesso,
+                StatusProcesso = StatusProcesso,
+                StatusCalculado = StatusCalculado,
+                ResponsavelUltimaVerificacao = ResponsavelUltimaVerificacao,
+                PrazoCalculado = PrazoCalculado,
+                PrazoVerificacao = PrazoVerificacao,
+                SituacaoRascunho = SituacaoRascunho,
+                MotivoRascunho = MotivoRascunho,
+                TotalDebito = Convert.ToDecimal(TotalDebito),
+                TotalCredito = Convert.ToDecimal(TotalCredito)
+            };
         }
     }
 }
