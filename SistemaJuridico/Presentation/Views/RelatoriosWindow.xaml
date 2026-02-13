@@ -1,0 +1,22 @@
+<Window x:Class="SistemaJuridico.Views.RelatoriosWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:SistemaJuridico.Views"
+        Title="Relatórios e Busca"
+        MinWidth="980"
+        MinHeight="620"
+        Width="1100"
+        Height="720"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize"
+        Background="#F8FAFC">
+    <Grid Margin="12">
+        <Border Padding="12"
+                CornerRadius="12"
+                Background="White"
+                BorderBrush="#E2E8F0"
+                BorderThickness="1">
+            <local:RelatoriosView/>
+        </Border>
+    </Grid>
+</Window>
