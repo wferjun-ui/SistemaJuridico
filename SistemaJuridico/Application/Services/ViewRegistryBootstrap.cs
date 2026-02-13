@@ -19,6 +19,11 @@ namespace SistemaJuridico.Services
                 typeof(ProcessoListViewModel));
 
             registry.Register(
+                NavigationKey.Relatorios,
+                typeof(RelatoriosView),
+                typeof(RelatoriosViewModel));
+
+            registry.Register(
                 NavigationKey.ProcessoDetalhes,
                 typeof(ProcessoDetalhesHostView),
                 typeof(ProcessoDetalhesHostViewModel));

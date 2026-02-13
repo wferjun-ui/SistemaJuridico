@@ -7,6 +7,51 @@ namespace SistemaJuridico.Services
 {
     public class PdfRelatorioProcessoService
     {
+        public void GerarPdfLista(List<RelatorioProcessoModel> modelos, string caminho)
+        {
+            Document.Create(container =>
+            {
+                foreach (var modelo in modelos)
+                {
+                    container.Page(page =>
+                    {
+                        page.Margin(40);
+
+                        page.Header().Column(header =>
+                        {
+                            header.Item().AlignCenter().Text("RELATÓRIO DO PROCESSO")
+                                .FontSize(18)
+                                .Bold();
+
+                            header.Item().AlignCenter().Text($"Processo nº {modelo.Processo.Numero}");
+                            header.Item().LineHorizontal(1);
+                        });
+
+                        page.Content().Column(col =>
+                        {
+                            DadosProcesso(col, modelo);
+                            ItensSaude(col, modelo);
+                            Financeiro(col, modelo);
+                            Diligencias(col, modelo);
+                            Verificacoes(col, modelo);
+                        });
+
+                        page.Footer().Column(footer =>
+                        {
+                            footer.Item().LineHorizontal(1);
+                            footer.Item().Text($"Gerado por {modelo.UsuarioGerador} em {modelo.DataGeracao:dd/MM/yyyy HH:mm}");
+                            footer.Item().AlignRight().Text(x =>
+                            {
+                                x.CurrentPageNumber();
+                                x.Span(" / ");
+                                x.TotalPages();
+                            });
+                        });
+                    });
+                }
+            }).GeneratePdf(caminho);
+        }
+
         public void GerarPdf(RelatorioProcessoModel modelo, string caminho)
         {
             Document.Create(container =>

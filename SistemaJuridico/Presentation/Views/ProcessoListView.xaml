@@ -27,10 +27,10 @@
         </Grid.RowDefinitions>
 
         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-            <Button Content="Novo Processo" Width="140" Margin="0,0,10,0" Command="{Binding NovoProcessoCommand}"/>
-            <Button Content="Atualizar" Width="100" Margin="0,0,10,0" Command="{Binding CarregarCommand}"/>
+            <Button Content="Novo Processo" Width="130" Margin="0,0,10,0" Command="{Binding NovoProcessoCommand}"/>
+            <Button Content="Atualizar" Width="130" Margin="0,0,10,0" Command="{Binding CarregarCommand}"/>
             <Button Content="Busca avançada" Width="130" Margin="0,0,10,0" Command="{Binding ToggleBuscaAvancadaCommand}"/>
-            <Button Content="Exportar" Width="100" Command="{Binding ExportarResultadosCommand}"/>
+            <Button Content="Exportar" Width="130" Command="{Binding ExportarResultadosCommand}"/>
         </StackPanel>
 
         <Border Grid.Row="1" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,8">
@@ -38,8 +38,8 @@
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                     <TextBlock Text="Busca simples:" VerticalAlignment="Center" Margin="0,0,8,0"/>
                     <TextBox Width="420" Text="{Binding TextoBusca, UpdateSourceTrigger=PropertyChanged}"/>
-                    <Button Content="Buscar" Margin="8,0,0,0" Width="80" Command="{Binding BuscarCommand}"/>
-                    <Button Content="Limpar" Margin="8,0,0,0" Width="80" Command="{Binding LimparFiltrosCommand}"/>
+                    <Button Content="Buscar" Margin="8,0,0,0" Width="100" Command="{Binding BuscarCommand}"/>
+                    <Button Content="Limpar" Margin="8,0,0,0" Width="100" Background="#64748B" BorderBrush="#64748B" Command="{Binding LimparFiltrosCommand}"/>
                 </StackPanel>
 
                 <StackPanel Visibility="{Binding MostrarBuscaAvancada, Converter={StaticResource BoolToVis}}">
