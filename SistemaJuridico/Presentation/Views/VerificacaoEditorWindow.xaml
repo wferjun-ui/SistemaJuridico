@@ -117,6 +117,69 @@
                     </Grid>
                 </GroupBox>
 
+                <GroupBox Header="Verificação de terapias e demais itens" Margin="0,10,0,0">
+                    <DataGrid Margin="8"
+                              ItemsSource="{Binding ItensSaude}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              IsReadOnly="False"
+                              GridLinesVisibility="Horizontal"
+                              HeadersVisibility="Column"
+                              RowHeaderWidth="0">
+
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Tipo"
+                                                Width="120"
+                                                Binding="{Binding Tipo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                            <DataGridTextColumn Header="Nome"
+                                                Width="*"
+                                                Binding="{Binding Nome, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                            <DataGridTextColumn Header="Qtd"
+                                                Width="80"
+                                                Binding="{Binding Qtd, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                            <DataGridTextColumn Header="Frequência"
+                                                Width="130"
+                                                Binding="{Binding Frequencia, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                            <DataGridTextColumn Header="Local"
+                                                Width="150"
+                                                Binding="{Binding Local, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                            <DataGridTextColumn Header="Data Prescrição"
+                                                Width="130"
+                                                Binding="{Binding DataPrescricao, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Opacity" Value="1"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsDesnecessario}" Value="True">
+                                                <Setter Property="Opacity" Value="0.5"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                                <DataGridTextColumn.EditingElementStyle>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="IsEnabled" Value="True"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsDesnecessario}" Value="True">
+                                                <Setter Property="IsEnabled" Value="False"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </DataGridTextColumn.EditingElementStyle>
+                            </DataGridTextColumn>
+
+                            <DataGridCheckBoxColumn Header="Tratamento desnecessário"
+                                                    Width="170"
+                                                    Binding="{Binding IsDesnecessario, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </GroupBox>
+
             </StackPanel>
         </ScrollViewer>
 
