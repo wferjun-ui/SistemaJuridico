@@ -3,6 +3,7 @@ using SistemaJuridico.Services;
 using SistemaJuridico.Views;
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.IO;
 using System.Text;
 
 namespace SistemaJuridico.ViewModels
