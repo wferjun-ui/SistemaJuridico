@@ -7,6 +7,8 @@ namespace SistemaJuridico.Infrastructure
     public class LoggerService
     {
         private static readonly object _lock = new();
+        private const LogLevel NivelMinimo = LogLevel.INFO;
+        private const int TamanhoMaximoMensagem = 420;
 
         private readonly string _pastaLogs;
 
@@ -28,11 +30,15 @@ namespace SistemaJuridico.Infrastructure
 
         public void Log(LogLevel nivel, string mensagem)
         {
+            if (nivel < NivelMinimo)
+                return;
+
             try
             {
                 var usuario = SessaoUsuarioService.Instance.NomeUsuario;
+                var mensagemNormalizada = NormalizarMensagem(mensagem);
 
-                var linha = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} | {nivel} | {usuario} | {mensagem}{Environment.NewLine}";
+                var linha = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} | {nivel} | {usuario} | {mensagemNormalizada}{Environment.NewLine}";
 
                 lock (_lock)
                 {
@@ -54,6 +60,34 @@ namespace SistemaJuridico.Infrastructure
         public void Audit(string msg) => Log(LogLevel.AUDIT, msg);
 
         public void Error(string msg, Exception ex)
-            => Log(LogLevel.ERROR, $"{msg} | {ex}");
+            => Log(LogLevel.ERROR, $"{msg} | {CompactarExcecao(ex)}");
+
+        private static string NormalizarMensagem(string? mensagem)
+        {
+            var texto = (mensagem ?? string.Empty)
+                .Replace(Environment.NewLine, " ")
+                .Replace("\r", " ")
+                .Replace("\n", " ")
+                .Trim();
+
+            if (texto.Length <= TamanhoMaximoMensagem)
+                return texto;
+
+            return $"{texto[..TamanhoMaximoMensagem]}...";
+        }
+
+        private static string CompactarExcecao(Exception ex)
+        {
+            var tipo = ex.GetType().Name;
+            var mensagem = NormalizarMensagem(ex.Message);
+
+            if (ex.InnerException == null)
+                return $"{tipo}: {mensagem}";
+
+            var innerTipo = ex.InnerException.GetType().Name;
+            var innerMensagem = NormalizarMensagem(ex.InnerException.Message);
+
+            return $"{tipo}: {mensagem} | Inner={innerTipo}: {innerMensagem}";
+        }
     }
 }
