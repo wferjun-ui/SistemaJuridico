@@ -30,9 +30,23 @@ namespace SistemaJuridico.Views
             DependencyPropertyChangedEventArgs e)
         {
             if (d is ContasView view && e.NewValue is string id)
-            {
                 view.DataContext = new ContasViewModel(id);
-            }
+        }
+
+        private void ValorAlvara_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (DataContext is not ContasViewModel vm || sender is not TextBox box)
+                return;
+
+            vm.AtualizarValorAlvaraTexto(box.Text);
+        }
+
+        private void ValorConta_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (DataContext is not ContasViewModel vm || sender is not TextBox box)
+                return;
+
+            vm.AtualizarValorContaTexto(box.Text);
         }
     }
 }

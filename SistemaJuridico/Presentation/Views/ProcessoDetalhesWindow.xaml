@@ -29,6 +29,16 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+        <Style x:Key="RoundedButton" TargetType="Button">
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="Margin" Value="5,0"/>
+            <Setter Property="Background" Value="#4F46E5"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#4F46E5"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
     </Window.Resources>
 
     <Grid Margin="15">
@@ -58,7 +68,7 @@
             </Grid.ColumnDefinitions>
 
             <TabControl Grid.Column="0" Margin="0,0,12,0">
-                <TabItem Header="Dados">
+                <TabItem Header="Cadastro">
                     <Grid Margin="10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="180"/>
@@ -75,23 +85,23 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Text="Número:" VerticalAlignment="Center"/>
-                        <TextBox Grid.Column="1" Text="{Binding Processo.Numero}" Style="{StaticResource CampoBloqueavel}"/>
+                        <TextBox Grid.Column="1" Text="{Binding Processo.Numero}" IsEnabled="{Binding PodeEditarProcesso}"/>
 
                         <TextBlock Grid.Row="1" Text="Paciente:" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Processo.Paciente}" Style="{StaticResource CampoBloqueavel}"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Processo.Paciente}" IsEnabled="{Binding PodeEditarProcesso}"/>
 
                         <TextBlock Grid.Row="2" Text="Juiz:" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Processo.Juiz}" Style="{StaticResource CampoBloqueavel}"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Processo.Juiz}" IsEnabled="{Binding PodeEditarProcesso}"/>
 
                         <TextBlock Grid.Row="3" Text="Classificação:" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding Processo.Classificacao}" Style="{StaticResource CampoBloqueavel}"/>
+                        <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding Processo.Classificacao}" IsEnabled="{Binding PodeEditarProcesso}"/>
 
                         <TextBlock Grid.Row="4" Text="Fase:" VerticalAlignment="Center"/>
                         <ComboBox Grid.Row="4"
                                   Grid.Column="1"
                                   SelectedValuePath="Content"
                                   SelectedValue="{Binding Processo.StatusFase, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                  Style="{StaticResource CampoBloqueavel}">
+                                  IsEnabled="{Binding PodeEditarProcesso}">
                             <ComboBoxItem Content="Conhecimento"/>
                             <ComboBoxItem Content="Execução"/>
                             <ComboBoxItem Content="Arquivado"/>
@@ -103,11 +113,11 @@
                                  Text="{Binding Processo.ObservacaoFixa}"
                                  AcceptsReturn="True"
                                  VerticalScrollBarVisibility="Auto"
-                                 Style="{StaticResource CampoBloqueavel}"/>
+                                 IsEnabled="{Binding PodeEditarProcesso}"/>
                     </Grid>
                 </TabItem>
 
-                <TabItem Header="Verificações">
+                <TabItem Header="Verificação" Visibility="{Binding PodeAcessarAbaVerificacao, Converter={StaticResource BoolToVis}}">
                     <DockPanel Margin="10">
                         <Button Content="Nova verificação"
                                 DockPanel.Dock="Top"
@@ -193,6 +203,20 @@
                     Margin="5,0"
                     Command="{Binding ConcluirEdicaoCommand}"
                     Style="{StaticResource CampoBloqueavel}" />
+
+            <Button Content="Salvar processo"
+                    Width="140"
+                    Command="{Binding SalvarProcessoCommand}"
+                    IsEnabled="{Binding PodeEditarProcesso}"
+                    Style="{StaticResource RoundedButton}"/>
+
+            <Button Content="Excluir processo"
+                    Width="140"
+                    Command="{Binding ExcluirProcessoCommand}"
+                    Visibility="{Binding PodeEditarProcesso, Converter={StaticResource BoolToVis}}"
+                    Background="#B91C1C"
+                    BorderBrush="#B91C1C"
+                    Style="{StaticResource RoundedButton}"/>
 
             <Button Content="Fechar"
                     Width="100"

@@ -57,7 +57,7 @@ namespace SistemaJuridico.ViewModels
             var incluido = _autorizacaoService.AdicionarEmail(NovoEmail.Trim());
             if (!incluido)
             {
-                System.Windows.MessageBox.Show("E-mail já cadastrado ou inválido.");
+                System.Windows.MessageBox.Show("Selecione um usuário para alterar a senha.");
                 return;
             }
 
@@ -86,7 +86,7 @@ namespace SistemaJuridico.ViewModels
 
             if (UsuarioSelecionado == null)
             {
-                System.Windows.MessageBox.Show("Apenas administradores podem alterar e-mails autorizados.");
+                System.Windows.MessageBox.Show("Selecione um usuário para alterar o perfil.");
                 return;
             }
 
@@ -109,7 +109,7 @@ namespace SistemaJuridico.ViewModels
 
             if (UsuarioSelecionado == null)
             {
-                System.Windows.MessageBox.Show("E-mail já cadastrado ou inválido.");
+                System.Windows.MessageBox.Show("Selecione um usuário para alterar a senha.");
                 return;
             }
 

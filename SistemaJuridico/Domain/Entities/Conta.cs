@@ -11,6 +11,10 @@ namespace SistemaJuridico.Models
         public string? NumNfAlvara { get; set; }
         public decimal ValorAlvara { get; set; }
         public decimal ValorConta { get; set; }
+        public string? TerapiaMedicamentoNome { get; set; }
+        public string? Quantidade { get; set; }
+        public string? MesReferencia { get; set; }
+        public string? AnoReferencia { get; set; }
         public string StatusConta { get; set; } = "rascunho";
         public string Responsavel { get; set; } = "";
         public string? Observacoes { get; set; }

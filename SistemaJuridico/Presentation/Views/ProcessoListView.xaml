@@ -2,50 +2,109 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <Grid Margin="15">
+        <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Margin" Value="3"/>
+            <Setter Property="Background" Value="#4F46E5"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#4F46E5"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style TargetType="GroupBox">
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+    </UserControl.Resources>
 
+
+    <Grid Margin="15">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-
-            <Button Content="Novo Processo"
-                    Width="140"
-                    Margin="0,0,10,0"
-                    Command="{Binding NovoProcessoCommand}"/>
-
-            <Button Content="Atualizar"
-                    Width="100"
-                    Command="{Binding CarregarCommand}"/>
-
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <Button Content="Novo Processo" Width="140" Margin="0,0,10,0" Command="{Binding NovoProcessoCommand}"/>
+            <Button Content="Atualizar" Width="100" Margin="0,0,10,0" Command="{Binding CarregarCommand}"/>
+            <Button Content="Busca avançada" Width="130" Margin="0,0,10,0" Command="{Binding ToggleBuscaAvancadaCommand}"/>
+            <Button Content="Exportar" Width="100" Command="{Binding ExportarResultadosCommand}"/>
         </StackPanel>
 
-        <DataGrid Grid.Row="1"
+        <Border Grid.Row="1" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,8">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                    <TextBlock Text="Busca simples:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBox Width="420" Text="{Binding TextoBusca, UpdateSourceTrigger=PropertyChanged}"/>
+                    <Button Content="Buscar" Margin="8,0,0,0" Width="80" Command="{Binding BuscarCommand}"/>
+                    <Button Content="Limpar" Margin="8,0,0,0" Width="80" Command="{Binding LimparFiltrosCommand}"/>
+                </StackPanel>
+
+                <StackPanel Visibility="{Binding MostrarBuscaAvancada, Converter={StaticResource BoolToVis}}">
+                    <WrapPanel>
+                        <StackPanel Margin="0,0,12,6">
+                            <TextBlock Text="Status"/>
+                            <TextBox Width="150" Text="{Binding StatusFiltro, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,12,6">
+                            <TextBlock Text="Tipo"/>
+                            <TextBox Width="150" Text="{Binding TipoFiltro, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,12,6">
+                            <TextBlock Text="Responsável"/>
+                            <TextBox Width="150" Text="{Binding ResponsavelFiltro, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,12,6">
+                            <TextBlock Text="Saldo mín."/>
+                            <TextBox Width="100" Text="{Binding ValorMinimo, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,12,6">
+                            <TextBlock Text="Saldo máx."/>
+                            <TextBox Width="100" Text="{Binding ValorMaximo, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,12,6">
+                            <TextBlock Text="Palavra-chave"/>
+                            <TextBox Width="180" Text="{Binding PalavraChaveHistorico, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                    </WrapPanel>
+                    <TextBlock Text="{Binding ResumoEstatistico}" FontStyle="Italic" Opacity="0.8"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <DataGrid Grid.Row="2"
                   ItemsSource="{Binding Processos}"
                   AutoGenerateColumns="False"
                   IsReadOnly="True"
                   SelectedItem="{Binding ProcessoSelecionado}"
                   MouseDoubleClick="DataGrid_MouseDoubleClick">
-
             <DataGrid.Columns>
-
-                <DataGridTextColumn Header="Número"
-                                    Binding="{Binding Numero}"
-                                    Width="*"/>
-
-                <DataGridTextColumn Header="Paciente"
-                                    Binding="{Binding Paciente}"
-                                    Width="*"/>
-
-                <DataGridTextColumn Header="Status"
-                                    Binding="{Binding StatusFase}"
-                                    Width="160"/>
-
+                <DataGridTextColumn Header="Número" Binding="{Binding Numero}" Width="130"/>
+                <DataGridTextColumn Header="Paciente" Binding="{Binding Paciente}" Width="*"/>
+                <DataGridTextColumn Header="Genitor" Binding="{Binding Genitor}" Width="170"/>
+                <DataGridTextColumn Header="Juiz" Binding="{Binding Juiz}" Width="170"/>
+                <DataGridTextColumn Header="Tipo" Binding="{Binding TipoProcesso}" Width="120"/>
+                <DataGridTextColumn Header="Status" Binding="{Binding StatusCalculado}" Width="140"/>
+                <DataGridTextColumn Header="Saldo" Binding="{Binding Saldo, StringFormat=R$ {0:N2}}" Width="120"/>
+                <DataGridTemplateColumn Header="Ação" Width="90">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="Abrir" Command="{Binding DataContext.AbrirProcessoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
-
         </DataGrid>
 
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+            <TextBlock Text="{Binding TotalResultados, StringFormat=Resultados: {0}}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <Button Content="&lt;" Width="30" Command="{Binding PaginaAnteriorCommand}"/>
+            <TextBlock Text="{Binding PaginaAtual}" VerticalAlignment="Center" Margin="8,0"/>
+            <TextBlock Text="/" VerticalAlignment="Center" Margin="0,0,8,0"/>
+            <TextBlock Text="{Binding TotalPaginas}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <Button Content=">" Width="30" Command="{Binding ProximaPaginaCommand}" Background="#64748B" BorderBrush="#64748B"/>
+        </StackPanel>
     </Grid>
 </UserControl>

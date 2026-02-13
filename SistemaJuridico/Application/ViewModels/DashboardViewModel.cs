@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using QuestPDF.Fluent;
 using SistemaJuridico.Services;
 using SistemaJuridico.Views;
 using System.Collections.ObjectModel;
@@ -10,7 +11,7 @@ namespace SistemaJuridico.ViewModels
     public partial class DashboardViewModel : ObservableObject
     {
         private readonly ProcessService _service;
-        private readonly DiligenciaService _diligenciaService;
+        private readonly ProcessoCacheService _cacheService;
 
         public ObservableCollection<ProcessoPrazoVM> ProcessosAtrasados { get; } = new();
         public ObservableCollection<ProcessoPrazoVM> ProcessosAAtrasar { get; } = new();
@@ -31,18 +32,73 @@ namespace SistemaJuridico.ViewModels
         [ObservableProperty]
         private string _resumoRascunhosTexto = "Sem processos em rascunho ou edição pendente.";
 
+        [ObservableProperty]
+        private bool _carregandoEmSegundoPlano;
+
         public DashboardViewModel()
         {
             var db = new DatabaseService();
-
             _service = new ProcessService(db);
-            _diligenciaService = new DiligenciaService(db);
+            _cacheService = new ProcessoCacheService(db);
 
             Carregar();
         }
 
         [RelayCommand]
         private void Carregar()
+        {
+            var cache = _cacheService.ObterCacheLeve();
+            AplicarResumo(cache);
+
+            CarregandoEmSegundoPlano = true;
+            _ = Task.Run(() =>
+            {
+                var atualizado = _cacheService.AtualizarCache();
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    AplicarResumo(atualizado);
+                    CarregandoEmSegundoPlano = false;
+                });
+            });
+        }
+
+        [RelayCommand]
+        private void ExportarResumoPdf()
+        {
+            var save = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "PDF|*.pdf",
+                FileName = $"resumo_dashboard_{DateTime.Now:yyyyMMdd_HHmmss}.pdf"
+            };
+
+            if (save.ShowDialog() != true)
+                return;
+
+            var total = TotalAtrasados + TotalAAtrasar;
+            Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Margin(32);
+                    page.Header().Text("Resumo Geral de Processos").Bold().FontSize(18);
+                    page.Content().Column(col =>
+                    {
+                        col.Item().Text($"Data: {DateTime.Now:dd/MM/yyyy HH:mm}");
+                        col.Item().Text($"Total monitorados: {total}");
+                        col.Item().Text($"Atrasados: {TotalAtrasados}");
+                        col.Item().Text($"A atrasar: {TotalAAtrasar}");
+                        col.Item().Text($"Bloqueados: {TotalBloqueados}");
+                        col.Item().PaddingTop(10).Text("Processos atrasados").Bold();
+                        foreach (var p in ProcessosAtrasados.Take(20))
+                            col.Item().Text($"• {p.NumeroProcesso} - {p.Paciente} - prazo {p.PrazoTexto}");
+                    });
+                });
+            }).GeneratePdf(save.FileName);
+
+            System.Windows.MessageBox.Show("Resumo PDF exportado com sucesso.");
+        }
+
+        private void AplicarResumo(List<ProcessoResumoCacheItem> processos)
         {
             ProcessosAtrasados.Clear();
             ProcessosAAtrasar.Clear();
@@ -58,43 +114,43 @@ namespace SistemaJuridico.ViewModels
             var atual = App.Session.UsuarioAtual?.Email;
             UsuarioLogadoTexto = $"Logado como: {atual ?? "(não identificado)"}";
 
-            foreach (var p in _service.ListarProcessos())
+            foreach (var p in processos)
             {
                 if (!string.Equals(p.SituacaoRascunho, "Concluído", StringComparison.OrdinalIgnoreCase))
                     processosNaoConcluidos++;
 
-                var usuarioLock = _service.UsuarioEditando(p.Id);
+                var usuarioLock = _service.UsuarioEditando(p.ProcessoId);
                 if (!string.IsNullOrWhiteSpace(usuarioLock) && usuarioLock != atual)
                 {
                     bloqueados++;
                     ProcessosBloqueados.Add($"{p.Numero} - {usuarioLock}");
                 }
 
-                foreach (var diligencia in _diligenciaService.ListarPorProcesso(p.Id).Where(x => !x.Concluida))
+                if (!TryParsePrazo(p.PrazoFinal, out var prazo))
+                    continue;
+
+                var vmPrazo = new ProcessoPrazoVM
                 {
-                    if (!TryParsePrazo(diligencia.Prazo, out var prazo))
-                        continue;
+                    ProcessoId = p.ProcessoId,
+                    NumeroProcesso = p.Numero,
+                    Paciente = p.Paciente,
+                    Juiz = p.Juiz,
+                    StatusCalculado = p.StatusCalculado ?? p.StatusProcesso,
+                    DescricaoDiligencia = "Prazo da última verificação",
+                    Prazo = prazo,
+                    SituacaoRascunho = string.IsNullOrWhiteSpace(p.SituacaoRascunho) ? "Concluído" : p.SituacaoRascunho,
+                    MotivoRascunho = p.MotivoRascunho
+                };
 
-                    var vmPrazo = new ProcessoPrazoVM
-                    {
-                        ProcessoId = p.Id,
-                        NumeroProcesso = p.Numero,
-                        DescricaoDiligencia = diligencia.Descricao,
-                        Prazo = prazo,
-                        SituacaoRascunho = string.IsNullOrWhiteSpace(p.SituacaoRascunho) ? "Concluído" : p.SituacaoRascunho,
-                        MotivoRascunho = p.MotivoRascunho
-                    };
-
-                    if (prazo.Date < hoje)
-                    {
-                        atrasados++;
-                        ProcessosAtrasados.Add(vmPrazo);
-                    }
-                    else if (prazo.Date <= limiteAAtrasar)
-                    {
-                        aAtrasar++;
-                        ProcessosAAtrasar.Add(vmPrazo);
-                    }
+                if (prazo.Date < hoje)
+                {
+                    atrasados++;
+                    ProcessosAtrasados.Add(vmPrazo);
+                }
+                else if (prazo.Date <= limiteAAtrasar)
+                {
+                    aAtrasar++;
+                    ProcessosAAtrasar.Add(vmPrazo);
                 }
             }
 
@@ -120,7 +176,7 @@ namespace SistemaJuridico.ViewModels
         }
 
         [RelayCommand]
-        private void AbrirProcesso(ProcessoPrazoVM processoPrazo)
+        private void AbrirProcesso(ProcessoPrazoVM? processoPrazo)
         {
             if (processoPrazo == null || string.IsNullOrWhiteSpace(processoPrazo.ProcessoId))
                 return;
@@ -136,6 +192,9 @@ namespace SistemaJuridico.ViewModels
     {
         public string ProcessoId { get; set; } = string.Empty;
         public string NumeroProcesso { get; set; } = string.Empty;
+        public string Paciente { get; set; } = string.Empty;
+        public string Juiz { get; set; } = string.Empty;
+        public string StatusCalculado { get; set; } = string.Empty;
         public string DescricaoDiligencia { get; set; } = string.Empty;
         public DateTime Prazo { get; set; }
         public string SituacaoRascunho { get; set; } = "Concluído";
