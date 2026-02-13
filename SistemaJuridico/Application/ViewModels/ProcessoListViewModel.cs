@@ -143,19 +143,31 @@ namespace SistemaJuridico.ViewModels
             ProximaPaginaCommand = new RelayCommand(() => MudarPagina(+1));
             PaginaAnteriorCommand = new RelayCommand(() => MudarPagina(-1));
 
-            _ = Carregar();
+            CarregarComSeguranca();
         }
 
         private async Task Carregar()
         {
-            _todos.Clear();
-            PopularComCache(_cacheService.ObterCacheLeve());
-            AplicarBusca();
+            try
+            {
+                _todos.Clear();
+                PopularComCache(_cacheService.ObterCacheLeve());
+                AplicarBusca();
 
-            var atualizados = await Task.Run(() => _cacheService.AtualizarCache());
-            _todos.Clear();
-            PopularComCache(atualizados);
-            AplicarBusca();
+                var atualizados = await Task.Run(() => _cacheService.AtualizarCache());
+                _todos.Clear();
+                PopularComCache(atualizados);
+                AplicarBusca();
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Falha ao carregar processos: {ex.Message}");
+            }
+        }
+
+        private async void CarregarComSeguranca()
+        {
+            await Carregar();
         }
 
         private void PopularComCache(List<ProcessoResumoCacheItem> cache)
@@ -307,17 +319,17 @@ namespace SistemaJuridico.ViewModels
         {
             var window = new CadastroProcessoWindow();
             window.ShowDialog();
-            _ = Carregar();
+            CarregarComSeguranca();
         }
 
         private void AbrirProcesso(ProcessoBuscaItemVM? processo)
         {
-            if (processo == null)
+            if (processo == null || string.IsNullOrWhiteSpace(processo.Id))
                 return;
 
             var window = new ProcessoDetalhesWindow(processo.Id);
             window.ShowDialog();
-            _ = Carregar();
+            CarregarComSeguranca();
         }
     }
 

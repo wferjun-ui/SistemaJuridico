@@ -3,8 +3,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="Administração"
-        Height="560"
-        Width="760"
+        MinHeight="620"
+        MinWidth="920"
+        Height="680"
+        Width="980"
+        ResizeMode="CanResize"
         WindowStartupLocation="CenterScreen">
 
     <Grid Margin="20">
@@ -36,12 +39,12 @@
                               CanUserAddRows="False">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="E-mail" Binding="{Binding}" Width="*"/>
-                            <DataGridTemplateColumn Header="Ações" Width="120">
+                            <DataGridTemplateColumn Header="Ações" Width="150">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button Content="Remover"
                                                 Command="{Binding DataContext.RemoverEmailCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                CommandParameter="{Binding}"/>
+                                                CommandParameter="{Binding}" MinWidth="100" HorizontalAlignment="Stretch"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -58,8 +61,8 @@
                     </Grid.RowDefinitions>
 
                     <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,10">
-                        <Button Content="Recarregar" Command="{Binding RecarregarCommand}" Width="120" Margin="0,0,10,0"/>
-                        <Button Content="Excluir usuário" Command="{Binding ExcluirUsuarioCommand}" Width="140"/>
+                        <Button Content="Recarregar" Command="{Binding RecarregarCommand}" MinWidth="120" Margin="0,0,10,0"/>
+                        <Button Content="Excluir usuário" Command="{Binding ExcluirUsuarioCommand}" MinWidth="160"/>
                     </StackPanel>
 
                     <Grid Grid.Row="1">

@@ -7,11 +7,11 @@ namespace SistemaJuridico.ViewModels
     public class MainShellViewModel : ViewModelBase
     {
         private readonly NavigationCoordinatorService _navigator;
+        private DebugConsoleWindow? _debugWindow;
 
         public RelayCommand OpenDashboardCommand { get; }
         public RelayCommand OpenProcessosCommand { get; }
         public RelayCommand OpenRelatoriosCommand { get; }
-        public RelayCommand OpenAuditoriaCommand { get; }
         public RelayCommand OpenAdminCommand { get; }
         public RelayCommand OpenCadastroUsuarioCommand { get; }
         public RelayCommand OpenDebugConsoleCommand { get; }
@@ -29,11 +29,11 @@ namespace SistemaJuridico.ViewModels
                 _navigator.Navigate(NavigationKey.Processos));
 
             OpenRelatoriosCommand = new RelayCommand(() =>
-                _navigator.Navigate(NavigationKey.Relatorios));
-
-
-            OpenAuditoriaCommand = new RelayCommand(() =>
-                _navigator.Navigate(NavigationKey.Auditoria));
+            {
+                var owner = System.Windows.Application.Current.MainWindow;
+                var janela = new RelatoriosWindow { Owner = owner };
+                janela.ShowDialog();
+            });
 
             OpenAdminCommand = new RelayCommand(() =>
             {
@@ -59,10 +59,23 @@ namespace SistemaJuridico.ViewModels
 
             OpenDebugConsoleCommand = new RelayCommand(() =>
             {
-                var owner = System.Windows.Application.Current.MainWindow;
-                var debugWindow = new DebugConsoleWindow { Owner = owner };
-                debugWindow.Show();
-                debugWindow.Activate();
+                if (!IsAdmin)
+                {
+                    System.Windows.MessageBox.Show("Depuração disponível apenas para administradores.");
+                    return;
+                }
+
+                if (_debugWindow == null || !_debugWindow.IsVisible)
+                {
+                    _debugWindow = new DebugConsoleWindow
+                    {
+                        Owner = System.Windows.Application.Current.MainWindow
+                    };
+                    _debugWindow.Closed += (_, _) => _debugWindow = null;
+                    _debugWindow.Show();
+                }
+
+                _debugWindow.Activate();
             });
         }
 
