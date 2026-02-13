@@ -2,21 +2,9 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-        <UserControl.Resources>
+    <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-        <Style TargetType="Button">
-            <Setter Property="Padding" Value="12,6"/>
-            <Setter Property="Margin" Value="3"/>
-            <Setter Property="Background" Value="#4F46E5"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#4F46E5"/>
-            <Setter Property="Cursor" Value="Hand"/>
-        </Style>
-        <Style TargetType="GroupBox">
-            <Setter Property="Margin" Value="0,0,0,8"/>
-        </Style>
     </UserControl.Resources>
-
 
     <Grid Margin="15">
         <Grid.RowDefinitions>
@@ -104,7 +92,7 @@
             <TextBlock Text="{Binding PaginaAtual}" VerticalAlignment="Center" Margin="8,0"/>
             <TextBlock Text="/" VerticalAlignment="Center" Margin="0,0,8,0"/>
             <TextBlock Text="{Binding TotalPaginas}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-            <Button Content=">" Width="30" Command="{Binding ProximaPaginaCommand}" Background="#64748B" BorderBrush="#64748B"/>
+            <Button Content=">" Width="30" Command="{Binding ProximaPaginaCommand}"/>
         </StackPanel>
     </Grid>
 </UserControl>
