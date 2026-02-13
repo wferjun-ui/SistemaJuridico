@@ -23,7 +23,7 @@ namespace SistemaJuridico.Views
         {
             if (!App.Session.IsAdmin())
             {
-                MessageBox.Show("Apenas admin.");
+                System.Windows.MessageBox.Show("Apenas admin.");
                 return;
             }
 

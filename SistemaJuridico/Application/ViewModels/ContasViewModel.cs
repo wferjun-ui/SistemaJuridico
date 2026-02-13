@@ -135,7 +135,7 @@ namespace SistemaJuridico.ViewModels
         {
             if (!PodeCadastrar)
             {
-                MessageBox.Show("Seu perfil não possui permissão para cadastrar contas.");
+                System.Windows.MessageBox.Show("Seu perfil não possui permissão para cadastrar contas.");
                 return;
             }
 
@@ -173,13 +173,13 @@ namespace SistemaJuridico.ViewModels
         {
             if (!PodeCadastrar)
             {
-                MessageBox.Show("Seu perfil não possui permissão para cadastrar contas.");
+                System.Windows.MessageBox.Show("Seu perfil não possui permissão para cadastrar contas.");
                 return;
             }
 
             if (ContasRascunho.Count == 0)
             {
-                MessageBox.Show("Não há lançamentos em rascunho para confirmar.");
+                System.Windows.MessageBox.Show("Não há lançamentos em rascunho para confirmar.");
                 return;
             }
 
@@ -206,13 +206,13 @@ namespace SistemaJuridico.ViewModels
 
             if (!PodeEditar)
             {
-                MessageBox.Show("Seu perfil não possui permissão para editar contas.");
+                System.Windows.MessageBox.Show("Seu perfil não possui permissão para editar contas.");
                 return;
             }
 
             if (!ContaSelecionada.PodeEditar)
             {
-                MessageBox.Show("Conta já fechada.");
+                System.Windows.MessageBox.Show("Conta já fechada.");
                 return;
             }
 
@@ -228,7 +228,7 @@ namespace SistemaJuridico.ViewModels
 
             if (!PodeEditar)
             {
-                MessageBox.Show("Seu perfil não possui permissão para editar contas.");
+                System.Windows.MessageBox.Show("Seu perfil não possui permissão para editar contas.");
                 return;
             }
 
@@ -258,11 +258,11 @@ namespace SistemaJuridico.ViewModels
 
             if (!PodeExcluir)
             {
-                MessageBox.Show("Somente administradores podem excluir contas.");
+                System.Windows.MessageBox.Show("Somente administradores podem excluir contas.");
                 return;
             }
 
-            if (MessageBox.Show("Excluir conta?", "Confirma", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            if (System.Windows.MessageBox.Show("Excluir conta?", "Confirma", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
                 _service.Excluir(ContaSelecionada.Id);
                 _auditService.Registrar(
@@ -289,19 +289,19 @@ namespace SistemaJuridico.ViewModels
         {
             if (string.IsNullOrWhiteSpace(conta.TipoLancamento))
             {
-                MessageBox.Show("Tipo de lançamento obrigatório.");
+                System.Windows.MessageBox.Show("Tipo de lançamento obrigatório.");
                 return false;
             }
 
             if (!DateTime.TryParse(conta.DataMovimentacao, out _))
             {
-                MessageBox.Show("Data da movimentação inválida.");
+                System.Windows.MessageBox.Show("Data da movimentação inválida.");
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(conta.Historico))
             {
-                MessageBox.Show("Histórico obrigatório.");
+                System.Windows.MessageBox.Show("Histórico obrigatório.");
                 return false;
             }
 
@@ -309,13 +309,13 @@ namespace SistemaJuridico.ViewModels
             {
                 if (string.IsNullOrWhiteSpace(conta.MovProcesso))
                 {
-                    MessageBox.Show("Movimento processual é obrigatório para Alvará.");
+                    System.Windows.MessageBox.Show("Movimento processual é obrigatório para Alvará.");
                     return false;
                 }
 
                 if (conta.ValorAlvara <= 0)
                 {
-                    MessageBox.Show("Valor do Alvará deve ser maior que zero.");
+                    System.Windows.MessageBox.Show("Valor do Alvará deve ser maior que zero.");
                     return false;
                 }
             }
@@ -323,14 +323,14 @@ namespace SistemaJuridico.ViewModels
             {
                 if (conta.ValorConta <= 0)
                 {
-                    MessageBox.Show("Valor da Conta deve ser maior que zero.");
+                    System.Windows.MessageBox.Show("Valor da Conta deve ser maior que zero.");
                     return false;
                 }
             }
 
             if (ExibirCampoTerapiaManual && string.IsNullOrWhiteSpace(TerapiaManual))
             {
-                MessageBox.Show("Informe a terapia/medicamento manual.");
+                System.Windows.MessageBox.Show("Informe a terapia/medicamento manual.");
                 return false;
             }
 
