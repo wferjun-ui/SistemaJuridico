@@ -20,6 +20,7 @@ namespace SistemaJuridico.ViewModels
         private readonly ItemSaudeService _itemSaudeService;
         private readonly VerificacaoService _verificacaoService;
         private readonly HistoricoService _historicoService;
+        private readonly AuditService _auditService;
         private readonly LoggerService _logger = new();
         private readonly string _processoId;
         private readonly AppStateViewModel _appState = AppStateViewModel.Instance;
@@ -58,6 +59,7 @@ namespace SistemaJuridico.ViewModels
             _itemSaudeService = new ItemSaudeService(db);
             _verificacaoService = new VerificacaoService(db);
             _historicoService = new HistoricoService(db);
+            _auditService = new AuditService(db);
 
             _processoId = processoId;
 
@@ -406,6 +408,43 @@ namespace SistemaJuridico.ViewModels
             CriarFacade().ReabrirDiligencia(d.Id, _processoId);
             CarregarDiligencias();
             CarregarHistorico();
+        }
+
+
+        [RelayCommand]
+        private void SalvarProcesso()
+        {
+            if (!PodeEditarProcesso)
+                return;
+
+            _processService.AtualizarProcesso(Processo);
+            _historicoService.Registrar(_processoId, "Processo atualizado", $"Status: {Processo.StatusFase}");
+            _auditService.Registrar("Processo.Editado", "processo", _processoId, "Dados cadastrais atualizados");
+            System.Windows.MessageBox.Show("Processo atualizado com sucesso.");
+        }
+
+        [RelayCommand]
+        private void ExcluirProcesso()
+        {
+            if (!_appState.IsAdministrador)
+                return;
+
+            var confirmar = System.Windows.MessageBox.Show(
+                "Deseja excluir permanentemente este processo e todos os dados vinculados?",
+                "Confirmação",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (confirmar != MessageBoxResult.Yes)
+                return;
+
+            _processService.ExcluirProcesso(_processoId);
+            _auditService.Registrar("Processo.Excluido", "processo", _processoId, "Exclusão completa de processo");
+            System.Windows.MessageBox.Show("Processo excluído com sucesso.");
+            LiberarLock();
+
+            if (System.Windows.Application.Current.Windows.OfType<Window>().FirstOrDefault(w => w.DataContext == this) is Window w)
+                w.Close();
         }
 
         [RelayCommand]

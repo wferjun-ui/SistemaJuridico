@@ -29,6 +29,16 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+        <Style x:Key="RoundedButton" TargetType="Button">
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="Margin" Value="5,0"/>
+            <Setter Property="Background" Value="#4F46E5"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#4F46E5"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
     </Window.Resources>
 
     <Grid Margin="15">
@@ -193,6 +203,20 @@
                     Margin="5,0"
                     Command="{Binding ConcluirEdicaoCommand}"
                     Style="{StaticResource CampoBloqueavel}" />
+
+            <Button Content="Salvar processo"
+                    Width="140"
+                    Command="{Binding SalvarProcessoCommand}"
+                    IsEnabled="{Binding PodeEditarProcesso}"
+                    Style="{StaticResource RoundedButton}"/>
+
+            <Button Content="Excluir processo"
+                    Width="140"
+                    Command="{Binding ExcluirProcessoCommand}"
+                    Visibility="{Binding PodeEditarProcesso, Converter={StaticResource BoolToVis}}"
+                    Background="#B91C1C"
+                    BorderBrush="#B91C1C"
+                    Style="{StaticResource RoundedButton}"/>
 
             <Button Content="Fechar"
                     Width="100"

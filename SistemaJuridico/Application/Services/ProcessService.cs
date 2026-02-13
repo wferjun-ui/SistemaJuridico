@@ -214,6 +214,51 @@ namespace SistemaJuridico.Services
             conn.Execute("UPDATE processos SET status_fase=@status WHERE id=@processoId", new { processoId, status });
         }
 
+        public void AtualizarProcesso(Processo processo)
+        {
+            using var conn = _db.GetConnection();
+            conn.Execute("""
+                UPDATE processos
+                SET numero = @Numero,
+                    paciente = @Paciente,
+                    representante = @Representante,
+                    sem_representante = @SemRepresentante,
+                    juiz = @Juiz,
+                    tipo_processo = @TipoProcesso,
+                    classificacao = @Classificacao,
+                    status_fase = @StatusFase,
+                    observacao_fixa = @ObservacaoFixa,
+                    ultima_atualizacao = @UltimaAtualizacao
+                WHERE id = @Id
+            """, new
+            {
+                processo.Id,
+                processo.Numero,
+                processo.Paciente,
+                processo.Representante,
+                processo.SemRepresentante,
+                processo.Juiz,
+                processo.TipoProcesso,
+                processo.Classificacao,
+                processo.StatusFase,
+                processo.ObservacaoFixa,
+                UltimaAtualizacao = DateTime.Now.ToString("o")
+            });
+        }
+
+        public void ExcluirProcesso(string processoId)
+        {
+            using var conn = _db.GetConnection();
+
+            conn.Execute("DELETE FROM contas WHERE processo_id = @id", new { id = processoId });
+            conn.Execute("DELETE FROM diligencias WHERE processo_id = @id", new { id = processoId });
+            conn.Execute("DELETE FROM verificacoes WHERE processo_id = @id", new { id = processoId });
+            conn.Execute("DELETE FROM itens_saude WHERE processo_id = @id", new { id = processoId });
+            conn.Execute("DELETE FROM historico WHERE processo_id = @id", new { id = processoId });
+            conn.Execute("DELETE FROM processo_reus WHERE processo_id = @id", new { id = processoId });
+            conn.Execute("DELETE FROM processos WHERE id = @id", new { id = processoId });
+        }
+
         // ========================
         // EXISTENTES (mantidos)
         // ========================
