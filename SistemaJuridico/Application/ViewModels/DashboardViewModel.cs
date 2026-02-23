@@ -12,10 +12,12 @@ namespace SistemaJuridico.ViewModels
     {
         private readonly ProcessService _service;
         private readonly ProcessoCacheService _cacheService;
+        private readonly ActiveSessionService _activeSessionService;
 
         public ObservableCollection<ProcessoPrazoVM> ProcessosAtrasados { get; } = new();
         public ObservableCollection<ProcessoPrazoVM> ProcessosAAtrasar { get; } = new();
         public ObservableCollection<string> ProcessosBloqueados { get; } = new();
+        public ObservableCollection<ActiveUserActivityVM> UsuariosAtivosRecentemente { get; } = new();
 
         [ObservableProperty]
         private int _totalAtrasados;
@@ -40,7 +42,9 @@ namespace SistemaJuridico.ViewModels
             var db = new DatabaseService();
             _service = new ProcessService(db);
             _cacheService = new ProcessoCacheService(db);
+            _activeSessionService = new ActiveSessionService(db);
 
+            RegistrarAtividadeUsuarioAtual();
             Carregar();
         }
 
@@ -103,6 +107,7 @@ namespace SistemaJuridico.ViewModels
             ProcessosAtrasados.Clear();
             ProcessosAAtrasar.Clear();
             ProcessosBloqueados.Clear();
+            UsuariosAtivosRecentemente.Clear();
 
             int atrasados = 0;
             int aAtrasar = 0;
@@ -154,6 +159,21 @@ namespace SistemaJuridico.ViewModels
                 }
             }
 
+            foreach (var atividade in _activeSessionService.GetRecentUserActivity())
+            {
+                if (DateTimeOffset.TryParse(atividade.LastActivityTimestamp, out var dataAtividade))
+                {
+                    UsuariosAtivosRecentemente.Add(new ActiveUserActivityVM
+                    {
+                        NomeUsuario = atividade.UserName,
+                        EmailUsuario = atividade.UserEmail,
+                        UltimaAtividade = dataAtividade.LocalDateTime,
+                        NumeroProcesso = atividade.LastProcessNumero,
+                        PacienteProcesso = atividade.LastProcessPaciente
+                    });
+                }
+            }
+
             TotalAtrasados = atrasados;
             TotalAAtrasar = aAtrasar;
             TotalBloqueados = bloqueados;
@@ -161,6 +181,16 @@ namespace SistemaJuridico.ViewModels
             ResumoRascunhosTexto = processosNaoConcluidos == 0
                 ? "Sem processos em rascunho ou edição pendente."
                 : $"{processosNaoConcluidos} processo(s) com alterações não salvas (Rascunho/Em edição).";
+        }
+
+
+        private void RegistrarAtividadeUsuarioAtual()
+        {
+            var usuario = App.Session.UsuarioAtual;
+            if (usuario == null)
+                return;
+
+            _activeSessionService.RecordUserActivity(usuario.Email, usuario.Nome, null, null, null);
         }
 
         private static bool TryParsePrazo(string? prazo, out DateTime data)
@@ -180,6 +210,17 @@ namespace SistemaJuridico.ViewModels
         {
             if (processoPrazo == null || string.IsNullOrWhiteSpace(processoPrazo.ProcessoId))
                 return;
+
+            var usuario = App.Session.UsuarioAtual;
+            if (usuario != null)
+            {
+                _activeSessionService.RecordUserActivity(
+                    usuario.Email,
+                    usuario.Nome,
+                    processoPrazo.ProcessoId,
+                    processoPrazo.NumeroProcesso,
+                    processoPrazo.Paciente);
+            }
 
             var tela = new ProcessoDetalhesWindow(processoPrazo.ProcessoId);
             tela.ShowDialog();
@@ -206,4 +247,33 @@ namespace SistemaJuridico.ViewModels
             ? "Salvo"
             : $"Não salvo ({SituacaoRascunho})";
     }
+
+    public class ActiveUserActivityVM
+    {
+        public string NomeUsuario { get; set; } = string.Empty;
+        public string EmailUsuario { get; set; } = string.Empty;
+        public DateTime UltimaAtividade { get; set; }
+        public string? NumeroProcesso { get; set; }
+        public string? PacienteProcesso { get; set; }
+
+        public string UltimaAtividadeTexto => UltimaAtividade.ToString("dd/MM/yyyy HH:mm");
+
+        public string UltimoProcessoTexto
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(NumeroProcesso) && string.IsNullOrWhiteSpace(PacienteProcesso))
+                    return "Sem processo recente";
+
+                if (string.IsNullOrWhiteSpace(PacienteProcesso))
+                    return NumeroProcesso ?? string.Empty;
+
+                if (string.IsNullOrWhiteSpace(NumeroProcesso))
+                    return PacienteProcesso;
+
+                return $"{NumeroProcesso} - {PacienteProcesso}";
+            }
+        }
+    }
+
 }

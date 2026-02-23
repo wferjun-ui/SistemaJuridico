@@ -190,6 +190,16 @@ CREATE TABLE IF NOT EXISTS audit_log(
     detalhes TEXT
 );
 
+CREATE TABLE IF NOT EXISTS active_sessions(
+    id TEXT PRIMARY KEY,
+    user_email TEXT,
+    user_name TEXT,
+    last_activity_timestamp TEXT,
+    last_process_id TEXT,
+    last_process_numero TEXT,
+    last_process_paciente TEXT
+);
+
 CREATE TABLE IF NOT EXISTS schema_version(
     versao INTEGER
 );
