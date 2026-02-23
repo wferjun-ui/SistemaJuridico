@@ -76,6 +76,15 @@ namespace SistemaJuridico.Services
             string dataNotificacao,
             List<ItemSaude> itensSnapshot)
         {
+            if (string.IsNullOrWhiteSpace(processoId))
+                throw new InvalidOperationException("ID do processo é obrigatório para registrar verificação.");
+
+            if (string.IsNullOrWhiteSpace(statusProcesso))
+                throw new InvalidOperationException("Status do processo é obrigatório para registrar verificação.");
+
+            if (itensSnapshot is null)
+                throw new InvalidOperationException("Snapshot dos itens de saúde é obrigatório para registrar verificação.");
+
             var prazoNormalizado = NormalizarDataOpcional(prazoDiligencia);
             var proximoPrazoNormalizado = NormalizarDataOpcional(proximoPrazoPadrao);
             var notificacaoNormalizada = NormalizarDataOpcional(dataNotificacao);
@@ -86,6 +95,10 @@ namespace SistemaJuridico.Services
                 proximoPrazoNormalizado = string.IsNullOrWhiteSpace(proximoPrazoNormalizado) ? calculado.proximoPrazo : proximoPrazoNormalizado;
                 notificacaoNormalizada = string.IsNullOrWhiteSpace(notificacaoNormalizada) ? calculado.dataNotificacao : notificacaoNormalizada;
             }
+
+            var itensAnteriores = _itemSaudeService.ListarPorProcesso(processoId);
+            var resumoAlteracoesItens = ItemSaudeChangesSummaryService.GerarResumo(itensAnteriores, itensSnapshot);
+            var alteracoesDetalhadas = MontarResumoAlteracoes(descricao, resumoAlteracoesItens);
 
             var verificacao = new Verificacao
             {
@@ -101,7 +114,7 @@ namespace SistemaJuridico.Services
                 ProximoPrazo = proximoPrazoNormalizado,
                 DataNotificacao = notificacaoNormalizada,
                 DiligenciaDescricao = string.IsNullOrWhiteSpace(descricaoDiligencia) ? descricao?.Trim() : descricaoDiligencia.Trim(),
-                AlteracoesTexto = descricao?.Trim(),
+                AlteracoesTexto = alteracoesDetalhadas,
                 ItensSnapshotJson = JsonConvert.SerializeObject(itensSnapshot)
             };
 
@@ -147,6 +160,21 @@ namespace SistemaJuridico.Services
             return (
                 dataBase.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
                 notificacao.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+        }
+
+
+        private static string MontarResumoAlteracoes(string? descricaoLivre, string resumoItens)
+        {
+            var descricao = (descricaoLivre ?? string.Empty).Trim();
+            var itens = (resumoItens ?? string.Empty).Trim();
+
+            if (string.IsNullOrWhiteSpace(descricao))
+                return string.IsNullOrWhiteSpace(itens) ? "Sem observações." : itens;
+
+            if (string.IsNullOrWhiteSpace(itens))
+                return descricao;
+
+            return $"{descricao} | {itens}";
         }
 
         private static DateTime CalcularProximaSegundaAposDuasSemanas(DateTime dataVerificacao)
