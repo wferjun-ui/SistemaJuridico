@@ -72,7 +72,7 @@
       z-index: 50;
     }
 
-.modal-content {
+    .modal-content {
   background-color: white;
   border-radius: 0.5rem;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
@@ -80,7 +80,12 @@
   width: 950px; /* <-- NOVA LARGURA MAIOR */
   max-height: 90vh;
   overflow-y: auto;
+  padding-bottom: 0.5rem;
 }
+
+    #cadastro-itens-adicionados-list > div {
+      scroll-margin-top: 1rem;
+    }
 
     .spinner {
       border: 4px solid rgba(0, 0, 0, 0.1);
@@ -529,6 +534,28 @@
    return parseFloat(onlyDigits) / 100;
   }
   // --- FIM DO NOVO CÓDIGO ---
+
+  /**
+   * Formata entrada numérica para o padrão CNJ (NNNNNNN-DD.AAAA.J.TR.OOOO).
+   */
+  function formatProcessNumberCNJ(rawValue) {
+   let digits = String(rawValue || '').replace(/\D/g, '').substring(0, 20);
+   const parts = [7, 2, 4, 1, 2, 4];
+   const separators = ['-', '.', '.', '.', ''];
+   let formatted = '';
+   let cursor = 0;
+   for (let i = 0; i < parts.length; i++) {
+    const part = digits.substring(cursor, cursor + parts[i]);
+    if (!part) break;
+    formatted += part;
+    cursor += part.length;
+    if (part.length === parts[i] && separators[i]) {
+     formatted += separators[i];
+    }
+   }
+   return formatted;
+  }
+
    function showMessageBox(message, type = 'info', title = 'Atenção!') {
     return new Promise((resolve) => {
      const modalsContainer = document.getElementById('modals-container');
@@ -2169,7 +2196,7 @@ const getFormHtml = () => {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium"><i class="fas fa-hashtag mr-1"></i>Número do Processo<span class="text-red-500 ml-1">*</span></label>
-                    <input type="text" id="novo-numero" maxlength="25" minlength="15" placeholder="0000000-00.0000.0.00.0000" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm border" required autocomplete="off">
+                    <input type="text" id="novo-numero" maxlength="25" minlength="25" pattern="\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}" title="Use o padrão CNJ: NNNNNNN-DD.AAAA.J.TR.OOOO" placeholder="0000000-00.0000.0.00.0000" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm border" required autocomplete="off" inputmode="numeric">
                 </div>
                 <div>
                     <label class="block text-sm font-medium"><i class="fas fa-user-tie mr-1"></i>Nome do Juiz(a)<span class="text-red-500 ml-1">*</span></label>
@@ -2290,15 +2317,12 @@ const getFormHtml = () => {
    * Configura os ouvintes para os campos do formulário de novo/editar processo.
    */
   const setupFormListeners = () => {
-   document.getElementById('novo-numero').addEventListener('input', (e) => {
-    let v = e.target.value.replace(/\D/g, '');
-    v = v.substring(0, 20);
-    if (v.length > 16) v = v.replace(/^(\d{7})(\d{2})(\d{4})(\d{1})(\d{2})(\d{4}).*/, '$1-$2.$3.$4.$5.$6');
-    else if (v.length > 14) v = v.replace(/^(\d{7})(\d{2})(\d{4})(\d{1})(\d{2}).*/, '$1-$2.$3.$4.$5');
-    else if (v.length > 13) v = v.replace(/^(\d{7})(\d{2})(\d{4})(\d{1}).*/, '$1-$2.$3.$4');
-    else if (v.length > 9) v = v.replace(/^(\d{7})(\d{2})(\d{4}).*/, '$1-$2.$3');
-    else if (v.length > 7) v = v.replace(/^(\d{7})(\d{2}).*/, '$1-$2');
-    e.target.value = v;
+   const processNumberInput = document.getElementById('novo-numero');
+   processNumberInput.addEventListener('input', (e) => {
+    e.target.value = formatProcessNumberCNJ(e.target.value);
+   });
+   processNumberInput.addEventListener('blur', (e) => {
+    e.target.value = formatProcessNumberCNJ(e.target.value);
    });
    document.getElementById('novo-tipo').addEventListener('change', handleTipoChange);
    document.getElementById('novo-pedido-especifico').addEventListener('change', handlePedidoEspecificoChange);
@@ -2861,8 +2885,8 @@ const getFormHtml = () => {
 * Renderiza um item de terapia para o formulário de registo/edição.
 */
   const renderTerapiaItem = (terapia, index) => `
-   <span><i class="fas fa-notes-medical mr-1"></i>${terapia.nome}</span>
-   <div class="flex items-center gap-2">
+   <span class="font-medium"><i class="fas fa-notes-medical mr-1"></i>${terapia.nome}</span>
+   <div class="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
     <label class="text-sm"><i class="fas fa-sort-numeric-up-alt mr-1"></i>Qtd:</label>
     <input type="number" value="${terapia.quantidade}" min="1" class="w-16 p-1 border rounded-md" data-list="terapiasAdicionadas" data-index="${index}" autocomplete="off">
     <label class="text-sm ml-2">Clínica/Profissional:</label>
@@ -3870,7 +3894,7 @@ const openEditModal = async () => {
     UIService.setupFormListeners();
     
     // CORREÇÃO: Renderiza as listas e mostra as seções correspondentes
-    UIService.renderDynamicList('terapias-list-cadastro', appState.terapiasAdicionadas, UIService.renderTerapiaItem, `flex items-center justify-between`);
+    UIService.renderDynamicList('terapias-list-cadastro', appState.terapiasAdicionadas, UIService.renderTerapiaItem, `flex flex-col sm:flex-row sm:items-center justify-between gap-2`);
     UIService.renderDynamicList('medicamentos-list-cadastro', appState.medicamentosAdicionadas, UIService.renderMedicamentoItem, `flex flex-col sm:flex-row items-start sm:items-center justify-between`);
     UIService.renderDynamicList('cirurgias-list-cadastro', appState.cirurgiasAdicionadas, UIService.renderCirurgiaItem, `flex flex-col sm:flex-row items-start sm:items-center justify-between`);
     UIService.renderDynamicList('outros-list-cadastro', appState.outrosItensAdicionadas, UIService.renderOutroItem, `flex flex-col sm:flex-row items-start sm:items-center justify-between`);
@@ -3897,10 +3921,9 @@ const openEditModal = async () => {
     clinicaProfissional: ''
     });
     document.getElementById('terapias-list-section').classList.remove('hidden');
-    UIService.renderDynamicList('terapias-list-cadastro', appState.terapiasAdicionadas, UIService.renderTerapiaItem, `flex items-center justify-between`);
+    document.getElementById('terapias-list-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    UIService.renderDynamicList('terapias-list-cadastro', appState.terapiasAdicionadas, UIService.renderTerapiaItem, `flex flex-col sm:flex-row sm:items-center justify-between gap-2`);
     select.value = '';
-    // CORREÇÃO: Esconde a seção de formulário após adicionar
-    document.getElementById('terapias-section').classList.add('hidden');
     } else if (select.value) {
     Utils.showMessageBox("Esta terapia já foi adicionada.", 'warning');
     }
@@ -3926,7 +3949,7 @@ const handleRemoveItem = (e) => {
         switch(listName) {
            case 'terapiasAdicionadas': 
             renderFn = UIService.renderTerapiaItem; 
-            itemClass = `flex items-center justify-between`;
+            itemClass = `flex flex-col sm:flex-row sm:items-center justify-between gap-2`;
             break;
            case 'medicamentosAdicionadas': 
             renderFn = UIService.renderMedicamentoItem; 
@@ -3965,12 +3988,11 @@ const handleRemoveItem = (e) => {
     appState.medicamentosAdicionadas.push({ nome: nomeInput.value.trim(), posologia: posologiaInput.value.trim(),
     desnecessario: false });
     document.getElementById('medicamentos-list-section').classList.remove('hidden');
+    document.getElementById('medicamentos-list-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     UIService.renderDynamicList('medicamentos-list-cadastro', appState.medicamentosAdicionadas,
     UIService.renderMedicamentoItem, `flex flex-col sm:flex-row items-start sm:items-center justify-between`);
     nomeInput.value = '';
     posologiaInput.value = '';
-    // CORREÇÃO: Esconde a seção de formulário após adicionar
-    document.getElementById('medicamentos-section').classList.add('hidden');
     } else {
     Utils.showMessageBox("Por favor, preencha o nome e a posologia do medicamento.", 'warning');
     }
@@ -3987,11 +4009,10 @@ const handleAddCirurgia = () => {
     appState.cirurgiasAdicionadas.push({ nome: nomeInput.value.trim(), dataCirurgia: dataInput.value.trim(), status:
     statusSelect.value });
     document.getElementById('cirurgias-list-section').classList.remove('hidden');
+    document.getElementById('cirurgias-list-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     UIService.renderDynamicList('cirurgias-list-cadastro', appState.cirurgiasAdicionadas, UIService.renderCirurgiaItem,
     `flex flex-col sm:flex-row items-start sm:items-center justify-between`);
     nomeInput.value = ''; dataInput.value = ''; statusSelect.value = '';
-    // CORREÇÃO: Esconde a seção de formulário após adicionar
-    document.getElementById('cirurgias-section').classList.add('hidden');
     } else {
     Utils.showMessageBox("Por favor, preencha o nome, a data e o estado da cirurgia.", 'warning');
     }
@@ -4006,11 +4027,10 @@ const handleAddOutro = () => {
     if (nomeInput.value.trim()) {
     appState.outrosItensAdicionadas.push({ nome: nomeInput.value.trim(), descricao: descricaoInput.value.trim() });
     document.getElementById('outros-list-section').classList.remove('hidden');
+    document.getElementById('outros-list-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     UIService.renderDynamicList('outros-list-cadastro', appState.outrosItensAdicionadas, UIService.renderOutroItem, `flex
     flex-col sm:flex-row items-start sm:items-center justify-between`);
     nomeInput.value = ''; descricaoInput.value = '';
-    // CORREÇÃO: Esconde a seção de formulário após adicionar
-    document.getElementById('outros-section').classList.add('hidden');
     } else {
     Utils.showMessageBox("Por favor, preencha o nome do item.", 'warning');
     }
@@ -4045,6 +4065,12 @@ const handleAddOutro = () => {
     outrosItens: appState.outrosItensAdicionadas,
     ultimaprescricao: document.getElementById('novo-ultimaprescricao').value.trim()
     };
+
+    if (!/^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$/.test(values.numero)) {
+    Utils.showMessageBox('Número do processo inválido. Use o padrão CNJ: NNNNNNN-DD.AAAA.J.TR.OOOO.', 'warning');
+    document.getElementById('novo-numero').focus();
+    return;
+    }
     
     if (appState.isEditing) {
     // A lógica de edição continua a mesma
