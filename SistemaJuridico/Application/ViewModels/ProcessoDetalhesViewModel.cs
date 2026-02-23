@@ -21,6 +21,7 @@ namespace SistemaJuridico.ViewModels
         private readonly VerificacaoService _verificacaoService;
         private readonly HistoricoService _historicoService;
         private readonly AuditService _auditService;
+        private readonly VerificacaoFacadeService _verificacaoFacade;
         private readonly LoggerService _logger = new();
         private readonly string _processoId;
         private readonly AppStateViewModel _appState = AppStateViewModel.Instance;
@@ -60,6 +61,7 @@ namespace SistemaJuridico.ViewModels
             _verificacaoService = new VerificacaoService(db);
             _historicoService = new HistoricoService(db);
             _auditService = new AuditService(db);
+            _verificacaoFacade = new VerificacaoFacadeService();
 
             _processoId = processoId;
 
@@ -369,6 +371,40 @@ namespace SistemaJuridico.ViewModels
             OnPropertyChanged(nameof(UltimaVerificacaoResponsavel));
             OnPropertyChanged(nameof(DataPrescricao));
             OnPropertyChanged(nameof(PrescricaoStatus));
+        }
+
+
+        [RelayCommand]
+        private void DesfazerUltimaVerificacao()
+        {
+            if (!_appState.PodeDesfazerVerificacao)
+                return;
+
+            var confirmar = System.Windows.MessageBox.Show(
+                "Deseja realmente desfazer a última verificação geral deste processo?",
+                "Confirmação",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (confirmar != MessageBoxResult.Yes)
+                return;
+
+            try
+            {
+                _verificacaoFacade.DesfazerUltimaVerificacaoGeral(_processoId);
+                CarregarVerificacoes();
+                CarregarItensSaude();
+                CarregarHistorico();
+                OnPropertyChanged(nameof(UltimaVerificacaoData));
+                OnPropertyChanged(nameof(UltimaVerificacaoResponsavel));
+                OnPropertyChanged(nameof(DataPrescricao));
+                OnPropertyChanged(nameof(PrescricaoStatus));
+                System.Windows.MessageBox.Show("Última verificação desfeita com sucesso.");
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show(ex.Message, "Erro ao desfazer", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         [RelayCommand]

@@ -24,7 +24,11 @@ SELECT
   responsavel as Responsavel,
   diligencia_pendente as DiligenciaPendente,
   pendencias_descricao as PendenciaDescricao,
+  diligencia_realizada as DiligenciaRealizada,
+  prazo_diligencia as PrazoDiligencia,
   proximo_prazo_padrao as ProximoPrazo,
+  data_notificacao as DataNotificacao,
+  alteracoes_texto as AlteracoesTexto,
   diligencia_descricao as DiligenciaDescricao,
   itens_snapshot_json as ItensSnapshotJson
 FROM verificacoes
@@ -38,9 +42,19 @@ ORDER BY data_hora DESC
             using var conn = _db.GetConnection();
             conn.Execute(@"
 INSERT INTO verificacoes
-(id, processo_id, data_hora, status_processo, responsavel, diligencia_pendente, pendencias_descricao, proximo_prazo_padrao, diligencia_descricao, itens_snapshot_json)
+(id, processo_id, data_hora, status_processo, responsavel, diligencia_pendente, pendencias_descricao, diligencia_realizada, diligencia_descricao, prazo_diligencia, proximo_prazo_padrao, data_notificacao, alteracoes_texto, itens_snapshot_json)
 VALUES
-(@Id, @ProcessoId, @DataHora, @StatusProcesso, @Responsavel, @DiligenciaPendente, @PendenciaDescricao, @ProximoPrazo, @DiligenciaDescricao, @ItensSnapshotJson)", verificacao);
+(@Id, @ProcessoId, @DataHora, @StatusProcesso, @Responsavel, @DiligenciaPendente, @PendenciaDescricao, @DiligenciaRealizada, @DiligenciaDescricao, @PrazoDiligencia, @ProximoPrazo, @DataNotificacao, @AlteracoesTexto, @ItensSnapshotJson)", verificacao);
         }
+
+        public void Excluir(string verificacaoId)
+        {
+            if (string.IsNullOrWhiteSpace(verificacaoId))
+                return;
+
+            using var conn = _db.GetConnection();
+            conn.Execute("DELETE FROM verificacoes WHERE id = @id", new { id = verificacaoId });
+        }
+
     }
 }
