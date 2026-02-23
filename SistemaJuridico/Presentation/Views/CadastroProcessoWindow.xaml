@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:behaviors="clr-namespace:SistemaJuridico.Behaviors"
         mc:Ignorable="d"
         Title="Cadastrar Novo Processo"
         Height="780"
@@ -220,7 +221,23 @@
                                                         Width="170"
                                                         ItemsSource="{Binding TiposDisponiveis}"
                                                         SelectedItemBinding="{Binding Tipo, UpdateSourceTrigger=PropertyChanged}"/>
-                                <DataGridTextColumn Header="Descrição" Width="*" Binding="{Binding Nome, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTemplateColumn Header="Descrição" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Nome}" VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                    <DataGridTemplateColumn.CellEditingTemplate>
+                                        <DataTemplate>
+                                            <ComboBox ItemsSource="{Binding SugestoesNome}"
+                                                      Text="{Binding Nome, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                      IsEditable="True"
+                                                      IsTextSearchEnabled="False"
+                                                      StaysOpenOnEdit="True"
+                                                      behaviors:ComboBoxSearchBehavior.EnableContainsFilter="True"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellEditingTemplate>
+                                </DataGridTemplateColumn>
                                 <DataGridTextColumn Header="Qtd." Width="130" Binding="{Binding Quantidade, UpdateSourceTrigger=PropertyChanged}"/>
                                 <DataGridTemplateColumn Header="Local" Width="220">
                                     <DataGridTemplateColumn.CellTemplate>
