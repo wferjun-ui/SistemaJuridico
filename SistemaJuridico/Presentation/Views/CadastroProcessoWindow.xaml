@@ -92,20 +92,32 @@
 
                         <StackPanel Margin="0,0,12,10">
                             <TextBlock Text="# Número do Processo *" FontWeight="SemiBold"/>
-                            <TextBox Text="{Binding NovoProcesso.Numero, UpdateSourceTrigger=PropertyChanged}"/>
+                            <ComboBox ItemsSource="{Binding SugestoesNumeroProcesso}"
+                                      Text="{Binding NovoProcesso.Numero, UpdateSourceTrigger=PropertyChanged}"
+                                      IsEditable="True"
+                                      IsTextSearchEnabled="True"
+                                      StaysOpenOnEdit="True"/>
                             <TextBlock Text="Formato: 0000000-00.0000.0.00.0000" FontSize="11" Foreground="#6B7280"/>
                         </StackPanel>
 
                         <StackPanel Grid.Column="1" Margin="12,0,0,10">
                             <TextBlock Text="👤 Nome do Paciente *" FontWeight="SemiBold"/>
-                            <TextBox Text="{Binding NovoProcesso.Paciente, UpdateSourceTrigger=PropertyChanged}"/>
+                            <ComboBox ItemsSource="{Binding SugestoesPacientes}"
+                                      Text="{Binding NovoProcesso.Paciente, UpdateSourceTrigger=PropertyChanged}"
+                                      IsEditable="True"
+                                      IsTextSearchEnabled="True"
+                                      StaysOpenOnEdit="True"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="1" Margin="0,0,12,10">
                             <TextBlock Text="👥 Nome do Genitor(a)" FontWeight="SemiBold"/>
-                            <TextBox Text="{Binding NovoProcesso.Representante, UpdateSourceTrigger=PropertyChanged}">
-                                <TextBox.Style>
-                                    <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                            <ComboBox ItemsSource="{Binding SugestoesRepresentantes}"
+                                      Text="{Binding NovoProcesso.Representante, UpdateSourceTrigger=PropertyChanged}"
+                                      IsEditable="True"
+                                      IsTextSearchEnabled="True"
+                                      StaysOpenOnEdit="True">
+                                <ComboBox.Style>
+                                    <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding TemRepresentante}" Value="False">
                                                 <Setter Property="IsEnabled" Value="False"/>
@@ -113,8 +125,8 @@
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
-                                </TextBox.Style>
-                            </TextBox>
+                                </ComboBox.Style>
+                            </ComboBox>
                             <CheckBox Content="Possui genitor/representante"
                                       IsChecked="{Binding TemRepresentante}"
                                       Margin="0,6,0,0"/>
@@ -122,7 +134,11 @@
 
                         <StackPanel Grid.Column="1" Grid.Row="1" Margin="12,0,0,10">
                             <TextBlock Text="⚖ Nome do Juiz(a) *" FontWeight="SemiBold"/>
-                            <TextBox Text="{Binding NovoProcesso.Juiz, UpdateSourceTrigger=PropertyChanged}"/>
+                            <ComboBox ItemsSource="{Binding SugestoesJuizes}"
+                                      Text="{Binding NovoProcesso.Juiz, UpdateSourceTrigger=PropertyChanged}"
+                                      IsEditable="True"
+                                      IsTextSearchEnabled="True"
+                                      StaysOpenOnEdit="True"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="2" Margin="0,0,12,0">
@@ -173,7 +189,12 @@
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBox Grid.Column="0" Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <ComboBox Grid.Column="0"
+                                                 ItemsSource="{Binding SugestoesNome}"
+                                                 Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged}"
+                                                 IsEditable="True"
+                                                 IsTextSearchEnabled="True"
+                                                 StaysOpenOnEdit="True"/>
                                         <Button Grid.Column="1"
                                                 Content="Desativar"
                                                 Margin="8,0,0,0"

@@ -269,6 +269,42 @@ namespace SistemaJuridico.Services
             return conn.Query<Processo>("SELECT * FROM processos").ToList();
         }
 
+        public List<string> ListarValoresDistintosCadastro(string campo)
+        {
+            var coluna = campo?.Trim().ToLowerInvariant() switch
+            {
+                "numero" => "numero",
+                "paciente" => "paciente",
+                "representante" => "representante",
+                "juiz" => "juiz",
+                _ => string.Empty
+            };
+
+            if (string.IsNullOrWhiteSpace(coluna))
+                return new List<string>();
+
+            using var conn = _db.GetConnection();
+            return conn.Query<string>($"""
+                SELECT DISTINCT TRIM({coluna})
+                FROM processos
+                WHERE {coluna} IS NOT NULL
+                  AND TRIM({coluna}) <> ''
+                ORDER BY TRIM({coluna})
+            """).ToList();
+        }
+
+        public List<string> ListarReusDistintosCadastro()
+        {
+            using var conn = _db.GetConnection();
+            return conn.Query<string>("""
+                SELECT DISTINCT TRIM(nome_reu)
+                FROM processo_reus
+                WHERE nome_reu IS NOT NULL
+                  AND TRIM(nome_reu) <> ''
+                ORDER BY TRIM(nome_reu)
+            """).ToList();
+        }
+
         public (decimal saldoPendente, bool diligenciaPendente, string? dataUltLanc)
             ObterResumo(string processoId)
         {

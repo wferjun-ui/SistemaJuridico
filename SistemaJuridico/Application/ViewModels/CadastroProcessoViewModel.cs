@@ -4,6 +4,7 @@ using SistemaJuridico.Models;
 using SistemaJuridico.Services;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
 
 namespace SistemaJuridico.ViewModels
@@ -11,6 +12,7 @@ namespace SistemaJuridico.ViewModels
     public partial class CadastroProcessoViewModel : ObservableObject
     {
         private const int MinimoCaracteresNumeroProcesso = 15;
+        private const string FormatoCnjRegex = @"^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$";
 
         private readonly ProcessService _processService;
         private readonly ItemSaudeService _itemSaudeService;
@@ -21,6 +23,12 @@ namespace SistemaJuridico.ViewModels
 
         public ObservableCollection<ReuCadastroViewModel> Reus { get; } = new();
         public ObservableCollection<SaudeItemCadastroViewModel> ItensSaudeCadastro { get; } = new();
+
+        public ObservableCollection<string> SugestoesNumeroProcesso { get; } = new();
+        public ObservableCollection<string> SugestoesPacientes { get; } = new();
+        public ObservableCollection<string> SugestoesRepresentantes { get; } = new();
+        public ObservableCollection<string> SugestoesJuizes { get; } = new();
+        public ObservableCollection<string> SugestoesReus { get; } = new();
 
         public ObservableCollection<string> SugestoesMedicamentos { get; } = new();
         public ObservableCollection<string> SugestoesTerapias { get; } = new();
@@ -62,7 +70,8 @@ namespace SistemaJuridico.ViewModels
             NovoProcesso.TipoProcesso = SelectedTipoProcesso;
             NovoProcesso.SemRepresentante = false;
 
-            Reus.Add(new ReuCadastroViewModel { IsFixo = true });
+            Reus.Add(new ReuCadastroViewModel(SugestoesReus) { IsFixo = true });
+            CarregarSugestoesCadastroGeral();
             CarregarSugestoesSaude();
         }
 
@@ -84,10 +93,19 @@ namespace SistemaJuridico.ViewModels
             OnPropertyChanged(nameof(IsProcessoSaude));
         }
 
+        private void CarregarSugestoesCadastroGeral()
+        {
+            PopularSugestoes(SugestoesNumeroProcesso, _processService.ListarValoresDistintosCadastro("numero"));
+            PopularSugestoes(SugestoesPacientes, _processService.ListarValoresDistintosCadastro("paciente"));
+            PopularSugestoes(SugestoesRepresentantes, _processService.ListarValoresDistintosCadastro("representante"));
+            PopularSugestoes(SugestoesJuizes, _processService.ListarValoresDistintosCadastro("juiz"));
+            PopularSugestoes(SugestoesReus, _processService.ListarReusDistintosCadastro());
+        }
+
         [RelayCommand]
         private void AdicionarReu()
         {
-            Reus.Add(new ReuCadastroViewModel());
+            Reus.Add(new ReuCadastroViewModel(SugestoesReus));
         }
 
         [RelayCommand]
@@ -109,7 +127,7 @@ namespace SistemaJuridico.ViewModels
         [RelayCommand]
         private void AdicionarItemSaude()
         {
-            ItensSaudeCadastro.Add(new SaudeItemCadastroViewModel(ObterSugestoesPorTipo)
+            ItensSaudeCadastro.Add(new SaudeItemCadastroViewModel(ObterSugestoesPorTipo, RegistrarSugestaoSaudeDigitada)
             {
                 Tipo = "Medicamento",
                 Quantidade = "1"
@@ -149,6 +167,9 @@ namespace SistemaJuridico.ViewModels
                 NovoProcesso.Classificacao = NovoProcesso.TipoProcesso;
                 NovoProcesso.UltimaAtualizacao = DateTime.Now.ToString("dd/MM/yyyy");
 
+                NovoProcesso.Numero = NovoProcesso.Numero.Trim();
+                NovoProcesso.Paciente = NovoProcesso.Paciente.Trim();
+                NovoProcesso.Juiz = NovoProcesso.Juiz.Trim();
                 _processService.CriarProcesso(NovoProcesso);
                 _processService.SubstituirReus(NovoProcesso.Id, Reus.Where(r => r.IsAtivo && !string.IsNullOrWhiteSpace(r.Nome)).Select(r => r.Nome.Trim()).ToList());
 
@@ -196,24 +217,54 @@ namespace SistemaJuridico.ViewModels
 
         private void CarregarSugestoesSaude()
         {
-            PopularSugestoes(SugestoesMedicamentos, "Medicamento");
-            PopularSugestoes(SugestoesTerapias, "Terapia");
-            PopularSugestoes(SugestoesCirurgias, "Cirurgia");
-            PopularSugestoes(SugestoesOutros, "Outros");
+            PopularSugestoes(SugestoesMedicamentos, _itemSaudeService.ListarCatalogoPorTipo("Medicamento"));
+            PopularSugestoes(SugestoesTerapias, _itemSaudeService.ListarCatalogoPorTipo("Terapia"));
+            PopularSugestoes(SugestoesCirurgias, _itemSaudeService.ListarCatalogoPorTipo("Cirurgia"));
+            PopularSugestoes(SugestoesOutros, _itemSaudeService.ListarCatalogoPorTipo("Outros"));
         }
 
-        private void PopularSugestoes(ObservableCollection<string> destino, string tipo)
+        private static void PopularSugestoes(ObservableCollection<string> destino, IEnumerable<string> valores)
         {
             destino.Clear();
-
-            foreach (var nome in _itemSaudeService.ListarCatalogoPorTipo(tipo))
+            foreach (var nome in valores
+                         .Where(nome => !string.IsNullOrWhiteSpace(nome))
+                         .Select(nome => nome.Trim())
+                         .Distinct(StringComparer.OrdinalIgnoreCase)
+                         .OrderBy(nome => nome))
+            {
                 destino.Add(nome);
+            }
+        }
+
+        private void RegistrarSugestaoSaudeDigitada(string tipo, string nome)
+        {
+            if (string.IsNullOrWhiteSpace(tipo) || string.IsNullOrWhiteSpace(nome))
+                return;
+
+            var destino = tipo.Trim() switch
+            {
+                "Medicamento" => SugestoesMedicamentos,
+                "Terapia" => SugestoesTerapias,
+                "Cirurgia" => SugestoesCirurgias,
+                "Outros" => SugestoesOutros,
+                _ => null
+            };
+
+            if (destino == null)
+                return;
+
+            var texto = nome.Trim();
+            if (!destino.Any(item => string.Equals(item, texto, StringComparison.OrdinalIgnoreCase)))
+                destino.Add(texto);
         }
 
         private string? ValidarFormulario()
         {
             if (string.IsNullOrWhiteSpace(NovoProcesso.Numero) || NovoProcesso.Numero.Trim().Length < MinimoCaracteresNumeroProcesso)
                 return $"Número do processo é obrigatório e deve ter no mínimo {MinimoCaracteresNumeroProcesso} caracteres.";
+
+            if (!Regex.IsMatch(NovoProcesso.Numero.Trim(), FormatoCnjRegex))
+                return "Número do processo deve seguir o padrão CNJ: 0000000-00.0000.0.00.0000.";
 
             if (string.IsNullOrWhiteSpace(NovoProcesso.Paciente))
                 return "O nome do paciente é obrigatório.";
@@ -309,6 +360,7 @@ namespace SistemaJuridico.ViewModels
     public partial class SaudeItemCadastroViewModel : ObservableObject
     {
         private readonly Func<string, IEnumerable<string>>? _sugestoesPorTipo;
+        private readonly Action<string, string>? _registrarSugestao;
 
         public IReadOnlyList<string> TiposDisponiveis { get; } = new[]
         {
@@ -320,9 +372,12 @@ namespace SistemaJuridico.ViewModels
 
         public ObservableCollection<string> SugestoesNome { get; } = new();
 
-        public SaudeItemCadastroViewModel(Func<string, IEnumerable<string>>? sugestoesPorTipo = null)
+        public SaudeItemCadastroViewModel(
+            Func<string, IEnumerable<string>>? sugestoesPorTipo = null,
+            Action<string, string>? registrarSugestao = null)
         {
             _sugestoesPorTipo = sugestoesPorTipo;
+            _registrarSugestao = registrarSugestao;
             AtualizarSugestoesNome();
         }
 
@@ -358,7 +413,9 @@ namespace SistemaJuridico.ViewModels
             if (SugestoesNome.Any(item => string.Equals(item, value, StringComparison.OrdinalIgnoreCase)))
                 return;
 
-            SugestoesNome.Add(value.Trim());
+            var texto = value.Trim();
+            SugestoesNome.Add(texto);
+            _registrarSugestao?.Invoke(Tipo, texto);
         }
 
         private void AtualizarSugestoesNome()
@@ -387,6 +444,28 @@ namespace SistemaJuridico.ViewModels
 
     public partial class ReuCadastroViewModel : ObservableObject
     {
+        public ObservableCollection<string> SugestoesNome { get; }
+
+        public ReuCadastroViewModel()
+        {
+            SugestoesNome = new ObservableCollection<string>();
+        }
+
+        public ReuCadastroViewModel(ObservableCollection<string> sugestoes)
+        {
+            SugestoesNome = sugestoes;
+        }
+
+        public ReuCadastroViewModel(IEnumerable<string> sugestoes)
+        {
+            SugestoesNome = new ObservableCollection<string>(
+                (sugestoes ?? Enumerable.Empty<string>())
+                .Where(nome => !string.IsNullOrWhiteSpace(nome))
+                .Select(nome => nome.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(nome => nome));
+        }
+
         [ObservableProperty]
         private string _nome = string.Empty;
 
