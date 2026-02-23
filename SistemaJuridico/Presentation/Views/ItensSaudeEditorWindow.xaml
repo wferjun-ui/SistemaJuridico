@@ -5,81 +5,105 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="Itens de Saúde"
-        Height="520"
-        Width="900"
+        Height="600"
+        Width="980"
+        MinHeight="450"
+        MinWidth="860"
         WindowStartupLocation="CenterOwner">
 
-    <DockPanel Margin="10">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
         <!-- Barra de ações -->
-        <StackPanel DockPanel.Dock="Top"
-                    Orientation="Horizontal"
-                    Margin="0,0,0,8"
-                    HorizontalAlignment="Right">
+        <WrapPanel Grid.Row="0"
+                   Margin="0,0,0,8"
+                   HorizontalAlignment="Right"
+                   ItemHeight="30"
+                   ItemWidth="110">
 
             <Button Content="Adicionar"
                     Padding="10,4"
-                    Margin="0,0,8,0"
+                    Margin="0,0,8,8"
                     Command="{Binding AdicionarCommand}" />
 
             <Button Content="Remover"
                     Padding="10,4"
-                    Margin="0,0,8,0"
+                    Margin="0,0,8,8"
                     Command="{Binding RemoverCommand}" />
 
             <Button Content="Desnecessário"
                     Padding="10,4"
-                    Margin="0,0,8,0"
+                    Margin="0,0,8,8"
                     Command="{Binding AlternarDesnecessarioCommand}" />
 
             <Button Content="Bloqueio"
                     Padding="10,4"
-                    Margin="0,0,8,0"
+                    Margin="0,0,8,8"
                     Command="{Binding AlternarBloqueioCommand}" />
 
             <Button Content="Recarregar"
                     Padding="10,4"
-                    Margin="0,0,8,0"
+                    Margin="0,0,8,8"
                     Command="{Binding RecarregarCommand}" />
 
             <Button Content="Salvar"
                     Padding="14,4"
                     FontWeight="Bold"
-                    Margin="0,0,8,0"
+                    Margin="0,0,8,8"
                     Command="{Binding SalvarCommand}" />
 
             <Button Content="Fechar"
                     Padding="10,4"
+                    Margin="0,0,8,8"
                     Click="Fechar_Click"/>
-        </StackPanel>
+        </WrapPanel>
 
         <!-- Grid principal -->
-        <DataGrid ItemsSource="{Binding Itens}"
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding Itens}"
                   SelectedItem="{Binding ItemSelecionado}"
                   AutoGenerateColumns="False"
                   CanUserAddRows="False"
                   IsReadOnly="False"
                   GridLinesVisibility="Horizontal"
                   HeadersVisibility="Column"
-                  RowHeaderWidth="0">
+                  RowHeaderWidth="0"
+                  VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Auto">
 
             <DataGrid.Columns>
 
                 <DataGridComboBoxColumn Header="Tipo"
-                                        Width="120"
+                                        Width="130"
                                         SelectedItemBinding="{Binding Tipo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                         ItemsSource="{Binding DataContext.TiposDisponiveis, RelativeSource={RelativeSource AncestorType=Window}}" />
 
-                <DataGridTextColumn Header="Nome"
-                                    Width="*"
-                                    Binding="{Binding Nome, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <DataGridTemplateColumn Header="Nome" Width="2*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Nome}" VerticalAlignment="Center"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <ComboBox ItemsSource="{Binding SugestoesNome}"
+                                      Text="{Binding Nome, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                      IsEditable="True"
+                                      IsTextSearchEnabled="True"
+                                      StaysOpenOnEdit="True"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
+                </DataGridTemplateColumn>
 
                 <DataGridTextColumn Header="Qtd"
-                                    Width="70"
+                                    Width="80"
                                     Binding="{Binding Qtd, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
                 <DataGridTextColumn Header="Frequência"
-                                    Width="110"
+                                    Width="120"
                                     Binding="{Binding Frequencia, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
                 <DataGridTextColumn Header="Local"
@@ -101,5 +125,5 @@
             </DataGrid.Columns>
         </DataGrid>
 
-    </DockPanel>
+    </Grid>
 </Window>

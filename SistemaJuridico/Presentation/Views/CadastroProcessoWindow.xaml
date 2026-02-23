@@ -220,7 +220,22 @@
                                                         Width="170"
                                                         ItemsSource="{Binding TiposDisponiveis}"
                                                         SelectedItemBinding="{Binding Tipo, UpdateSourceTrigger=PropertyChanged}"/>
-                                <DataGridTextColumn Header="Descrição" Width="*" Binding="{Binding Nome, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTemplateColumn Header="Descrição" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Nome}" VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                    <DataGridTemplateColumn.CellEditingTemplate>
+                                        <DataTemplate>
+                                            <ComboBox ItemsSource="{Binding SugestoesNome}"
+                                                      Text="{Binding Nome, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                      IsEditable="True"
+                                                      IsTextSearchEnabled="True"
+                                                      StaysOpenOnEdit="True"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellEditingTemplate>
+                                </DataGridTemplateColumn>
                                 <DataGridTextColumn Header="Qtd." Width="130" Binding="{Binding Quantidade, UpdateSourceTrigger=PropertyChanged}"/>
                                 <DataGridTemplateColumn Header="Local" Width="220">
                                     <DataGridTemplateColumn.CellTemplate>
