@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using SistemaJuridico.Models;
 using SistemaJuridico.Services;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 
@@ -101,7 +102,7 @@ namespace SistemaJuridico.ViewModels
         [RelayCommand]
         private void AdicionarItemSaude()
         {
-            ItensSaudeCadastro.Add(new SaudeItemCadastroViewModel
+            ItensSaudeCadastro.Add(new SaudeItemCadastroViewModel(ObterSugestoesPorTipo)
             {
                 Tipo = "Medicamento",
                 Quantidade = "1"
@@ -215,7 +216,6 @@ namespace SistemaJuridico.ViewModels
 
             return null;
         }
-
         private static string? ValidarItensSaude(IEnumerable<SaudeItemCadastroViewModel> itens)
         {
             var preenchidos = itens.Where(item =>
@@ -242,6 +242,21 @@ namespace SistemaJuridico.ViewModels
             }
 
             return null;
+        }
+
+        private IEnumerable<string> ObterSugestoesPorTipo(string tipo)
+        {
+            if (string.IsNullOrWhiteSpace(tipo))
+                return Enumerable.Empty<string>();
+
+            return tipo.Trim() switch
+            {
+                "Medicamento" => SugestoesMedicamentos,
+                "Terapia" => SugestoesTerapias,
+                "Cirurgia" => SugestoesCirurgias,
+                "Outros" => SugestoesOutros,
+                _ => Enumerable.Empty<string>()
+            };
         }
 
         private List<ItemSaude> ObterItensSaudeParaPersistencia()
@@ -277,6 +292,8 @@ namespace SistemaJuridico.ViewModels
 
     public partial class SaudeItemCadastroViewModel : ObservableObject
     {
+        private readonly Func<string, IEnumerable<string>>? _sugestoesPorTipo;
+
         public IReadOnlyList<string> TiposDisponiveis { get; } = new[]
         {
             "Medicamento",
@@ -284,6 +301,14 @@ namespace SistemaJuridico.ViewModels
             "Cirurgia",
             "Outros"
         };
+
+        public ObservableCollection<string> SugestoesNome { get; } = new();
+
+        public SaudeItemCadastroViewModel(Func<string, IEnumerable<string>>? sugestoesPorTipo = null)
+        {
+            _sugestoesPorTipo = sugestoesPorTipo;
+            AtualizarSugestoesNome();
+        }
 
         [ObservableProperty]
         private string _tipo = string.Empty;
@@ -303,9 +328,44 @@ namespace SistemaJuridico.ViewModels
         partial void OnTipoChanged(string value)
         {
             OnPropertyChanged(nameof(ExigeLocal));
+            AtualizarSugestoesNome();
 
             if (!ExigeLocal)
                 Local = string.Empty;
+        }
+
+        partial void OnNomeChanged(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return;
+
+            if (SugestoesNome.Any(item => string.Equals(item, value, StringComparison.OrdinalIgnoreCase)))
+                return;
+
+            SugestoesNome.Add(value.Trim());
+        }
+
+        private void AtualizarSugestoesNome()
+        {
+            SugestoesNome.Clear();
+
+            if (_sugestoesPorTipo == null)
+                return;
+
+            foreach (var item in _sugestoesPorTipo(Tipo)
+                         .Where(nome => !string.IsNullOrWhiteSpace(nome))
+                         .Select(nome => nome.Trim())
+                         .Distinct(StringComparer.OrdinalIgnoreCase)
+                         .OrderBy(nome => nome))
+            {
+                SugestoesNome.Add(item);
+            }
+
+            if (!string.IsNullOrWhiteSpace(Nome)
+                && !SugestoesNome.Any(item => string.Equals(item, Nome, StringComparison.OrdinalIgnoreCase)))
+            {
+                SugestoesNome.Add(Nome.Trim());
+            }
         }
     }
 

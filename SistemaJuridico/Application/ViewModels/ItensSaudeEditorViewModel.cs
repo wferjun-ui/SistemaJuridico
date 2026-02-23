@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using SistemaJuridico.Models;
 using SistemaJuridico.Services;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 
 namespace SistemaJuridico.ViewModels
@@ -52,8 +53,18 @@ namespace SistemaJuridico.ViewModels
 
             foreach (var item in lista)
             {
-                Itens.Add(new ItemSaudeViewModel(item));
+                Itens.Add(new ItemSaudeViewModel(item, ObterSugestoesPorTipo));
             }
+        }
+
+
+
+        private IEnumerable<string> ObterSugestoesPorTipo(string tipo)
+        {
+            if (string.IsNullOrWhiteSpace(tipo))
+                return Enumerable.Empty<string>();
+
+            return _itemService.ListarCatalogoPorTipo(tipo);
         }
 
         // ======================
@@ -77,7 +88,7 @@ namespace SistemaJuridico.ViewModels
                 TemBloqueio = false
             };
 
-            var vm = new ItemSaudeViewModel(novo);
+            var vm = new ItemSaudeViewModel(novo, ObterSugestoesPorTipo);
 
             Itens.Add(vm);
             ItemSelecionado = vm;
@@ -120,7 +131,12 @@ namespace SistemaJuridico.ViewModels
                     _itemService.Inserir(vm.Model);
                 else
                     _itemService.Atualizar(vm.Model);
+
+                _itemService.RegistrarCatalogo(vm.Tipo, vm.Nome);
             }
+
+            foreach (var item in Itens)
+                item.AtualizarSugestoesNome();
 
             System.Windows.MessageBox.Show("Itens salvos com sucesso.");
         }
