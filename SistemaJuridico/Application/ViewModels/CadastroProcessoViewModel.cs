@@ -13,6 +13,13 @@ namespace SistemaJuridico.ViewModels
     {
         private const int MinimoCaracteresNumeroProcesso = 15;
         private const string FormatoCnjRegex = @"^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$";
+        private static readonly string[] TerapiasPadrao =
+        {
+            "Consulta neuro", "Equoterapia", "Fisioterapia", "Fonoaudiologia ABA", "Fonoaudiologia",
+            "Musicoterapia", "Neurofuncional", "Psicologia/Intervenção ABA", "Psicologia/Intervenção DENVER",
+            "Psicomotricidade", "Psicopedagogia", "Psicoterapia", "Terapia Ocupacional",
+            "Terapia Ocupacional com integração sensorial", "Terapia Cognitivo Comportamental"
+        };
 
         private readonly ProcessService _processService;
         private readonly ItemSaudeService _itemSaudeService;
@@ -35,7 +42,17 @@ namespace SistemaJuridico.ViewModels
         public ObservableCollection<string> SugestoesCirurgias { get; } = new();
         public ObservableCollection<string> SugestoesOutros { get; } = new();
 
-        public List<string> TiposProcessoDisponiveis { get; } = new() { "Saúde", "Cível", "Criminal", "Outros" };
+        public List<string> TiposProcessoDisponiveis { get; } = new()
+        {
+            "Ação Coletiva", "Mandado de Segurança", "Indenizatória", "Tributária",
+            "Previdenciária", "Cível (Geral)", "Saúde"
+        };
+
+        public List<string> StatusInicialDisponiveis { get; } = new()
+        {
+            "Não iniciado", "Cumprimento de Sentença", "Cumprimento Provisório de Sentença", "Conhecimento",
+            "Recurso Inominado", "Apelação", "Agravo", "Suspenso", "Arquivado", "Cumprimento Extinto", "Desistência da Parte"
+        };
 
         [ObservableProperty]
         private bool _isSaving;
@@ -52,6 +69,21 @@ namespace SistemaJuridico.ViewModels
 
         public bool IsProcessoSaude => string.Equals(SelectedTipoProcesso, "Saúde", StringComparison.OrdinalIgnoreCase);
 
+        public string NumeroProcesso
+        {
+            get => NovoProcesso.Numero;
+            set
+            {
+                var formatado = FormatarNumeroProcessoParcial(value);
+                if (string.Equals(NovoProcesso.Numero, formatado, StringComparison.Ordinal))
+                    return;
+
+                NovoProcesso.Numero = formatado;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(NovoProcesso));
+            }
+        }
+
         public Action? FecharTela { get; set; }
 
         public CadastroProcessoViewModel(
@@ -65,12 +97,12 @@ namespace SistemaJuridico.ViewModels
             _verificacaoService = verificacaoService;
             _historicoService = historicoService;
 
-            NovoProcesso.StatusFase = "Conhecimento";
+            NovoProcesso.StatusFase = "Não iniciado";
             NovoProcesso.UltimaAtualizacao = DateTime.Now.ToString("dd/MM/yyyy");
             NovoProcesso.TipoProcesso = SelectedTipoProcesso;
             NovoProcesso.SemRepresentante = false;
 
-            Reus.Add(new ReuCadastroViewModel(SugestoesReus) { IsFixo = true });
+            Reus.Add(new ReuCadastroViewModel(SugestoesReus, RegistrarSugestaoReuDigitada) { IsFixo = true });
             CarregarSugestoesCadastroGeral();
             CarregarSugestoesSaude();
         }
@@ -105,7 +137,7 @@ namespace SistemaJuridico.ViewModels
         [RelayCommand]
         private void AdicionarReu()
         {
-            Reus.Add(new ReuCadastroViewModel(SugestoesReus));
+            Reus.Add(new ReuCadastroViewModel(SugestoesReus, RegistrarSugestaoReuDigitada));
         }
 
         [RelayCommand]
@@ -167,11 +199,16 @@ namespace SistemaJuridico.ViewModels
                 NovoProcesso.Classificacao = NovoProcesso.TipoProcesso;
                 NovoProcesso.UltimaAtualizacao = DateTime.Now.ToString("dd/MM/yyyy");
 
-                NovoProcesso.Numero = NovoProcesso.Numero.Trim();
+                NovoProcesso.Numero = FormatarNumeroProcesso(NovoProcesso.Numero);
                 NovoProcesso.Paciente = NovoProcesso.Paciente.Trim();
                 NovoProcesso.Juiz = NovoProcesso.Juiz.Trim();
                 _processService.CriarProcesso(NovoProcesso);
                 _processService.SubstituirReus(NovoProcesso.Id, Reus.Where(r => r.IsAtivo && !string.IsNullOrWhiteSpace(r.Nome)).Select(r => r.Nome.Trim()).ToList());
+
+                RegistrarSugestaoCadastroDigitada(SugestoesNumeroProcesso, NovoProcesso.Numero);
+                RegistrarSugestaoCadastroDigitada(SugestoesPacientes, NovoProcesso.Paciente);
+                RegistrarSugestaoCadastroDigitada(SugestoesRepresentantes, NovoProcesso.Representante);
+                RegistrarSugestaoCadastroDigitada(SugestoesJuizes, NovoProcesso.Juiz);
 
                 if (IsProcessoSaude)
                 {
@@ -218,7 +255,7 @@ namespace SistemaJuridico.ViewModels
         private void CarregarSugestoesSaude()
         {
             PopularSugestoes(SugestoesMedicamentos, _itemSaudeService.ListarCatalogoPorTipo("Medicamento"));
-            PopularSugestoes(SugestoesTerapias, _itemSaudeService.ListarCatalogoPorTipo("Terapia"));
+            PopularSugestoes(SugestoesTerapias, _itemSaudeService.ListarCatalogoPorTipo("Terapia").Concat(TerapiasPadrao));
             PopularSugestoes(SugestoesCirurgias, _itemSaudeService.ListarCatalogoPorTipo("Cirurgia"));
             PopularSugestoes(SugestoesOutros, _itemSaudeService.ListarCatalogoPorTipo("Outros"));
         }
@@ -258,8 +295,25 @@ namespace SistemaJuridico.ViewModels
                 destino.Add(texto);
         }
 
+        private void RegistrarSugestaoReuDigitada(string nome)
+        {
+            RegistrarSugestaoCadastroDigitada(SugestoesReus, nome);
+        }
+
+        private static void RegistrarSugestaoCadastroDigitada(ObservableCollection<string> destino, string? valor)
+        {
+            if (destino == null || string.IsNullOrWhiteSpace(valor))
+                return;
+
+            var texto = valor.Trim();
+            if (!destino.Any(item => string.Equals(item, texto, StringComparison.OrdinalIgnoreCase)))
+                destino.Add(texto);
+        }
+
         private string? ValidarFormulario()
         {
+            NovoProcesso.Numero = FormatarNumeroProcesso(NovoProcesso.Numero);
+
             if (string.IsNullOrWhiteSpace(NovoProcesso.Numero) || NovoProcesso.Numero.Trim().Length < MinimoCaracteresNumeroProcesso)
                 return $"Número do processo é obrigatório e deve ter no mínimo {MinimoCaracteresNumeroProcesso} caracteres.";
 
@@ -323,6 +377,35 @@ namespace SistemaJuridico.ViewModels
                 "Cirurgia" => SugestoesCirurgias,
                 "Outros" => SugestoesOutros,
                 _ => Enumerable.Empty<string>()
+            };
+        }
+
+        public static string FormatarNumeroProcesso(string? valor)
+        {
+            var digitos = new string((valor ?? string.Empty).Where(char.IsDigit).ToArray());
+            if (digitos.Length > 20)
+                digitos = digitos[..20];
+
+            if (digitos.Length != 20)
+                return valor?.Trim() ?? string.Empty;
+
+            return $"{digitos[..7]}-{digitos.Substring(7, 2)}.{digitos.Substring(9, 4)}.{digitos.Substring(13, 1)}.{digitos.Substring(14, 2)}.{digitos.Substring(16, 4)}";
+        }
+
+        public static string FormatarNumeroProcessoParcial(string? valor)
+        {
+            var digitos = new string((valor ?? string.Empty).Where(char.IsDigit).ToArray());
+            if (digitos.Length > 20)
+                digitos = digitos[..20];
+
+            return digitos.Length switch
+            {
+                > 16 => Regex.Replace(digitos, @"^(\d{7})(\d{2})(\d{4})(\d{1})(\d{2})(\d{0,4}).*$", "$1-$2.$3.$4.$5.$6"),
+                > 14 => Regex.Replace(digitos, @"^(\d{7})(\d{2})(\d{4})(\d{1})(\d{0,2}).*$", "$1-$2.$3.$4.$5"),
+                > 13 => Regex.Replace(digitos, @"^(\d{7})(\d{2})(\d{4})(\d{0,1}).*$", "$1-$2.$3.$4"),
+                > 9 => Regex.Replace(digitos, @"^(\d{7})(\d{2})(\d{0,4}).*$", "$1-$2.$3"),
+                > 7 => Regex.Replace(digitos, @"^(\d{7})(\d{0,2}).*$", "$1-$2"),
+                _ => digitos
             };
         }
 
@@ -444,6 +527,8 @@ namespace SistemaJuridico.ViewModels
 
     public partial class ReuCadastroViewModel : ObservableObject
     {
+        private readonly Action<string>? _registrarSugestao;
+
         public ObservableCollection<string> SugestoesNome { get; }
 
         public ReuCadastroViewModel()
@@ -454,6 +539,12 @@ namespace SistemaJuridico.ViewModels
         public ReuCadastroViewModel(ObservableCollection<string> sugestoes)
         {
             SugestoesNome = sugestoes;
+        }
+
+        public ReuCadastroViewModel(ObservableCollection<string> sugestoes, Action<string>? registrarSugestao)
+        {
+            SugestoesNome = sugestoes;
+            _registrarSugestao = registrarSugestao;
         }
 
         public ReuCadastroViewModel(IEnumerable<string> sugestoes)
@@ -468,6 +559,14 @@ namespace SistemaJuridico.ViewModels
 
         [ObservableProperty]
         private string _nome = string.Empty;
+
+        partial void OnNomeChanged(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return;
+
+            _registrarSugestao?.Invoke(value.Trim());
+        }
 
         [ObservableProperty]
         private bool _isFixo;
