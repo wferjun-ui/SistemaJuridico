@@ -11,7 +11,7 @@ namespace SistemaJuridico.ViewModels
 {
     public partial class CadastroProcessoViewModel : ObservableObject
     {
-        private const int MinimoCaracteresNumeroProcesso = 15;
+        private const int MinimoCaracteresNumeroProcesso = 25;
         private const string FormatoCnjRegex = @"^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$";
         private static readonly string[] TerapiasPadrao =
         {
@@ -161,8 +161,8 @@ namespace SistemaJuridico.ViewModels
         {
             ItensSaudeCadastro.Add(new SaudeItemCadastroViewModel(ObterSugestoesPorTipo, RegistrarSugestaoSaudeDigitada)
             {
-                Tipo = "Medicamento",
-                Quantidade = "1"
+                Tipo = string.Empty,
+                Quantidade = string.Empty
             });
         }
 

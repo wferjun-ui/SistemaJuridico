@@ -231,19 +231,22 @@
                         </DockPanel>
 
                         <DataGrid AutoGenerateColumns="False" CanUserAddRows="False" ItemsSource="{Binding ItensSaudeCadastro}"
-                                  EnableRowVirtualization="True" EnableColumnVirtualization="True" VirtualizingPanel.ScrollUnit="Pixel">
+                                  EnableRowVirtualization="True" EnableColumnVirtualization="True" VirtualizingPanel.ScrollUnit="Pixel"
+                                  HeadersVisibility="Column" RowHeaderWidth="0"
+                                  VerticalAlignment="Top" MinHeight="150" MaxHeight="360"
+                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                  GridLinesVisibility="Horizontal">
                             <DataGrid.Columns>
-                                <DataGridComboBoxColumn Header="Tipo"
-                                                        Width="170"
-                                                        ItemsSource="{Binding TiposDisponiveis}"
-                                                        SelectedItemBinding="{Binding Tipo, UpdateSourceTrigger=PropertyChanged}"/>
-                                <DataGridTemplateColumn Header="Descrição" Width="*">
+                                <DataGridTemplateColumn Header="Tipo" Width="180">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <TextBlock Text="{Binding Nome}" VerticalAlignment="Center"/>
+                                            <ComboBox ItemsSource="{Binding TiposDisponiveis}"
+                                                      SelectedItem="{Binding Tipo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
-                                    <DataGridTemplateColumn.CellEditingTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="Descrição" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <ComboBox ItemsSource="{Binding SugestoesNome}"
                                                       Text="{Binding Nome, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -251,16 +254,17 @@
                                                       IsTextSearchEnabled="True"
                                                       StaysOpenOnEdit="True"/>
                                         </DataTemplate>
-                                    </DataGridTemplateColumn.CellEditingTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="Qtd." Width="130" Binding="{Binding Quantidade, UpdateSourceTrigger=PropertyChanged}"/>
-                                <DataGridTemplateColumn Header="Local" Width="220">
+                                <DataGridTemplateColumn Header="Qtd." Width="130">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <TextBlock Text="{Binding Local}" VerticalAlignment="Center"/>
+                                            <TextBox Text="{Binding Quantidade, UpdateSourceTrigger=PropertyChanged}"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
-                                    <DataGridTemplateColumn.CellEditingTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="Local" Width="220">
+                                    <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBox Text="{Binding Local, UpdateSourceTrigger=PropertyChanged}">
                                                 <TextBox.Style>
@@ -276,7 +280,7 @@
                                                 </TextBox.Style>
                                             </TextBox>
                                         </DataTemplate>
-                                    </DataGridTemplateColumn.CellEditingTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
                                 <DataGridTemplateColumn Header="Ações" Width="110">
                                     <DataGridTemplateColumn.CellTemplate>
