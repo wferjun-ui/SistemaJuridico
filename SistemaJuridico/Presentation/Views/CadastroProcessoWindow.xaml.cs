@@ -12,7 +12,9 @@ namespace SistemaJuridico.Views
 
             var vm = new CadastroProcessoViewModel(
                 ServiceLocator.ProcessService,
-                ServiceLocator.ItemSaudeService);
+                ServiceLocator.ItemSaudeService,
+                ServiceLocator.VerificacaoService,
+                ServiceLocator.HistoricoService);
 
             vm.FecharTela = Close;
             DataContext = vm;

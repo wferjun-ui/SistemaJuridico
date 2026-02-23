@@ -4,17 +4,18 @@ using SistemaJuridico.Models;
 using SistemaJuridico.Services;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Windows;
 
 namespace SistemaJuridico.ViewModels
 {
     public partial class CadastroProcessoViewModel : ObservableObject
     {
-        private static readonly Regex CnjRegex = new(@"^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$", RegexOptions.Compiled);
+        private const int MinimoCaracteresNumeroProcesso = 15;
 
         private readonly ProcessService _processService;
         private readonly ItemSaudeService _itemSaudeService;
+        private readonly VerificacaoService _verificacaoService;
+        private readonly HistoricoService _historicoService;
 
         public Processo NovoProcesso { get; set; } = new();
 
@@ -45,10 +46,16 @@ namespace SistemaJuridico.ViewModels
 
         public Action? FecharTela { get; set; }
 
-        public CadastroProcessoViewModel(ProcessService processService, ItemSaudeService itemSaudeService)
+        public CadastroProcessoViewModel(
+            ProcessService processService,
+            ItemSaudeService itemSaudeService,
+            VerificacaoService verificacaoService,
+            HistoricoService historicoService)
         {
             _processService = processService;
             _itemSaudeService = itemSaudeService;
+            _verificacaoService = verificacaoService;
+            _historicoService = historicoService;
 
             NovoProcesso.StatusFase = "Conhecimento";
             NovoProcesso.UltimaAtualizacao = DateTime.Now.ToString("dd/MM/yyyy");
@@ -154,6 +161,21 @@ namespace SistemaJuridico.ViewModels
                         _itemSaudeService.RegistrarCatalogo(item.Tipo, item.Nome);
                 }
 
+                var verificacaoInicial = new Verificacao
+                {
+                    ProcessoId = NovoProcesso.Id,
+                    DataHora = DateTime.Now.ToString("dd/MM/yyyy"),
+                    StatusProcesso = string.IsNullOrWhiteSpace(NovoProcesso.StatusFase) ? "Conhecimento" : NovoProcesso.StatusFase,
+                    Responsavel = App.Session.UsuarioAtual?.Nome ?? "Sistema",
+                    DiligenciaPendente = true,
+                    PendenciaDescricao = "Registro inicial do processo.",
+                    ProximoPrazo = DateTime.Today.AddDays(90).ToString("dd/MM/yyyy"),
+                    DiligenciaDescricao = string.Empty
+                };
+
+                _verificacaoService.Inserir(verificacaoInicial);
+                _historicoService.Registrar(NovoProcesso.Id, "Processo criado", "Registro inicial do processo.");
+
                 await Task.Delay(350);
 
                 StatusMensagem = "Processo criado com sucesso.";
@@ -190,23 +212,17 @@ namespace SistemaJuridico.ViewModels
 
         private string? ValidarFormulario()
         {
-            if (!CnjRegex.IsMatch(NovoProcesso.Numero ?? string.Empty))
-                return "Número do processo inválido. Use o padrão CNJ: 0000000-00.0000.0.00.0000.";
+            if (string.IsNullOrWhiteSpace(NovoProcesso.Numero) || NovoProcesso.Numero.Trim().Length < MinimoCaracteresNumeroProcesso)
+                return $"Número do processo é obrigatório e deve ter no mínimo {MinimoCaracteresNumeroProcesso} caracteres.";
 
             if (string.IsNullOrWhiteSpace(NovoProcesso.Paciente))
                 return "O nome do paciente é obrigatório.";
-
-            if (TemRepresentante && string.IsNullOrWhiteSpace(NovoProcesso.Representante))
-                return "Informe o nome do genitor/representante ou desative essa opção.";
 
             if (string.IsNullOrWhiteSpace(NovoProcesso.Juiz))
                 return "O nome do juiz é obrigatório.";
 
             if (string.IsNullOrWhiteSpace(NovoProcesso.TipoProcesso))
                 return "Selecione o tipo de processo.";
-
-            if (Reus.Where(r => r.IsAtivo).All(r => string.IsNullOrWhiteSpace(r.Nome)))
-                return "Informe pelo menos um réu.";
 
             if (!IsProcessoSaude)
                 return null;
