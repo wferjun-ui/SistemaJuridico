@@ -107,6 +107,17 @@
                     </StackPanel>
                 </Border>
 
+                <GroupBox Header="Usuários ativos recentemente" Margin="0,0,0,14">
+                    <DataGrid ItemsSource="{Binding UsuariosAtivosRecentemente}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" MinHeight="120">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Usuário" Binding="{Binding NomeUsuario}" Width="170"/>
+                            <DataGridTextColumn Header="E-mail" Binding="{Binding EmailUsuario}" Width="220"/>
+                            <DataGridTextColumn Header="Última atividade" Binding="{Binding UltimaAtividadeTexto}" Width="150"/>
+                            <DataGridTextColumn Header="Último processo" Binding="{Binding UltimoProcessoTexto}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </GroupBox>
+
                 <GroupBox Header="Processos bloqueados">
                     <ListBox ItemsSource="{Binding ProcessosBloqueados}" MinHeight="90"/>
                 </GroupBox>
