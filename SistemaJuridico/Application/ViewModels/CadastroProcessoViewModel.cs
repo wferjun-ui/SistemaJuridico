@@ -18,10 +18,7 @@ namespace SistemaJuridico.ViewModels
         public Processo NovoProcesso { get; set; } = new();
 
         public ObservableCollection<ReuCadastroViewModel> Reus { get; } = new();
-        public ObservableCollection<SaudeItemCadastroViewModel> Medicamentos { get; } = new();
-        public ObservableCollection<SaudeItemCadastroViewModel> Terapias { get; } = new();
-        public ObservableCollection<SaudeItemCadastroViewModel> Cirurgias { get; } = new();
-        public ObservableCollection<SaudeItemCadastroViewModel> OutrosSaude { get; } = new();
+        public ObservableCollection<SaudeItemCadastroViewModel> ItensSaudeCadastro { get; } = new();
 
         public ObservableCollection<string> SugestoesMedicamentos { get; } = new();
         public ObservableCollection<string> SugestoesTerapias { get; } = new();
@@ -58,11 +55,6 @@ namespace SistemaJuridico.ViewModels
             NovoProcesso.SemRepresentante = false;
 
             Reus.Add(new ReuCadastroViewModel { IsFixo = true });
-            AdicionarSaudeItem("Medicamento", Medicamentos);
-            AdicionarSaudeItem("Terapia", Terapias);
-            AdicionarSaudeItem("Cirurgia", Cirurgias);
-            AdicionarSaudeItem("Outros", OutrosSaude);
-
             CarregarSugestoesSaude();
         }
 
@@ -107,16 +99,14 @@ namespace SistemaJuridico.ViewModels
         }
 
         [RelayCommand]
-        private void AdicionarMedicamento() => AdicionarSaudeItem("Medicamento", Medicamentos);
-
-        [RelayCommand]
-        private void AdicionarTerapia() => AdicionarSaudeItem("Terapia", Terapias);
-
-        [RelayCommand]
-        private void AdicionarCirurgia() => AdicionarSaudeItem("Cirurgia", Cirurgias);
-
-        [RelayCommand]
-        private void AdicionarOutroSaude() => AdicionarSaudeItem("Outros", OutrosSaude);
+        private void AdicionarItemSaude()
+        {
+            ItensSaudeCadastro.Add(new SaudeItemCadastroViewModel
+            {
+                Tipo = "Medicamento",
+                Quantidade = "1"
+            });
+        }
 
         [RelayCommand]
         private void RemoverSaudeItem(SaudeItemCadastroViewModel? item)
@@ -124,11 +114,7 @@ namespace SistemaJuridico.ViewModels
             if (item == null)
                 return;
 
-            var colecao = ObterColecaoPorTipo(item.Tipo);
-            colecao.Remove(item);
-
-            if (colecao.Count == 0)
-                AdicionarSaudeItem(item.Tipo, colecao);
+            ItensSaudeCadastro.Remove(item);
         }
 
         [RelayCommand]
@@ -185,26 +171,6 @@ namespace SistemaJuridico.ViewModels
             FecharTela?.Invoke();
         }
 
-        private void AdicionarSaudeItem(string tipo, ObservableCollection<SaudeItemCadastroViewModel> destino)
-        {
-            destino.Add(new SaudeItemCadastroViewModel
-            {
-                Tipo = tipo,
-                Quantidade = "1"
-            });
-        }
-
-        private ObservableCollection<SaudeItemCadastroViewModel> ObterColecaoPorTipo(string tipo)
-        {
-            return tipo switch
-            {
-                "Medicamento" => Medicamentos,
-                "Terapia" => Terapias,
-                "Cirurgia" => Cirurgias,
-                _ => OutrosSaude
-            };
-        }
-
         private void CarregarSugestoesSaude()
         {
             PopularSugestoes(SugestoesMedicamentos, "Medicamento");
@@ -244,25 +210,13 @@ namespace SistemaJuridico.ViewModels
             if (!IsProcessoSaude)
                 return null;
 
-            if (ValidarColecaoSaude(Medicamentos, "Medicamentos", exigeLocal: false) is string erroMedicamento)
-                return erroMedicamento;
-
-            if (ValidarColecaoSaude(Terapias, "Terapias", exigeLocal: true) is string erroTerapia)
-                return erroTerapia;
-
-            if (ValidarColecaoSaude(Cirurgias, "Cirurgias", exigeLocal: false) is string erroCirurgia)
-                return erroCirurgia;
-
-            if (ValidarColecaoSaude(OutrosSaude, "Outros", exigeLocal: false) is string erroOutros)
-                return erroOutros;
+            if (ValidarItensSaude(ItensSaudeCadastro) is string erroSaude)
+                return erroSaude;
 
             return null;
         }
 
-        private static string? ValidarColecaoSaude(
-            ObservableCollection<SaudeItemCadastroViewModel> itens,
-            string categoria,
-            bool exigeLocal)
+        private static string? ValidarItensSaude(IEnumerable<SaudeItemCadastroViewModel> itens)
         {
             var preenchidos = itens.Where(item =>
                 !string.IsNullOrWhiteSpace(item.Nome) ||
@@ -275,13 +229,16 @@ namespace SistemaJuridico.ViewModels
             foreach (var item in preenchidos)
             {
                 if (string.IsNullOrWhiteSpace(item.Nome))
-                    return $"Todos os itens de {categoria} devem ter nome.";
+                    return "Todos os itens de saúde devem ter nome.";
 
                 if (string.IsNullOrWhiteSpace(item.Quantidade))
-                    return $"Todos os itens de {categoria} devem ter quantidade prescrita.";
+                    return "Todos os itens de saúde devem ter quantidade prescrita.";
 
-                if (exigeLocal && string.IsNullOrWhiteSpace(item.Local))
-                    return $"Todos os itens de {categoria} devem informar o local de realização.";
+                if (string.IsNullOrWhiteSpace(item.Tipo))
+                    return "Selecione o tipo de cada item de saúde.";
+
+                if (item.ExigeLocal && string.IsNullOrWhiteSpace(item.Local))
+                    return $"Informe o local de realização para o item '{item.Nome}'.";
             }
 
             return null;
@@ -291,10 +248,7 @@ namespace SistemaJuridico.ViewModels
         {
             var lista = new List<ItemSaude>();
 
-            lista.AddRange(ConverterParaItemSaude(Medicamentos));
-            lista.AddRange(ConverterParaItemSaude(Terapias));
-            lista.AddRange(ConverterParaItemSaude(Cirurgias));
-            lista.AddRange(ConverterParaItemSaude(OutrosSaude));
+            lista.AddRange(ConverterParaItemSaude(ItensSaudeCadastro));
 
             return lista;
         }
@@ -323,6 +277,14 @@ namespace SistemaJuridico.ViewModels
 
     public partial class SaudeItemCadastroViewModel : ObservableObject
     {
+        public IReadOnlyList<string> TiposDisponiveis { get; } = new[]
+        {
+            "Medicamento",
+            "Terapia",
+            "Cirurgia",
+            "Outros"
+        };
+
         [ObservableProperty]
         private string _tipo = string.Empty;
 
@@ -334,6 +296,17 @@ namespace SistemaJuridico.ViewModels
 
         [ObservableProperty]
         private string _local = string.Empty;
+
+        public bool ExigeLocal => string.Equals(Tipo, "Terapia", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(Tipo, "Cirurgia", StringComparison.OrdinalIgnoreCase);
+
+        partial void OnTipoChanged(string value)
+        {
+            OnPropertyChanged(nameof(ExigeLocal));
+
+            if (!ExigeLocal)
+                Local = string.Empty;
+        }
     }
 
     public partial class ReuCadastroViewModel : ObservableObject

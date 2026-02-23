@@ -200,97 +200,52 @@
                             </Style>
                         </StackPanel.Style>
 
-                        <TextBlock Text="Dados de Saúde"
-                                   FontSize="16"
-                                   FontWeight="SemiBold"
-                                   Margin="0,0,0,10"/>
+                        <DockPanel Margin="0,0,0,10">
+                            <TextBlock DockPanel.Dock="Left"
+                                       Text="Dados de Saúde"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"/>
+                            <Button DockPanel.Dock="Right"
+                                    Content="+ Adicionar item"
+                                    Command="{Binding AdicionarItemSaudeCommand}"
+                                    Background="{StaticResource PrimaryBrush}"
+                                    Foreground="White"
+                                    BorderBrush="{StaticResource PrimaryBrush}"/>
+                        </DockPanel>
 
-                        <TextBlock Text="Medicamentos" FontWeight="SemiBold" Margin="0,4,0,4"/>
-                        <Button Content="+ Medicamento" HorizontalAlignment="Left" Command="{Binding AdicionarMedicamentoCommand}" Margin="0,0,0,6"/>
-                        <DataGrid AutoGenerateColumns="False" CanUserAddRows="False" ItemsSource="{Binding Medicamentos}" Margin="0,0,0,10"
+                        <DataGrid AutoGenerateColumns="False" CanUserAddRows="False" ItemsSource="{Binding ItensSaudeCadastro}"
                                   EnableRowVirtualization="True" EnableColumnVirtualization="True" VirtualizingPanel.ScrollUnit="Pixel">
                             <DataGrid.Columns>
-                                <DataGridTemplateColumn Header="Nome" Width="*">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <ComboBox IsEditable="True"
-                                                      IsTextSearchEnabled="True"
-                                                      ItemsSource="{Binding DataContext.SugestoesMedicamentos, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                      Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged}"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="Qtd." Width="130" Binding="{Binding Quantidade, UpdateSourceTrigger=PropertyChanged}"/>
-                                <DataGridTemplateColumn Header="Ações" Width="110">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Button Content="Remover" Command="{Binding DataContext.RemoverSaudeItemCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
-
-                        <TextBlock Text="Terapias" FontWeight="SemiBold" Margin="0,4,0,4"/>
-                        <Button Content="+ Terapia" HorizontalAlignment="Left" Command="{Binding AdicionarTerapiaCommand}" Margin="0,0,0,6"/>
-                        <DataGrid AutoGenerateColumns="False" CanUserAddRows="False" ItemsSource="{Binding Terapias}" Margin="0,0,0,10"
-                                  EnableRowVirtualization="True" EnableColumnVirtualization="True" VirtualizingPanel.ScrollUnit="Pixel">
-                            <DataGrid.Columns>
-                                <DataGridTemplateColumn Header="Nome" Width="*">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <ComboBox IsEditable="True"
-                                                      IsTextSearchEnabled="True"
-                                                      ItemsSource="{Binding DataContext.SugestoesTerapias, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                      Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged}"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="Qtd." Width="130" Binding="{Binding Quantidade, UpdateSourceTrigger=PropertyChanged}"/>
-                                <DataGridTextColumn Header="Clínica/Local" Width="220" Binding="{Binding Local, UpdateSourceTrigger=PropertyChanged}"/>
-                                <DataGridTemplateColumn Header="Ações" Width="110">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Button Content="Remover" Command="{Binding DataContext.RemoverSaudeItemCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
-
-                        <TextBlock Text="Cirurgias" FontWeight="SemiBold" Margin="0,4,0,4"/>
-                        <Button Content="+ Cirurgia" HorizontalAlignment="Left" Command="{Binding AdicionarCirurgiaCommand}" Margin="0,0,0,6"/>
-                        <DataGrid AutoGenerateColumns="False" CanUserAddRows="False" ItemsSource="{Binding Cirurgias}" Margin="0,0,0,10"
-                                  EnableRowVirtualization="True" EnableColumnVirtualization="True" VirtualizingPanel.ScrollUnit="Pixel">
-                            <DataGrid.Columns>
-                                <DataGridTemplateColumn Header="Nome" Width="*">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <ComboBox IsEditable="True"
-                                                      IsTextSearchEnabled="True"
-                                                      ItemsSource="{Binding DataContext.SugestoesCirurgias, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                      Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged}"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="Qtd." Width="130" Binding="{Binding Quantidade, UpdateSourceTrigger=PropertyChanged}"/>
-                                <DataGridTemplateColumn Header="Ações" Width="110">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Button Content="Remover" Command="{Binding DataContext.RemoverSaudeItemCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
-
-                        <TextBlock Text="Outros" FontWeight="SemiBold" Margin="0,4,0,4"/>
-                        <Button Content="+ Outro" HorizontalAlignment="Left" Command="{Binding AdicionarOutroSaudeCommand}" Margin="0,0,0,6"/>
-                        <DataGrid AutoGenerateColumns="False" CanUserAddRows="False" ItemsSource="{Binding OutrosSaude}"
-                                  EnableRowVirtualization="True" EnableColumnVirtualization="True" VirtualizingPanel.ScrollUnit="Pixel">
-                            <DataGrid.Columns>
+                                <DataGridComboBoxColumn Header="Tipo"
+                                                        Width="170"
+                                                        ItemsSource="{Binding TiposDisponiveis}"
+                                                        SelectedItemBinding="{Binding Tipo, UpdateSourceTrigger=PropertyChanged}"/>
                                 <DataGridTextColumn Header="Descrição" Width="*" Binding="{Binding Nome, UpdateSourceTrigger=PropertyChanged}"/>
                                 <DataGridTextColumn Header="Qtd." Width="130" Binding="{Binding Quantidade, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTemplateColumn Header="Local" Width="220">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Local}" VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                    <DataGridTemplateColumn.CellEditingTemplate>
+                                        <DataTemplate>
+                                            <TextBox Text="{Binding Local, UpdateSourceTrigger=PropertyChanged}">
+                                                <TextBox.Style>
+                                                    <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                                                        <Setter Property="IsEnabled" Value="True"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding ExigeLocal}" Value="False">
+                                                                <Setter Property="IsEnabled" Value="False"/>
+                                                                <Setter Property="Text" Value=""/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBox.Style>
+                                            </TextBox>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellEditingTemplate>
+                                </DataGridTemplateColumn>
                                 <DataGridTemplateColumn Header="Ações" Width="110">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
