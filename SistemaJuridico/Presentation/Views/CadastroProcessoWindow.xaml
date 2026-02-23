@@ -93,7 +93,7 @@
                         <StackPanel Margin="0,0,12,10">
                             <TextBlock Text="# Número do Processo *" FontWeight="SemiBold"/>
                             <ComboBox ItemsSource="{Binding SugestoesNumeroProcesso}"
-                                      Text="{Binding NovoProcesso.Numero, UpdateSourceTrigger=PropertyChanged}"
+                                      Text="{Binding NumeroProcesso, UpdateSourceTrigger=PropertyChanged}"
                                       IsEditable="True"
                                       IsTextSearchEnabled="True"
                                       StaysOpenOnEdit="True"/>
@@ -149,12 +149,8 @@
 
                         <StackPanel Grid.Column="1" Grid.Row="2" Margin="12,0,0,0">
                             <TextBlock Text="ℹ Status Inicial do Processo *" FontWeight="SemiBold"/>
-                            <ComboBox SelectedValuePath="Content"
-                                      SelectedValue="{Binding NovoProcesso.StatusFase, UpdateSourceTrigger=PropertyChanged}">
-                                <ComboBoxItem Content="Conhecimento"/>
-                                <ComboBoxItem Content="Execução"/>
-                                <ComboBoxItem Content="Arquivado"/>
-                            </ComboBox>
+                            <ComboBox ItemsSource="{Binding StatusInicialDisponiveis}"
+                                      SelectedItem="{Binding NovoProcesso.StatusFase, UpdateSourceTrigger=PropertyChanged}"/>
                         </StackPanel>
                     </Grid>
                 </Border>
