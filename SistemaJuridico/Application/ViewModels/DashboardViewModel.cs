@@ -17,6 +17,8 @@ namespace SistemaJuridico.ViewModels
         public ObservableCollection<ProcessoPrazoVM> ProcessosAtrasados { get; } = new();
         public ObservableCollection<ProcessoPrazoVM> ProcessosAAtrasar { get; } = new();
         public ObservableCollection<string> ProcessosBloqueados { get; } = new();
+        public ObservableCollection<string> PainelAtrasadosResumo { get; } = new();
+        public ObservableCollection<string> PainelAAtrasarResumo { get; } = new();
         public ObservableCollection<ActiveUserActivityVM> UsuariosAtivosRecentemente { get; } = new();
 
         [ObservableProperty]
@@ -107,6 +109,8 @@ namespace SistemaJuridico.ViewModels
             ProcessosAtrasados.Clear();
             ProcessosAAtrasar.Clear();
             ProcessosBloqueados.Clear();
+            PainelAtrasadosResumo.Clear();
+            PainelAAtrasarResumo.Clear();
             UsuariosAtivosRecentemente.Clear();
 
             int atrasados = 0;
@@ -157,6 +161,23 @@ namespace SistemaJuridico.ViewModels
                     aAtrasar++;
                     ProcessosAAtrasar.Add(vmPrazo);
                 }
+            }
+
+            var atrasadosOrdenados = ProcessosAtrasados.OrderBy(p => p.Prazo).ThenBy(p => p.NumeroProcesso).ToList();
+            var aAtrasarOrdenados = ProcessosAAtrasar.OrderBy(p => p.Prazo).ThenBy(p => p.NumeroProcesso).ToList();
+
+            ProcessosAtrasados.Clear();
+            foreach (var item in atrasadosOrdenados)
+            {
+                ProcessosAtrasados.Add(item);
+                PainelAtrasadosResumo.Add($"{item.NumeroProcesso} — {item.Paciente} ({item.PrazoTexto})");
+            }
+
+            ProcessosAAtrasar.Clear();
+            foreach (var item in aAtrasarOrdenados)
+            {
+                ProcessosAAtrasar.Add(item);
+                PainelAAtrasarResumo.Add($"{item.NumeroProcesso} — {item.Paciente} ({item.PrazoTexto})");
             }
 
             foreach (var atividade in _activeSessionService.GetRecentUserActivity())
@@ -257,6 +278,28 @@ namespace SistemaJuridico.ViewModels
         public string? PacienteProcesso { get; set; }
 
         public string UltimaAtividadeTexto => UltimaAtividade.ToString("dd/MM/yyyy HH:mm");
+
+        public string UltimaAtividadeRelativaTexto
+        {
+            get
+            {
+                var diferenca = DateTime.Now - UltimaAtividade;
+
+                if (diferenca.TotalMinutes < 1)
+                    return "agora";
+
+                if (diferenca.TotalHours < 1)
+                    return $"há {Math.Floor(diferenca.TotalMinutes)} min";
+
+                if (diferenca.TotalDays < 1)
+                    return $"há {Math.Floor(diferenca.TotalHours)} h";
+
+                if (diferenca.TotalDays < 30)
+                    return $"há {Math.Floor(diferenca.TotalDays)} dias";
+
+                return UltimaAtividadeTexto;
+            }
+        }
 
         public string UltimoProcessoTexto
         {

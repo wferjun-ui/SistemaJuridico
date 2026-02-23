@@ -22,6 +22,7 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <StackPanel Grid.Row="0" Margin="0,0,0,18">
@@ -33,7 +34,36 @@
                 </StackPanel>
             </StackPanel>
 
-            <Border Grid.Row="1" Margin="0,0,0,18" Padding="16" CornerRadius="12" BorderThickness="1" BorderBrush="#FFD9DEE7" Background="#FFF9FBFD">
+            <Grid Grid.Row="1" Margin="0,0,0,18">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Margin="0,0,8,0" Padding="12" CornerRadius="10" BorderThickness="1" BorderBrush="#FFFECACA" Background="#FFFEF2F2">
+                    <StackPanel>
+                        <TextBlock FontWeight="SemiBold" Foreground="#FFB91C1C">
+                            <Run Text="Processos Atrasados ("/>
+                            <Run Text="{Binding TotalAtrasados}"/>
+                            <Run Text=")"/>
+                        </TextBlock>
+                        <ListBox ItemsSource="{Binding PainelAtrasadosResumo}" Margin="0,8,0,0" MinHeight="84" MaxHeight="130" BorderThickness="0" Background="Transparent"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Margin="8,0,0,0" Padding="12" CornerRadius="10" BorderThickness="1" BorderBrush="#FFFDE68A" Background="#FFFFFBEB">
+                    <StackPanel>
+                        <TextBlock FontWeight="SemiBold" Foreground="#FFA16207">
+                            <Run Text="Para Atrasar ("/>
+                            <Run Text="{Binding TotalAAtrasar}"/>
+                            <Run Text=")"/>
+                        </TextBlock>
+                        <ListBox ItemsSource="{Binding PainelAAtrasarResumo}" Margin="0,8,0,0" MinHeight="84" MaxHeight="130" BorderThickness="0" Background="Transparent"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <Border Grid.Row="2" Margin="0,0,0,14" Padding="12" CornerRadius="10" BorderThickness="1" BorderBrush="#FFD9DEE7" Background="#FFF9FBFD">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -58,7 +88,7 @@
                 </Grid>
             </Border>
 
-            <GroupBox Grid.Row="2" Header="Processos atrasados" Margin="0,0,0,14">
+            <GroupBox Grid.Row="3" Header="Processos atrasados" Margin="0,0,0,14">
                 <DataGrid ItemsSource="{Binding ProcessosAtrasados}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" MinHeight="190" SelectionMode="Single">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Processo" Binding="{Binding NumeroProcesso}" Width="130"/>
@@ -78,7 +108,7 @@
                 </DataGrid>
             </GroupBox>
 
-            <StackPanel Grid.Row="3">
+            <StackPanel Grid.Row="4">
                 <GroupBox Header="Processos a atrasar (próximos 7 dias)" Margin="0,0,0,14">
                     <DataGrid ItemsSource="{Binding ProcessosAAtrasar}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" MinHeight="190" SelectionMode="Single">
                         <DataGrid.Columns>
@@ -112,7 +142,7 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Usuário" Binding="{Binding NomeUsuario}" Width="170"/>
                             <DataGridTextColumn Header="E-mail" Binding="{Binding EmailUsuario}" Width="220"/>
-                            <DataGridTextColumn Header="Última atividade" Binding="{Binding UltimaAtividadeTexto}" Width="150"/>
+                            <DataGridTextColumn Header="Última atividade" Binding="{Binding UltimaAtividadeRelativaTexto}" Width="150"/>
                             <DataGridTextColumn Header="Último processo" Binding="{Binding UltimoProcessoTexto}" Width="*"/>
                         </DataGrid.Columns>
                     </DataGrid>
