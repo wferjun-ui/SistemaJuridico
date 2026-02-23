@@ -4,6 +4,7 @@ using SistemaJuridico.Models;
 using SistemaJuridico.Services;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Numerics;
 using System.Text.RegularExpressions;
 using System.Windows;
 
@@ -313,26 +314,33 @@ namespace SistemaJuridico.ViewModels
         private string? ValidarFormulario()
         {
             NovoProcesso.Numero = FormatarNumeroProcesso(NovoProcesso.Numero);
+            return ValidarFormulario(NovoProcesso, IsProcessoSaude, ItensSaudeCadastro);
+        }
 
-            if (string.IsNullOrWhiteSpace(NovoProcesso.Numero) || NovoProcesso.Numero.Trim().Length < MinimoCaracteresNumeroProcesso)
+        internal static string? ValidarFormulario(Processo processo, bool isProcessoSaude, IEnumerable<SaudeItemCadastroViewModel> itensSaudeCadastro)
+        {
+            if (string.IsNullOrWhiteSpace(processo.Numero) || processo.Numero.Trim().Length < MinimoCaracteresNumeroProcesso)
                 return $"Número do processo é obrigatório e deve ter no mínimo {MinimoCaracteresNumeroProcesso} caracteres.";
 
-            if (!Regex.IsMatch(NovoProcesso.Numero.Trim(), FormatoCnjRegex))
+            if (!Regex.IsMatch(processo.Numero.Trim(), FormatoCnjRegex))
                 return "Número do processo deve seguir o padrão CNJ: 0000000-00.0000.0.00.0000.";
 
-            if (string.IsNullOrWhiteSpace(NovoProcesso.Paciente))
+            if (!ValidarDigitoVerificadorCnj(processo.Numero))
+                return "Número do processo inválido: dígito verificador CNJ não confere.";
+
+            if (string.IsNullOrWhiteSpace(processo.Paciente))
                 return "O nome do paciente é obrigatório.";
 
-            if (string.IsNullOrWhiteSpace(NovoProcesso.Juiz))
+            if (string.IsNullOrWhiteSpace(processo.Juiz))
                 return "O nome do juiz é obrigatório.";
 
-            if (string.IsNullOrWhiteSpace(NovoProcesso.TipoProcesso))
+            if (string.IsNullOrWhiteSpace(processo.TipoProcesso))
                 return "Selecione o tipo de processo.";
 
-            if (!IsProcessoSaude)
+            if (!isProcessoSaude)
                 return null;
 
-            if (ValidarItensSaude(ItensSaudeCadastro) is string erroSaude)
+            if (ValidarItensSaude(itensSaudeCadastro) is string erroSaude)
                 return erroSaude;
 
             return null;
@@ -398,15 +406,49 @@ namespace SistemaJuridico.ViewModels
             if (digitos.Length > 20)
                 digitos = digitos[..20];
 
-            return digitos.Length switch
+            var partes = new[] { 7, 2, 4, 1, 2, 4 };
+            var separadores = new[] { '-', '.', '.', '.', '\0' };
+            var formatado = string.Empty;
+            var cursor = 0;
+
+            foreach (var indice in Enumerable.Range(0, partes.Length))
             {
-                > 16 => Regex.Replace(digitos, @"^(\d{7})(\d{2})(\d{4})(\d{1})(\d{2})(\d{0,4}).*$", "$1-$2.$3.$4.$5.$6"),
-                > 14 => Regex.Replace(digitos, @"^(\d{7})(\d{2})(\d{4})(\d{1})(\d{0,2}).*$", "$1-$2.$3.$4.$5"),
-                > 13 => Regex.Replace(digitos, @"^(\d{7})(\d{2})(\d{4})(\d{0,1}).*$", "$1-$2.$3.$4"),
-                > 9 => Regex.Replace(digitos, @"^(\d{7})(\d{2})(\d{0,4}).*$", "$1-$2.$3"),
-                > 7 => Regex.Replace(digitos, @"^(\d{7})(\d{0,2}).*$", "$1-$2"),
-                _ => digitos
-            };
+                var tamanhoParte = partes[indice];
+                var restante = digitos.Length - cursor;
+                if (restante <= 0)
+                    break;
+
+                var tamanhoAtual = Math.Min(tamanhoParte, restante);
+                var parte = digitos.Substring(cursor, tamanhoAtual);
+                formatado += parte;
+                cursor += tamanhoAtual;
+
+                if (tamanhoAtual == tamanhoParte && separadores[indice] != '\0')
+                    formatado += separadores[indice];
+            }
+
+            return formatado;
+        }
+
+        public static bool ValidarDigitoVerificadorCnj(string? numeroProcesso)
+        {
+            var digitos = new string((numeroProcesso ?? string.Empty).Where(char.IsDigit).ToArray());
+            if (digitos.Length != 20)
+                return false;
+
+            var sequencial = digitos[..7];
+            var digitoInformado = digitos.Substring(7, 2);
+            var ano = digitos.Substring(9, 4);
+            var ramo = digitos.Substring(13, 1);
+            var tribunal = digitos.Substring(14, 2);
+            var origem = digitos.Substring(16, 4);
+
+            var numeroBase = $"{sequencial}{ano}{ramo}{tribunal}{origem}";
+            var resto = (int)(BigInteger.Parse(numeroBase) % 97);
+            var digitoCalculado = 98 - resto;
+            var digitoCalculadoTexto = digitoCalculado.ToString("00");
+
+            return string.Equals(digitoInformado, digitoCalculadoTexto, StringComparison.Ordinal);
         }
 
         private List<ItemSaude> ObterItensSaudeParaPersistencia()

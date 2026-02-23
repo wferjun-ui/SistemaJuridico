@@ -230,7 +230,7 @@
                                     BorderBrush="{StaticResource PrimaryBrush}"/>
                         </DockPanel>
 
-                        <DataGrid AutoGenerateColumns="False" CanUserAddRows="False" ItemsSource="{Binding ItensSaudeCadastro}"
+                        <DataGrid x:Name="ItensSaudeDataGrid" AutoGenerateColumns="False" CanUserAddRows="False" ItemsSource="{Binding ItensSaudeCadastro}"
                                   EnableRowVirtualization="True" EnableColumnVirtualization="True" VirtualizingPanel.ScrollUnit="Pixel"
                                   HeadersVisibility="Column" RowHeaderWidth="0"
                                   VerticalAlignment="Top" MinHeight="150" MaxHeight="360"

@@ -4,12 +4,18 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SistemaJuridico", "SistemaJuridico\SistemaJuridico.csproj", "{E4D3EA56-B57E-4F50-93C6-6F47258AFC3A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SistemaJuridico.Tests", "SistemaJuridico.Tests\SistemaJuridico.Tests.csproj", "{0E98C54A-D8CE-445D-962A-E25C4297C8D7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0E98C54A-D8CE-445D-962A-E25C4297C8D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E98C54A-D8CE-445D-962A-E25C4297C8D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E98C54A-D8CE-445D-962A-E25C4297C8D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E98C54A-D8CE-445D-962A-E25C4297C8D7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E4D3EA56-B57E-4F50-93C6-6F47258AFC3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E4D3EA56-B57E-4F50-93C6-6F47258AFC3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E4D3EA56-B57E-4F50-93C6-6F47258AFC3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
