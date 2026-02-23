@@ -1,0 +1,1344 @@
+/**
+ * @fileoverview Google Apps Script para atuar como o backend do aplicativo HTML de Controle de Processos Jurídicos.
+ * Versão 0.4.0 - Otimizado para Performance
+ * Este script é responsável por todas as operações de banco de dados na planilha Google Sheets,
+ * incluindo a criação, leitura, atualização, exclusão e busca de processos.
+ * Ele também fornece o nome do usuário ativo, calcula prazos e o estado dos processos.
+ *
+ * =================================================================================================================
+ * CONFIGURAÇÃO CRÍTICA DA PLANILHA:
+ *
+ * 1. Aba de Processos: Crie uma aba na sua planilha Google Sheets chamada "Dados".
+ * A PRIMEIRA LINHA (cabeçalho) desta aba DEVE conter as seguintes colunas, NESTA ORDEM EXATA e COM ESTA GRAFIA:
+ * 'ID', 'Numero', 'Paciente', 'Genitor', 'Juiz', 'Tipo', 'UltimaPrescricao'
+ *
+ * 2. Aba de Usuários: Crie UMA NOVA ABA na sua planilha Google Sheets chamada "Usuários".
+ * A PRIMEIRA LINHA (cabeçalho) desta aba DEVE conter as seguintes colunas, NESTA ORDEM EXATA e COM ESTA GRAFIA:
+ * 'ID', 'Email', 'Nome', 'IsAdmin'
+ *
+ * 3. Aba de Histórico (OPCIONAL, mas RECOMENDADO): Crie UMA NOVA ABA chamada "Histórico".
+ * A PRIMEIRA LINHA (cabeçalho) desta aba DEVE conter:
+ * 'DataHora', 'Usuario', 'ProcessoID', 'ProcessoNumero', 'TipoAcao', 'DetalhesAntigos', 'DetalhesNovos'
+ *
+ * 4. Aba de Sessões Ativas (CRIADA AUTOMATICAMENTE): Uma aba chamada "ActiveSessions" será criada para
+ * rastrear a atividade recente dos usuários.
+ * =================================================================================================================
+ */
+// --- Configurações Globais ---
+const INSTITUTION_DOMAIN = 'mppr.mp.br';
+const PROCESSOS_SHEET_NAME = 'Dados';
+const USERS_SHEET_NAME = 'Usuários';
+const HISTORY_SHEET_NAME = 'Histórico';
+const ACTIVE_SESSIONS_SHEET_NAME = 'ActiveSessions';
+const VERIFICACOES_SHEET_NAME = 'Verificacoes';
+const CONTAS_SHEET_NAME = 'Contas';
+const DATA_START_ROW = 2;
+const MIN_PROCESS_NUMBER_LENGTH = 15;
+const CACHE_EXPIRATION_SECONDS = 360; // Cache de 6 minutos para os dados iniciais
+
+// Cabeçalhos das planilhas
+const PROCESSOS_SHEET_HEADERS = [
+  'ID', 'Numero', 'Paciente', 'Genitor', 'Juiz', 'Tipo', 'UltimaPrescricao'
+];
+const USER_SHEET_HEADERS = [
+  'ID', 'Email', 'Nome', 'IsAdmin'
+];
+const HISTORY_SHEET_HEADERS = [
+  'DataHora', 'Usuario', 'ProcessoID', 'ProcessoNumero', 'TipoAcao', 'DetalhesAntigos', 'DetalhesNovos'
+];
+const ACTIVE_SESSIONS_SHEET_HEADERS = [
+  'UserEmail', 'UserName', 'LastActivityTimestamp', 'LastProcessId', 'LastProcessNumero', 'LastProcessPaciente'
+];
+const VERIFICACOES_SHEET_HEADERS = [
+  'ID', 'ProcessoID', 'Data', 'StatusProcesso', 'Responsavel', 'Diligencia', 'Descricao', 'Pendencias',
+  'PrazoDiligencia', 'ProximoPrazoPadrao', 'DataNotificacao', 'UltimaPrescricaoGlobal', 'TerapiasJSON',
+  'MedicamentosJSON', 'CirurgiasJSON', 'OutrosItensJSON', 'Alteracoes'
+];
+const CONTAS_SHEET_HEADERS = [
+  'ID', 'ProcessoID', 'DataMovimentacao', 'TipoLancamento', 'Historico', 'MovProcesso', 'NumNFAlvara',
+  'ValorAlvara', 'ValorConta', 'TerapiaMedicamentoNome', 'Quantidade', 'MesReferencia', 'AnoReferencia',
+  'Observacoes', 'Responsavel'
+];
+
+// Mapeamento de cabeçalhos para chaves de objeto
+const PROCESSOS_HEADER_TO_KEY_MAP = {
+  'ID': 'id', 'Numero': 'numero', 'Paciente': 'paciente', 'Genitor': 'genitor', 'Juiz': 'juiz', 'Tipo': 'tipo',
+  'UltimaPrescricao': 'ultimaprescricao'
+};
+const USER_HEADER_TO_KEY_MAP = {
+  'ID': 'id', 'Email': 'email', 'Nome': 'nome', 'IsAdmin': 'isAdmin'
+};
+const VERIFICACOES_HEADER_TO_KEY_MAP = {
+  'ID': 'id', 'ProcessoID': 'processoId', 'Data': 'data', 'StatusProcesso': 'statusProcesso',
+  'Responsavel': 'responsavel', 'Diligencia': 'diligencia', 'Descricao': 'descricao',
+  'Pendencias': 'pendencias', 'PrazoDiligencia': 'prazoDiligencia',
+  'ProximoPrazoPadrao': 'proximoPrazoPadrao', 'DataNotificacao': 'dataNotificacao',
+  'UltimaPrescricaoGlobal': 'ultimaPrescricaoGlobal', 'TerapiasJSON': 'terapias',
+  'MedicamentosJSON': 'medicamentos', 'CirurgiasJSON': 'cirurgias',
+  'OutrosItensJSON': 'outrosItens', 'Alteracoes': 'alteracoes'
+};
+const CONTAS_HEADER_TO_KEY_MAP = {
+  'ID': 'id', 'ProcessoID': 'processoId', 'DataMovimentacao': 'dataMovimentacao',
+  'TipoLancamento': 'tipoLancamento', 'Historico': 'historico', 'MovProcesso': 'movProcesso',
+  'NumNFAlvara': 'numNfAlvara', 'ValorAlvara': 'valorAlvara', 'ValorConta': 'valorConta',
+  'TerapiaMedicamentoNome': 'terapiaMedicamentoNome', 'Quantidade': 'quantidade',
+  'MesReferencia': 'mesReferencia', 'AnoReferencia': 'anoReferencia',
+  'Observacoes': 'observacoes', 'Responsavel': 'responsavel'
+};
+
+
+// --- Funções Principais de Serviço Web ---
+
+/**
+ * Serve o arquivo HTML principal quando o URL do script é acessado.
+ */
+function doGet(e) {
+  return HtmlService.createHtmlOutputFromFile('Index')
+    .setTitle('V0.4.0 Performance - Controle de Processos Jurídicos')
+    .setSandboxMode(HtmlService.SandboxMode.IFRAME);
+}
+
+/**
+ * OTIMIZADA: Busca os dados iniciais para o dashboard de forma leve.
+ * Retorna os painéis de status e uma lista LEVE de processos para a busca.
+ * Esta é a principal mudança para o carregamento rápido.
+ * @returns {Object} Um objeto contendo allProcesses (leve), painelAtrasados e painelParaAtrasar.
+ */
+function getInitialDashboardData() {
+  checkRegisteredUserAccess();
+  const cache = CacheService.getScriptCache();
+  const CACHE_KEY = 'dashboard_initial_data_v2'; // Nova chave de cache para a versão leve
+
+  const cachedData = cache.get(CACHE_KEY);
+  if (cachedData) {
+    console.log("Dados de dashboard (leves e pré-calculados) retornados do CACHE.");
+    return JSON.parse(cachedData);
+  }
+
+  try {
+    console.log("Lendo e processando dados da PLANILHA para o dashboard (não havia cache).");
+    // 1. Busca os dados completos para cálculo. Esta continua sendo a única fonte.
+    const allProcessesWithStatus = _fetchAllProcessosFromSheet();
+    // 2. Usa a lista completa para construir os painéis, que são essenciais na carga inicial.
+    const { painelAtrasados, painelParaAtrasar } = _buildDashboardPanels(allProcessesWithStatus);
+
+    // 3. CRÍTICO: Cria a versão "leve" da lista de processos a partir da mesma fonte.
+    // Esta lista é pequena e ideal para a busca do frontend.
+    const lightweightProcesses = allProcessesWithStatus.map(p => {
+      return {
+        id: p.id,
+        numero: p.numero,
+        paciente: p.paciente,
+        genitor: p.genitor,
+        juiz: p.juiz,
+        tipo: p.tipo,
+        calculatedStatus: p.calculatedStatus // Mantém o status calculado, que é leve e útil.
+      };
+    });
+    // 4. Monta o objeto de resultado final, que é PEQUENO e consistente.
+    const result = {
+      allProcesses: lightweightProcesses,
+      painelAtrasados: painelAtrasados,
+      painelParaAtrasar: painelParaAtrasar
+    };
+    // 5. Salva este objeto PEQUENO e final no cache.
+    cache.put(CACHE_KEY, JSON.stringify(result), CACHE_EXPIRATION_SECONDS);
+    // 6. Retorna o objeto pequeno para o frontend.
+    return result;
+  } catch (e) {
+    console.error("Erro em getInitialDashboardData ao processar dados da planilha:", e);
+    throw new Error(`Erro ao buscar e processar dados de processos: ${e.message}`);
+  }
+}
+
+/**
+ *SOB DEMANDA: Busca todos os detalhes de um único processo.
+ *Esta função é chamada pelo frontend quando o usuário clica em um processo.
+ *@param {string} processoId O ID do processo a ser detalhado.
+ *@returns {Object} O objeto de processo completo com todas as suas verificações e contas.
+ */
+function getProcessDetails(processoId) {
+    checkRegisteredUserAccess();
+    if (!processoId) {
+       throw new Error("ID do processo não fornecido.");
+    }
+
+   // 1. Busca os dados básicos do processo
+   const processosSheet = getSheet(PROCESSOS_SHEET_NAME);
+   const { data: processoDataRow, headers: processoHeaders } = findRowById(processosSheet, processoId);
+    if (!processoDataRow) {
+       throw new Error(`Processo com ID ${processoId} não encontrado.`);
+    }
+   let processoCompleto = rowToObject(processoDataRow, processoHeaders, PROCESSOS_HEADER_TO_KEY_MAP);
+   // 2. Anexa o histórico de verificações e contas filtrando pelo ID
+    processoCompleto.verificacoes = _fetchVerificationsForAllProcesses()
+       .filter(v => v.processoId === processoId)
+        .sort((a, b) => new Date(a.data) - new Date(b.data));// Garante a ordem cronológica
+   processoCompleto.contas = _fetchContasForAllProcesses().filter(c => c.processoId === processoId);
+   // 3. Encontra o estado mais recente de cada item (terapias, medicamentos, etc.)
+   let latestTerapias = [];
+   let latestMedicamentos = [];
+   let latestCirurgias = [];
+   let latestOutrosItens = [];
+   let latestPrescricao = null;
+   let found = { terapias: false, medicamentos: false, cirurgias: false, outrosItens: false, prescricao: false };
+    for (let i = processoCompleto.verificacoes.length - 1; i >= 0; i--) {
+       const verif = processoCompleto.verificacoes[i];
+        if (!found.terapias && verif.terapias && verif.terapias.length > 0) {
+           latestTerapias = verif.terapias;
+           found.terapias = true;
+        }
+        if (!found.medicamentos && verif.medicamentos && verif.medicamentos.length > 0) {
+           latestMedicamentos = verif.medicamentos;
+           found.medicamentos = true;
+        }
+        if (!found.cirurgias && verif.cirurgias && verif.cirurgias.length > 0) {
+           latestCirurgias = verif.cirurgias;
+           found.cirurgias = true;
+        }
+        if (!found.outrosItens && verif.outrosItens && verif.outrosItens.length > 0) {
+           latestOutrosItens = verif.outrosItens;
+           found.outrosItens = true;
+        }
+        if (!found.prescricao && verif.ultimaPrescricaoGlobal) {
+           latestPrescricao = verif.ultimaPrescricaoGlobal;
+           found.prescricao = true;
+        }
+        
+        if (found.terapias && found.medicamentos && found.cirurgias && found.outrosItens && found.prescricao) {
+           break;
+        }
+    }
+    
+   // 4. Define o estado atual do processo com os dados mais recentes encontrados
+   processoCompleto.terapias = latestTerapias;
+   processoCompleto.medicamentos = latestMedicamentos;
+   processoCompleto.cirurgias = latestCirurgias;
+   processoCompleto.outrosItens = latestOutrosItens;
+   processoCompleto.ultimaprescricao = latestPrescricao;
+   // 5. Calcula os dados derivados (status e última prestação de contas)
+   const today = new Date();
+   today.setHours(0, 0, 0, 0);
+   processoCompleto = _calculateProcessDerivedData(processoCompleto, today);
+
+   return processoCompleto;
+}
+
+// --- Funções Auxiliares de Cálculo e Construção ---
+
+function _calculateProcessDerivedData(processo, todayDateObject) {
+  try {
+    // CRIA UMA VERSÃO DE "HOJE" BASEADA NO FUSO-HORÁRIO DA PLANILHA
+    const timezone = SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone();
+    const todayString = Utilities.formatDate(new Date(), timezone, "yyyy-MM-dd");
+    const today = new Date(todayString + 'T00:00:00'); // Garante que a data seja no início do dia, no fuso correto
+
+    const allGeneralVerifications = [...(processo.verificacoes || [])]
+      .filter(v => !['Lançamento Contábil de Lote', 'Edição de Conta Individual', 'Exclusão de Conta Individual', 'Verificação Desfeita'].includes(v.statusProcesso));
+    const ultimaVerificacaoGeral = [...allGeneralVerifications].pop() || {};
+    
+    const ultimaVerificacaoComPrazo = [...allGeneralVerifications].reverse().find(
+      v => v.prazoDiligencia || v.proximoPrazoPadrao
+    ) || {};
+
+    let situacao = { text: 'Não iniciado / Prazo Indefinido', color: 'text-gray-950', icon: '' };
+    let prazoTipo = '';
+    let prazoCor = '';
+    
+    const statusProcesso = ultimaVerificacaoGeral.statusProcesso;
+    const isFinalizedStatusDashboard = ['Arquivado', 'Desistência da Parte', 'Cumprimento Extinto'].includes(statusProcesso);
+    
+    const hasAllUnnecessaryTreatments =
+      (ultimaVerificacaoGeral.medicamentos?.every(med => med.desnecessario)) &&
+      (ultimaVerificacaoGeral.terapias?.every(terapia => terapia.desnecessario));
+
+    if (isFinalizedStatusDashboard || ( (ultimaVerificacaoGeral.medicamentos?.length > 0 || ultimaVerificacaoGeral.terapias?.length > 0) && hasAllUnnecessaryTreatments)) {
+      situacao = { text: statusProcesso || 'Tratamentos Concluídos', color: 'text-gray-600', icon: '<i class="fas fa-archive"></i>' };
+    } else {
+      let prazoString = null;
+      if (ultimaVerificacaoComPrazo.prazoDiligencia) {
+        prazoString = ultimaVerificacaoComPrazo.prazoDiligencia;
+        prazoTipo = 'Prazo Diligência';
+        prazoCor = 'font-bold text-emerald-600';
+      } else if (ultimaVerificacaoComPrazo.proximoPrazoPadrao) {
+        prazoString = ultimaVerificacaoComPrazo.proximoPrazoPadrao;
+        prazoTipo = 'Próx. Prazo Padrão';
+        prazoCor = 'font-bold text-blue-600';
+      }
+
+      if (prazoString) {
+        try {
+          // A lógica de comparação de datas é mantida, mas agora contra o "hoje" correto
+          const prazoDate = new Date(prazoString + 'T00:00:00');
+          const diffTime = prazoDate.getTime() - today.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+          if (diffDays < 0) {
+            situacao = { text: 'Atrasado', color: 'text-red-500', icon: '<i class="fas fa-times-circle"></i>' };
+            if (prazoTipo === 'Prazo Diligência') { prazoCor = 'font-bold text-violet-800'; } else { prazoCor = 'font-bold text-red-600'; }
+          } else if (diffDays === 0) {
+            situacao = { text: 'Vence hoje', color: 'text-yellow-500', icon: '<i class="fas fa-exclamation-triangle"></i>' };
+          } else if (diffDays <= 7) {
+            situacao = { text: `Vence em ${diffDays} dia(s)`, color: 'text-yellow-500', icon: '<i class="fas fa-exclamation-triangle"></i>' };
+          } else {
+            situacao = { text: 'Em dia', color: 'text-green-500', icon: '<i class="fas fa-check-circle"></i>' };
+          }
+          
+          const [pYear, pMonth, pDay] = prazoString.split('-');
+          situacao.prazoData = `${pDay}/${pMonth}/${pYear}`;
+          situacao.prazoTipo = prazoTipo;
+        } catch(e) {
+          console.error(`Erro ao processar data '${prazoString}' para o processo ${processo.id}.`);
+        }
+      }
+    }
+    processo.calculatedStatus = situacao;
+    processo.calculatedStatus.prazoCor = prazoCor;
+    
+    // A busca pela última prestação de contas foi removida daqui para simplificar e focar na correção do prazo
+    processo.ultimaPrestacaoContasData = null; 
+
+    return processo;
+  } catch (e) {
+      console.error(`Erro fatal ao calcular dados derivados para o processo ${processo ? processo.id : 'ID desconhecido'}: ${e.message}`);
+      // Retorna o processo sem o status calculado para não quebrar a aplicação
+      processo.calculatedStatus = { text: 'Erro no Cálculo', color: 'text-red-500', icon: '<i class="fas fa-bug"></i>' };
+      return processo;
+  }
+}
+
+/**
+ * CRIA UMA NOVA LINHA NA PLANILHA DE VERIFICAÇÕES.
+ * Esta função estava faltando e causava o erro.
+ * @param {Object} verificationData O objeto com os dados da verificação a ser salva.
+ * @returns {Object} O objeto da verificação com o novo ID gerado.
+ */
+function _createVerificationInSheet(verificationData) {
+  const sheet = getSheet(VERIFICACOES_SHEET_NAME);
+  verificationData.id = Utilities.getUuid(); // Gera um ID único para o registro da verificação
+  
+  // Garante que a data seja um objeto Date para a formatação correta
+  if (typeof verificationData.data === 'string') {
+    verificationData.data = new Date(verificationData.data);
+  }
+
+  const newRow = objectToRow(verificationData, VERIFICACOES_SHEET_HEADERS, VERIFICACOES_HEADER_TO_KEY_MAP);
+  sheet.appendRow(newRow);
+  
+  // Retorna o objeto completo com o ID, caso seja necessário
+  return rowToObject(newRow, VERIFICACOES_SHEET_HEADERS, VERIFICACOES_HEADER_TO_KEY_MAP);
+}
+
+function _buildDashboardPanels(processes) {
+    const painelAtrasados = [];
+    const painelParaAtrasar = [];
+
+    Logger.log(`_buildDashboardPanels: Analisando ${processes.length} processos para montar os painéis.`);
+
+    processes.forEach(processo => {
+        if (!processo.calculatedStatus || !processo.calculatedStatus.text) {
+            return;
+        }
+
+        if (processo.calculatedStatus.text === 'Atrasado') {
+            painelAtrasados.push({
+                id: processo.id,
+                paciente: processo.paciente,
+                numero: processo.numero,
+                prazoTipo: processo.calculatedStatus.prazoTipo || 'N/A',
+                prazoData: processo.calculatedStatus.prazoData || 'N/A',
+                prazoCor: processo.calculatedStatus.prazoCor
+            });
+        } else if (processo.calculatedStatus.text.includes('Vence em') || processo.calculatedStatus.text === 'Vence hoje') {
+            painelParaAtrasar.push({
+                id: processo.id,
+                paciente: processo.paciente,
+                numero: processo.numero,
+                prazoTipo: processo.calculatedStatus.prazoTipo || 'N/A',
+                prazoData: processo.calculatedStatus.prazoData || 'N/A',
+                prazoCor: processo.calculatedStatus.prazoCor
+            });
+        }
+    });
+    
+    Logger.log(`--> Painéis Finalizados: ${painelAtrasados.length} atrasados, ${painelParaAtrasar.length} para atrasar.`);
+
+    return { painelAtrasados, painelParaAtrasar };
+}
+
+function _calculateVerificationDueDates(verificationDateString, prazoDiligenciaString = null) {
+    const timezone = SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone();
+    let effectiveDueDate;
+
+    if (prazoDiligenciaString) {
+        effectiveDueDate = new Date(prazoDiligenciaString + 'T00:00:00');
+    } else {
+        const verificationDate = new Date(verificationDateString + 'T00:00:00');
+        let twoWeeksLater = new Date(verificationDate);
+        twoWeeksLater.setDate(verificationDate.getDate() + 14);
+        let dayOfWeek = twoWeeksLater.getDay();
+        
+        let daysUntilNextMonday = 0;
+        if (dayOfWeek !== 1) {
+            daysUntilNextMonday = (8 - dayOfWeek) % 7;
+        } else {
+            daysUntilNextMonday = 7;
+        }
+        
+        effectiveDueDate = new Date(twoWeeksLater);
+        effectiveDueDate.setDate(twoWeeksLater.getDate() + daysUntilNextMonday);
+    }
+    
+    const proximoPrazo = Utilities.formatDate(effectiveDueDate, timezone, "yyyy-MM-dd");
+    
+    let notificationDate = new Date(effectiveDueDate);
+    notificationDate.setDate(effectiveDueDate.getDate() - 7); 
+    
+    const dataNotificacao = Utilities.formatDate(notificationDate, timezone, "yyyy-MM-dd");
+
+    return { proximoPrazo, dataNotificacao };
+}
+
+// --- Funções Auxiliares Internas (Planilha, Conversão, etc.) ---
+
+function getSheet(sheetName) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    throw new Error(`Planilha "${sheetName}" não encontrada. Por favor, crie-a com os cabeçalhos corretos.`);
+  }
+  return sheet;
+}
+
+function objectToRow(obj, headers, headerToKeyMap) {
+  return headers.map(header => {
+    const key = headerToKeyMap[header];
+    let value = obj[key];
+    const sheetTimeZone = SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone();
+
+    const userDateKeys = ['ultimaprescricao', 'ultimoRelatorio', 'dataMovimentacao', 'dataCirurgia', 'ultimaPrescricaoGlobal'];
+    if (userDateKeys.includes(key) && value && typeof value === 'string' && value.includes('-')) {
+       return "'" + value;
+    }
+
+    const systemDateKeys = ['data', 'prazoDiligencia', 'proximoPrazoPadrao', 'dataNotificacao'];
+    if (systemDateKeys.includes(key) && value) {
+      if (value instanceof Date) {
+        return Utilities.formatDate(value, sheetTimeZone, "yyyy-MM-dd");
+      }
+      return value;
+    }
+
+    if (key === 'movProcesso' && typeof value === 'string' && value.includes('.')) {
+      return "'" + value;
+    }
+
+    if (key === 'numNfAlvara') {
+      return value ? "'" + String(value) : "";
+    }
+
+    if (header.endsWith('JSON')) {
+      return JSON.stringify(value || []);
+    }
+    if (key === 'isAdmin') {
+      return value ? 'VERDADEIRO' : 'FALSO';
+    }
+    if (['ValorAlvara', 'ValorConta'].includes(header) && typeof value === 'number') {
+      return value.toFixed(2).replace('.', ',');
+    }
+    
+    if (value === undefined || value === null) {
+      return '';
+    }
+    
+    return String(value);
+  });
+}
+
+function rowToObject(row, headers, headerToKeyMap) {
+  const obj = {};
+  const sheetTimeZone = SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone();
+  headers.forEach((header, index) => {
+    const key = headerToKeyMap[header];
+    let value = row[index];
+    
+    if (key === 'id' || key === 'processoId') {
+      obj[key] = String(value || '').trim();
+      return;
+    }
+
+    const dateCalculationKeys = ['data', 'prazoDiligencia', 'proximoPrazoPadrao', 'dataNotificacao'];
+    if (dateCalculationKeys.includes(key)) {
+      if (value instanceof Date && !isNaN(value)) {
+        obj[key] = Utilities.formatDate(value, sheetTimeZone, "yyyy-MM-dd");
+      } else if (typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}/)) {
+        obj[key] = value.substring(0, 10);
+      } else {
+        obj[key] = null;
+      }
+      return;
+    }
+
+    if (header.endsWith('JSON')) {
+      try {
+        obj[key] = value ? JSON.parse(value) : [];
+      } catch (e) {
+        console.error(`Erro ao parsear JSON para ${key} (valor: "${value}"):`, e);
+        obj[key] = [];
+      }
+      return;
+    }
+    
+    if (key === 'isAdmin') {
+      obj[key] = (String(value).toUpperCase() === 'VERDADEIRO');
+      return;
+    }
+
+    if (['ValorAlvara', 'ValorConta'].includes(header)) {
+      obj[key] = parseFloat(String(value).replace(',', '.') || 0);
+      return;
+    }
+
+    obj[key] = String(value || '');
+  });
+  return obj;
+}
+
+function findRowById(sheet, id) {
+  const allData = sheet.getDataRange().getValues();
+  const headers = allData[0];
+  const idColIndex = headers.indexOf('ID');
+  if (idColIndex === -1) throw new Error("Coluna 'ID' não encontrada na planilha.");
+  for (let i = 1; i < allData.length; i++) {
+    if (String(allData[i][idColIndex]).trim() === String(id).trim()) {
+      return {
+        index: i + 1,
+        data: allData[i],
+        headers: headers
+      };
+    }
+  }
+  return { index: -1, data: null, headers: headers };
+}
+
+function logToHistorySheet(processId, processNumero, actionType, oldDetails = {}, newDetails = {}) {
+  try {
+    const sheet = getSheet(HISTORY_SHEET_NAME);
+    const activeUserEmail = Session.getActiveUser().getEmail() || 'Desconhecido';
+    sheet.appendRow([
+      new Date(),
+      activeUserEmail,
+      processId,
+      processNumero,
+      actionType,
+      JSON.stringify(oldDetails),
+      JSON.stringify(newDetails)
+    ]);
+  } catch (e) {
+    console.error("Erro ao logar para a aba de histórico:", e);
+  }
+}
+
+// --- Funções de Validação e Acesso ---
+
+function checkAdminAccess() {
+  const authStatus = getActiveUserRegisteredInfo();
+  if (!authStatus.isAdmin) {
+    throw new Error('Acesso negado. Apenas administradores podem realizar esta ação.');
+  }
+}
+
+function checkRegisteredUserAccess() {
+  const authStatus = getActiveUserRegisteredInfo();
+  if (!authStatus.isDomainUser) {
+    throw new Error('Acesso negado. Apenas usuários da instituição podem visualizar os dados.');
+  }
+}
+
+function checkEditorAccess() {
+  const authStatus = getActiveUserRegisteredInfo();
+  if (!authStatus.isRegistered) {
+    throw new Error('Acesso negado. Apenas usuários cadastrados podem realizar esta ação.');
+  }
+}
+
+function validateProcessPayload(payload) {
+  if (!payload || typeof payload !== 'object') throw new Error('Dados do processo inválidos ou ausentes.');
+  if (!payload.numero || payload.numero.trim().length < MIN_PROCESS_NUMBER_LENGTH) throw new Error(`Número do processo é obrigatório e deve ter no mínimo ${MIN_PROCESS_NUMBER_LENGTH} caracteres.`);
+  if (!payload.paciente?.trim()) throw new Error('Nome do paciente é obrigatório.');
+  if (!payload.juiz?.trim()) throw new Error('Nome do Juiz(a) é obrigatório.');
+  const tiposProcessoValidos = getAppConfiguration().tiposDeProcesso;
+  if (!tiposProcessoValidos.includes(payload.tipo)) throw new Error('Tipo de processo inválido.');
+  if (payload.ultimaprescricao && !/^\d{4}-\d{2}-\d{2}$/.test(payload.ultimaprescricao)) throw new Error('Data da última prescrição inválida. Use o formato "YYYY-MM-DD".');
+  ['verificacoes', 'terapias', 'medicamentos', 'cirurgias', 'outrosItens'].forEach(key => {
+    if (!Array.isArray(payload[key])) payload[key] = [];
+  });
+}
+
+// --- Funções Internas de Busca de Dados ---
+
+function _fetchProcessBasicDataFromSheet() {
+  try {
+    const sheet = getSheet(PROCESSOS_SHEET_NAME);
+    const allValues = sheet.getDataRange().getValues();
+    if (allValues.length <= 1) return [];
+    const headers = allValues.shift();
+    const basicProcesses = allValues.map(row => rowToObject(row, headers, PROCESSOS_HEADER_TO_KEY_MAP));
+    return basicProcesses;
+  } catch (error) {
+    console.error("Erro em _fetchProcessBasicDataFromSheet:", error);
+    throw new Error(`Erro ao buscar dados básicos de processos: ${error.message}`);
+  }
+}
+
+function _fetchVerificationsForAllProcesses() {
+  try {
+    const sheet = getSheet(VERIFICACOES_SHEET_NAME);
+    const allValues = sheet.getDataRange().getValues();
+    if (allValues.length <= 1) return [];
+    const headers = allValues.shift();
+    const verifications = allValues.map(row => rowToObject(row, headers, VERIFICACOES_HEADER_TO_KEY_MAP));
+    return verifications;
+  } catch (error) {
+    console.error("Erro em _fetchVerificationsForAllProcesses:", error);
+    throw new Error(`Erro ao buscar dados de verificações: ${error.message}`);
+  }
+}
+
+function _fetchContasForAllProcesses() {
+  try {
+    const sheet = getSheet(CONTAS_SHEET_NAME);
+    const allValues = sheet.getDataRange().getValues();
+    if (allValues.length <= 1) return [];
+    const headers = allValues.shift();
+    const contas = allValues.map(row => rowToObject(row, headers, CONTAS_HEADER_TO_KEY_MAP));
+    return contas;
+  } catch (error) {
+    console.error("Erro em _fetchContasForAllProcesses:", error);
+    throw new Error(`Erro ao buscar dados de contas: ${error.message}`);
+  }
+}
+
+function _fetchAllProcessosFromSheet() {
+  try {
+    const basicProcesses = _fetchProcessBasicDataFromSheet();
+    if (basicProcesses.length === 0) return [];
+
+    const allVerifications = _fetchVerificationsForAllProcesses();
+
+    const verificationsByProcessId = allVerifications.reduce((acc, v) => {
+        (acc[v.processoId] = acc[v.processoId] || []).push(v);
+        return acc;
+    }, {});
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const processesWithFullData = basicProcesses.map(processo => {
+      processo.verificacoes = verificationsByProcessId[processo.id] || [];
+      return _calculateProcessDerivedData(processo, today);
+    });
+    
+    return processesWithFullData;
+
+  } catch (error) {
+    console.error("Erro em _fetchAllProcessosFromSheet:", error);
+    throw error;
+  }
+}
+
+// --- CRUD de Processos ---
+
+function createProcessoInSheet(payload) {
+  checkEditorAccess();
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+
+  try {
+    validateProcessPayload(payload);
+
+    const processosSheet = getSheet(PROCESSOS_SHEET_NAME);
+    payload.id = Utilities.getUuid();
+
+    const basicProcessData = {
+      id: payload.id,
+      numero: payload.numero,
+      paciente: payload.paciente,
+      genitor: payload.genitor,
+      juiz: payload.juiz,
+      tipo: payload.tipo,
+      ultimaprescricao: payload.ultimaprescricao
+    };
+
+    const newProcessRow = objectToRow(basicProcessData, PROCESSOS_SHEET_HEADERS, PROCESSOS_HEADER_TO_KEY_MAP);
+    processosSheet.appendRow(newProcessRow);
+
+    const initialVerificationDateString = new Date().toISOString().split('T')[0];
+    const { proximoPrazo, dataNotificacao } = _calculateVerificationDueDates(initialVerificationDateString, null);
+
+    const initialVerification = {
+      processoId: payload.id,
+      data: initialVerificationDateString,
+      statusProcesso: payload.statusInicial,
+      diligencia: 'Pendente',
+      responsavel: getActiveUserRegisteredInfo().nome,
+      descricao: 'Registro inicial do processo.',
+      pendencias: '',
+      prazoDiligencia: '',
+      proximoPrazoPadrao: proximoPrazo,
+      dataNotificacao: dataNotificacao,
+      terapias: payload.terapias || [],
+      medicamentos: payload.medicamentos || [],
+      cirurgias: payload.cirurgias || [],
+      outrosItens: payload.outrosItens || [],
+      ultimaPrescricaoGlobal: payload.ultimaprescricao || null,
+      alteracoes: 'Processo registrado inicialmente.'
+    };
+    _createVerificationInSheet(initialVerification);
+
+    invalidateProcessosCache();
+    logToHistorySheet(payload.id, payload.numero, 'Processo Criado', {}, payload);
+
+    return getProcessDetails(payload.id);
+
+  } catch (error) {
+    console.error("Erro em createProcessoInSheet:", error);
+    throw new Error(`Erro ao criar processo: ${error.message}`);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function updateProcessoInSheet(payload) {
+  checkAdminAccess();
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    if (!payload.id) throw new Error('ID do processo inválido para atualização.');
+
+    const processosSheet = getSheet(PROCESSOS_SHEET_NAME);
+    const { index: processoRowIndex, data: oldData, headers: processoHeaders } = findRowById(processosSheet, payload.id);
+    if (processoRowIndex === -1) throw new Error(`Processo com ID ${payload.id} não encontrado para atualização.`);
+    
+    const oldProcessDetails = rowToObject(oldData, processoHeaders, PROCESSOS_HEADER_TO_KEY_MAP);
+    
+    const updatedProcessRowValues = objectToRow(payload, PROCESSOS_SHEET_HEADERS, PROCESSOS_HEADER_TO_KEY_MAP);
+    processosSheet.getRange(processoRowIndex, 1, 1, updatedProcessRowValues.length).setValues([updatedProcessRowValues]);
+
+    const allVerifications = _fetchVerificationsForAllProcesses().filter(v => v.processoId === payload.id);
+    const ultimaVerificacaoReal = [...allVerifications].reverse().find(v => 
+        !['Lançamento Contábil de Lote', 'Edição de Conta Individual', 'Exclusão de Conta Individual', 'Lote de Contas Desfeito', 'Verificação Desfeita'].includes(v.statusProcesso)
+    ) || {};
+
+    const newVerificationData = { ...ultimaVerificacaoReal };
+
+    newVerificationData.data = new Date();
+    newVerificationData.responsavel = getActiveUserRegisteredInfo().nome;
+    
+    newVerificationData.statusProcesso = payload.statusInicial || ultimaVerificacaoReal.statusProcesso || 'Status não definido';
+    newVerificationData.diligencia = 'N/A (Alteração de Cadastro)';
+    newVerificationData.descricao = 'Os tratamentos e/ou dados do processo foram atualizados por um administrador.';
+    newVerificationData.pendencias = ultimaVerificacaoReal.pendencias || 'Nenhuma';
+    newVerificationData.prazoDiligencia = ultimaVerificacaoReal.prazoDiligencia || null;
+
+    newVerificationData.terapias = payload.terapias || [];
+    newVerificationData.medicamentos = payload.medicamentos || [];
+    newVerificationData.cirurgias = payload.cirurgias || [];
+    newVerificationData.outrosItens = payload.outrosItens || [];
+    newVerificationData.ultimaPrescricaoGlobal = payload.ultimaprescricao || null;
+    
+    newVerificationData.alteracoes = getChangesSummary(oldProcessDetails, payload.terapias, payload.medicamentos, payload.cirurgias, payload.outrosItens, payload.ultimaprescricao);
+
+    _createVerificationInSheet(newVerificationData);
+
+    invalidateProcessosCache();
+    logToHistorySheet(payload.id, payload.numero, 'Cadastro do Processo Alterado', oldProcessDetails, payload);
+
+    return getProcessDetails(payload.id);
+
+  } catch (error) {
+    console.error("Erro em updateProcessoInSheet:", error);
+    throw new Error(`Erro ao atualizar processo: ${error.message}`);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function deleteProcessoInSheet(idToDelete) {
+  checkAdminAccess();
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    const processosSheet = getSheet(PROCESSOS_SHEET_NAME);
+    const verificacoesSheet = getSheet(VERIFICACOES_SHEET_NAME);
+    const contasSheet = getSheet(CONTAS_SHEET_NAME);
+    
+    const { index: processoRowIndex, data: processoDataRow, headers: processoHeaders } = findRowById(processosSheet, idToDelete);
+    if (processoRowIndex === -1) throw new Error(`Processo com ID ${idToDelete} não encontrado para exclusão.`);
+    const deletedProcessDetails = rowToObject(processoDataRow, processoHeaders, PROCESSOS_HEADER_TO_KEY_MAP);
+    
+    const allVerifications = verificacoesSheet.getDataRange().getValues();
+    const verifHeaders = allVerifications.shift();
+    const verifProcessoIdColIndex = verifHeaders.indexOf('ProcessoID');
+    const verifRowsToDelete = [];
+    for (let i = 0; i < allVerifications.length; i++) {
+      if (String(allVerifications[i][verifProcessoIdColIndex]).trim() === String(idToDelete).trim()) {
+        verifRowsToDelete.push(i + 2);
+      }
+    }
+    verifRowsToDelete.sort((a, b) => b - a).forEach(rowIndex => verificacoesSheet.deleteRow(rowIndex));
+    
+    const allContas = contasSheet.getDataRange().getValues();
+    const contasHeaders = allContas.shift();
+    const contasProcessoIdColIndex = contasHeaders.indexOf('ProcessoID');
+    const contasRowsToDelete = [];
+    for (let i = 0; i < allContas.length; i++) {
+      if (String(allContas[i][contasProcessoIdColIndex]).trim() === String(idToDelete).trim()) {
+        contasRowsToDelete.push(i + 2);
+      }
+    }
+    contasRowsToDelete.sort((a, b) => b - a).forEach(rowIndex => contasSheet.deleteRow(rowIndex));
+    
+    processosSheet.deleteRow(processoRowIndex);
+    
+    invalidateProcessosCache();
+    logToHistorySheet(idToDelete, deletedProcessDetails.numero, 'Processo Excluído (Total)', deletedProcessDetails, {});
+    return `Processo com ID ${idToDelete} e todos os dados relacionados excluídos com sucesso.`;
+  } catch (error) {
+    console.error("Erro em deleteProcessoInSheet:", error);
+    throw new Error(`Erro ao excluir processo: ${error.message}`);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function salvarNovaVerificacao(processoId, payload) {
+  checkEditorAccess();
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    if (!processoId) throw new Error("ID do processo não fornecido para salvar verificação.");
+
+    const today = new Date();
+    const { proximoPrazo, dataNotificacao } = _calculateVerificationDueDates(today.toISOString().slice(0, 10), payload.prazoDiligencia);
+
+    const newVerificationData = {
+      processoId: processoId,
+      data: today,
+      responsavel: getActiveUserRegisteredInfo().nome,
+      statusProcesso: payload.statusProcesso,
+      diligencia: payload.diligencia,
+      descricao: payload.descricao,
+      pendencias: payload.pendencias,
+      prazoDiligencia: payload.prazoDiligencia,
+      proximoPrazoPadrao: proximoPrazo,
+      dataNotificacao: dataNotificacao,
+      terapias: payload.terapias,
+      medicamentos: payload.medicamentos,
+      cirurgias: payload.cirurgias,
+      outrosItens: payload.outrosItens,
+      ultimaPrescricaoGlobal: payload.prescricaoData,
+      alteracoes: payload.alteracoes
+    };
+
+    _createVerificationInSheet(newVerificationData);
+
+    invalidateProcessosCache();
+    logToHistorySheet(processoId, null, 'Nova Verificação Salva', {}, payload);
+
+    return getProcessDetails(processoId);
+
+  } catch (error) {
+    console.error("Erro em salvarNovaVerificacao:", error);
+    throw new Error(`Erro ao salvar nova verificação: ${error.message}`);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function undoLastVerification(processId) {
+ checkAdminAccess();
+ const lock = LockService.getScriptLock();
+ lock.waitLock(30000);
+ try {
+  const processosSheet = getSheet(PROCESSOS_SHEET_NAME);
+  const verificacoesSheet = getSheet(VERIFICACOES_SHEET_NAME);
+
+  const { data: processoDataRow, headers: processoHeaders } = findRowById(processosSheet, processId);
+  if (!processoDataRow) throw new Error(`Processo com ID ${processId} não encontrado.`);
+  const processoObj = rowToObject(processoDataRow, processoHeaders, PROCESSOS_HEADER_TO_KEY_MAP);
+
+  const allVerifications = _fetchVerificationsForAllProcesses().filter(v => v.processoId === processId);
+  const generalVerifications = allVerifications
+   .filter(v => !['Lançamento Contábil de Lote', 'Edição de Conta Individual', 'Exclusão de Conta Individual', 'Edição de Conta Antiga', 'Exclusão de Conta Antiga', 'Lote de Contas Desfeito', 'Verificação Desfeita'].includes(v.statusProcesso))
+   .sort((a, b) => new Date(a.data) - new Date(b.data));
+
+  if (generalVerifications.length <= 1) {
+   throw new Error("Não é possível desfazer o registro histórico inicial ou não há verificações gerais suficientes para desfazer.");
+  }
+
+  const lastGeneralVerification = generalVerifications.pop();
+  const secondLastGeneralVerification = generalVerifications.pop() || {};
+
+  const allVerifsRaw = verificacoesSheet.getDataRange().getValues();
+  const verifHeaders = allVerifsRaw[0];
+  const verifIdColIndex = verifHeaders.indexOf('ID');
+  let rowToDeleteIndex = -1;
+
+  for (let i = 1; i < allVerifsRaw.length; i++) {
+   if (String(allVerifsRaw[i][verifIdColIndex]).trim() === String(lastGeneralVerification.id).trim()) {
+    rowToDeleteIndex = i + 1;
+    break;
+   }
+  }
+
+  if (rowToDeleteIndex === -1) {
+   throw new Error("A última verificação geral não foi encontrada na planilha para exclusão.");
+  }
+  verificacoesSheet.deleteRow(rowToDeleteIndex);
+  
+  invalidateProcessosCache();
+  logToHistorySheet(processId, processoObj.numero, 'Verificação Desfeita (Geral)', lastGeneralVerification, secondLastGeneralVerification);
+
+  return getProcessDetails(processId);
+
+ } catch (error) {
+  console.error("Erro em undoLastVerification:", error);
+  throw new Error(`Erro ao desfazer última verificação: ${error.message}`);
+ } finally {
+  lock.releaseLock();
+ }
+}
+
+// --- CRUD de Usuários e Autenticação ---
+
+function _getUsersData() {
+  try {
+    const sheet = getSheet(USERS_SHEET_NAME);
+    const allValues = sheet.getDataRange().getValues();
+    if (allValues.length <= 1) return [];
+    const headers = allValues.shift();
+    return allValues.map(row => rowToObject(row, headers, USER_HEADER_TO_KEY_MAP));
+  } catch (error) {
+    console.error("Erro em _getUsersData:", error);
+    throw new Error(`Erro interno ao ler a planilha de usuários: ${error.message}`);
+  }
+}
+
+function getActiveUserRegisteredInfo() {
+  try {
+    const activeUserEmail = Session.getActiveUser().getEmail();
+    const lowerCaseEmail = activeUserEmail ? activeUserEmail.toLowerCase().trim() : null;
+
+    if (!lowerCaseEmail) {
+      return { isRegistered: false, isAdmin: false, isDomainUser: false, email: null, nome: 'Visitante' };
+    }
+
+    const allUsers = _getUsersData();
+    const userFound = allUsers.find(user => String(user.email || '').toLowerCase().trim() === lowerCaseEmail);
+
+    const isDomainUser = lowerCaseEmail.endsWith('@' + INSTITUTION_DOMAIN);
+
+    if (userFound) {
+      return {
+        isRegistered: true,
+        isAdmin: userFound.isAdmin,
+        isDomainUser: true,
+        email: userFound.email,
+        nome: userFound.nome,
+        id: userFound.id
+      };
+    } else if (isDomainUser) {
+      return {
+        isRegistered: false,
+        isAdmin: false,
+        isDomainUser: true,
+        email: activeUserEmail,
+        nome: `Consulta (${activeUserEmail.split('@')[0]})`,
+        id: null
+      };
+    } else {
+      return {
+        isRegistered: false,
+        isAdmin: false,
+        isDomainUser: false,
+        email: activeUserEmail,
+        nome: 'Visitante',
+        id: null
+      };
+    }
+  } catch (e) {
+    console.error("Erro em getActiveUserRegisteredInfo:", e);
+    throw new Error(`Erro ao identificar usuário: ${e.message}`);
+  }
+}
+
+function getAllUsers() {
+  checkAdminAccess();
+  return _getUsersData();
+}
+
+function registerNewUser(email, name) {
+  checkAdminAccess(); 
+  if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Formato de e-mail inválido.');
+  if (typeof name !== 'string' || name.trim().length === 0) throw new Error('Nome do usuário é obrigatório.');
+  
+  const userExists = _getUsersData().some(user => user.email.toLowerCase().trim() === email.toLowerCase().trim());
+  if (userExists) throw new Error(`Usuário com e-mail "${email}" já está cadastrado.`);
+  
+  const sheet = getSheet(USERS_SHEET_NAME);
+  const newUser = { id: Utilities.getUuid(), email, nome: name, isAdmin: false };
+  sheet.appendRow(objectToRow(newUser, USER_SHEET_HEADERS, USER_HEADER_TO_KEY_MAP));
+  invalidateUsersCache();
+  return newUser;
+}
+
+function toggleUserAdminStatus(userId, newIsAdminStatus) {
+  checkAdminAccess();
+  const sheet = getSheet(USERS_SHEET_NAME);
+  const { index, data, headers } = findRowById(sheet, userId);
+  if (index === -1) throw new Error(`Usuário com ID ${userId} não encontrado.`);
+  const userToUpdate = rowToObject(data, headers, USER_HEADER_TO_KEY_MAP);
+  if (userToUpdate.email.toLowerCase().trim() === Session.getActiveUser().getEmail().toLowerCase().trim()) {
+    throw new Error('Um administrador não pode remover o próprio status de administrador.');
+  }
+  userToUpdate.isAdmin = newIsAdminStatus;
+  const updatedRowValues = objectToRow(userToUpdate, USER_SHEET_HEADERS, USER_HEADER_TO_KEY_MAP);
+  sheet.getRange(index, 1, 1, updatedRowValues.length).setValues([updatedRowValues]);
+  invalidateUsersCache();
+  return userToUpdate;
+}
+
+function deleteUser(userId) {
+  checkAdminAccess();
+  const sheet = getSheet(USERS_SHEET_NAME);
+  const { index, data, headers } = findRowById(sheet, userId);
+  if (index === -1) throw new Error(`Usuário com ID ${userId} não encontrado para exclusão.`);
+  const userToDelete = rowToObject(data, headers, USER_HEADER_TO_KEY_MAP);
+  if (userToDelete.email.toLowerCase().trim() === Session.getActiveUser().getEmail().toLowerCase().trim()) {
+    throw new Error('Um administrador não pode excluir o próprio usuário logado.');
+  }
+  sheet.deleteRow(index);
+  invalidateUsersCache();
+  return `Usuário com ID ${userId} excluído com sucesso.`;
+}
+
+// --- Funções de Prestação de Contas ---
+
+function _createContaInSheet(contaData) {
+  const sheet = getSheet(CONTAS_SHEET_NAME);
+  contaData.id = Utilities.getUuid();
+  if (!contaData.processoId) {
+    throw new Error("ID do processo é obrigatório para salvar um lançamento contábil.");
+  }
+  const newRow = objectToRow(contaData, CONTAS_SHEET_HEADERS, CONTAS_HEADER_TO_KEY_MAP);
+  sheet.appendRow(newRow);
+  return rowToObject(newRow, CONTAS_SHEET_HEADERS, CONTAS_HEADER_TO_KEY_MAP);
+}
+
+function salvarLoteDeContas(processoId, contasParaSalvar) {
+ checkEditorAccess();
+ if (!processoId || !Array.isArray(contasParaSalvar) || contasParaSalvar.length === 0) {
+  throw new Error("Dados inválidos para salvar o lote de contas.");
+ }
+ const lock = LockService.getScriptLock();
+ lock.waitLock(30000);
+ try {
+  const processosSheet = getSheet(PROCESSOS_SHEET_NAME);
+  const { data, headers } = findRowById(processosSheet, processoId);
+  if (!data) throw new Error(`Processo com ID ${processoId} não encontrado.`);
+  let processoObj = rowToObject(data, headers, PROCESSOS_HEADER_TO_KEY_MAP);
+  const currentUser = getActiveUserRegisteredInfo().nome;
+
+  for (const conta of contasParaSalvar) {
+   const contaToSave = {
+    processoId: processoId,
+    dataMovimentacao: conta.detalhes.dataMovimentacao,
+    tipoLancamento: conta.tipo,
+    historico: conta.detalhes.historico,
+    movProcesso: conta.detalhes.movProcesso,
+    numNfAlvara: conta.detalhes.numNfAlvara,
+    valorAlvara: conta.detalhes.valorAlvara,
+    valorConta: conta.detalhes.valorConta,
+    terapiaMedicamentoNome: conta.detalhes.terapia || conta.detalhes.outrosNomeManual || '',
+    quantidade: conta.detalhes.quantidade || '',
+    mesReferencia: conta.detalhes.mesReferencia || '',
+    anoReferencia: conta.detalhes.anoReferencia || '',
+    observacoes: conta.detalhes.observacoes || '',
+    responsavel: currentUser
+   };
+   _createContaInSheet(contaToSave);
+  }
+
+  invalidateProcessosCache();
+  logToHistorySheet(processoId, processoObj.numero, 'Lote de Prestações de Contas Salvo', {}, { count: contasParaSalvar.length });
+
+  return getProcessDetails(processoId);
+
+ } catch (error) {
+  console.error("Erro em salvarLoteDeContas:", error);
+  throw new Error(`Erro ao salvar lote de contas: ${error.message}`);
+ } finally {
+  lock.releaseLock();
+ }
+}
+
+function updateIndividualConta(processId, contaId, updatedContaData) {
+  checkEditorAccess();
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    const contasSheet = getSheet(CONTAS_SHEET_NAME);
+    const { index: contaRowIndex, data: oldContaDataRow, headers: contasHeaders } = findRowById(contasSheet, contaId);
+    if (contaRowIndex === -1) {
+      throw new Error(`Lançamento contábil com ID ${contaId} não encontrado para atualização.`);
+    }
+    const oldContaDetails = rowToObject(oldContaDataRow, contasHeaders, CONTAS_HEADER_TO_KEY_MAP);
+
+    const updatedContaRowValues = objectToRow(updatedContaData, CONTAS_SHEET_HEADERS, CONTAS_HEADER_TO_KEY_MAP);
+    contasSheet.getRange(contaRowIndex, 1, 1, updatedContaRowValues.length).setValues([updatedContaRowValues]);
+
+    const processosSheet = getSheet(PROCESSOS_SHEET_NAME);
+    const { data: processoOldData, headers: processoHeaders } = findRowById(processosSheet, processId);
+    let processoObj = rowToObject(processoOldData, processoHeaders, PROCESSOS_HEADER_TO_KEY_MAP);
+
+    invalidateProcessosCache();
+    logToHistorySheet(processId, processoObj.numero, 'Conta Individual Editada', oldContaDetails, updatedContaData);
+
+    return getProcessDetails(processId);
+
+  } catch (e) {
+    console.error("Erro em updateIndividualConta:", e);
+    throw new Error(`Erro ao atualizar conta individual: ${e.message}`);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function deleteIndividualConta(processId, contaId) {
+  checkAdminAccess();
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    const contasSheet = getSheet(CONTAS_SHEET_NAME);
+    const { index: contaRowIndex, data: oldContaDataRow, headers: contasHeaders } = findRowById(contasSheet, contaId);
+    if (contaRowIndex === -1) {
+      throw new Error(`Lançamento contábil com ID ${contaId} não encontrado para exclusão.`);
+    }
+    const deletedConta = rowToObject(oldContaDataRow, contasHeaders, CONTAS_HEADER_TO_KEY_MAP);
+    
+    contasSheet.deleteRow(contaRowIndex);
+
+    const processosSheet = getSheet(PROCESSOS_SHEET_NAME);
+    const { data: processoOldData, headers: processoHeaders } = findRowById(processosSheet, processId);
+    let processoObj = rowToObject(processoOldData, processoHeaders, PROCESSOS_HEADER_TO_KEY_MAP);
+    
+    invalidateProcessosCache();
+    logToHistorySheet(processId, processoObj.numero, 'Conta Individual Excluída', deletedConta, {});
+
+    return getProcessDetails(processId);
+
+  } catch (e) {
+    console.error("Erro em deleteIndividualConta:", e);
+    throw new Error(`Erro ao excluir conta individual: ${e.message}`);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// --- Funções de Cache e Sessão de Usuário ---
+
+/**
+ * OTIMIZADA: Invalida o cache de dados do dashboard.
+ * Garante que, na próxima carga, os dados mais recentes sejam buscados da planilha.
+ */
+function invalidateProcessosCache() {
+  const cache = CacheService.getScriptCache();
+  cache.remove('dashboard_initial_data_v2'); // Remove a nova chave leve
+  console.log("Cache de processos e dashboard invalidado.");
+}
+
+function invalidateUsersCache() {
+  CacheService.getScriptCache().remove('allUsers');
+  console.log("Cache de usuários invalidado.");
+}
+
+function recordUserActivity(userEmail, userName, processId, processNumero, processPaciente) {
+  checkRegisteredUserAccess();
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(ACTIVE_SESSIONS_SHEET_NAME);
+    if (!sheet) {
+      sheet = ss.insertSheet(ACTIVE_SESSIONS_SHEET_NAME);
+      sheet.appendRow(ACTIVE_SESSIONS_SHEET_HEADERS).setFrozenRows(1);
+    }
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    const emailColIndex = headers.indexOf('UserEmail');
+    let rowIndex = -1;
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][emailColIndex] === userEmail) {
+        rowIndex = i + 1;
+        break;
+      }
+    }
+    const now = new Date();
+    const newRow = [userEmail, userName, now, processId, processNumero, processPaciente];
+    if (rowIndex !== -1) {
+      sheet.getRange(rowIndex, 1, 1, newRow.length).setValues([newRow]);
+    } else {
+      sheet.appendRow(newRow);
+    }
+  } catch (e) {
+    console.error("Erro em recordUserActivity:", e);
+  }
+}
+
+function getRecentUserActivity() {
+  checkRegisteredUserAccess();
+  let sheet;
+  try {
+    sheet = getSheet(ACTIVE_SESSIONS_SHEET_NAME);
+  } catch (e) {
+    return [];
+  }
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return [];
+  const headers = data.shift();
+  const activeThresholdMinutes = 5;
+  const now = new Date();
+  const recentActivities = [];
+  data.forEach(row => {
+    const lastActivityCol = headers.indexOf('LastActivityTimestamp');
+    if (lastActivityCol === -1 || !row[lastActivityCol]) return;
+    const lastActivity = new Date(row[lastActivityCol]);
+    if (isNaN(lastActivity.getTime())) return;
+    const minutesSinceLastActivity = (now.getTime() - lastActivity.getTime()) / (1000 * 60);
+    if (minutesSinceLastActivity <= activeThresholdMinutes) {
+      recentActivities.push({
+        userEmail: row[headers.indexOf('UserEmail')],
+        userName: row[headers.indexOf('UserName')],
+        lastActivityTimestamp: lastActivity.toISOString(),
+        lastProcessId: row[headers.indexOf('LastProcessId')],
+        lastProcessNumero: row[headers.indexOf('LastProcessNumero')],
+        lastProcessPaciente: row[headers.indexOf('LastProcessPaciente')]
+      });
+    }
+  });
+  return recentActivities;
+}
+
+// --- Configuração da Aplicação ---
+
+function getAppConfiguration() {
+  return {
+    tiposDeProcesso: ['Ação Coletiva', 'Mandado de Segurança', 'Indenizatória', 'Tributária', 'Previdenciária', 'Cível (Geral)', 'Saúde'],
+    statusDeProcesso: ['Cumprimento de Sentença', 'Cumprimento Provisório de Sentença', 'Conhecimento', 'Recurso Inominado', 'Apelação', 'Agravo', 'Suspenso', 'Arquivado', 'Cumprimento Extinto', 'Desistência da Parte'],
+    statusInicialDeProcesso: ['Não iniciado', 'Cumprimento de Sentença', 'Cumprimento Provisório de Sentença', 'Conhecimento', 'Recurso Inominado', 'Apelação', 'Agravo', 'Suspenso', 'Arquivado', 'Cumprimento Extinto', 'Desistência da Parte'],
+    diligencias: ['Concluída', 'Pendente', 'Infrutífera'],
+    tiposDeTerapia: ['Consulta neuro', 'Equoterapia', 'Fisioterapia', 'Fonoaudiologia ABA', 'Fonoaudiologia', 'Musicoterapia', 'Neurofuncional', 'Psicologia/Intervenção ABA', 'Psicologia/Intervenção DENVER', 'Psicomotricidade', 'Psicopedagogia', 'Psicoterapia', 'Terapia Ocupacional', 'Terapia Ocupacional com integração sensorial', 'Terapia Cognitivo Comportamental'],
+    statusDeCirurgia: ['Agendada', 'Realizada', 'Cancelada']
+  };
+}
+
+// --- Funções de Geração de Relatórios e Resumos ---
+
+function generateProcessReportSummary() {
+    checkRegisteredUserAccess();
+    const allProcesses = _fetchAllProcessosFromSheet(); 
+    const summary = {
+        totalProcesses: allProcesses.length,
+        byStatus: {},
+        byType: {}
+    };
+    allProcesses.forEach(p => {
+        const ultimaVerificacao = [...(p.verificacoes || [])].pop() || {};
+        const status = ultimaVerificacao.statusProcesso || 'Não Iniciado';
+        const type = p.tipo || 'Desconhecido';
+        summary.byStatus[status] = (summary.byStatus[status] || 0) + 1;
+        summary.byType[type] = (summary.byType[type] || 0) + 1;
+    });
+    return summary;
+}
+
+// --- Função Auxiliar de Comparação para Histórico ---
+
+function getChangesSummary(oldData, newTerapias, newMeds, newSurgeries, newOthers, newPrescription) {
+  let changes = [];
+  const oldTerapias = oldData.terapias || [];
+  const oldMedicamentos = oldData.medicamentos || [];
+  const oldCirurgias = oldData.cirurgias || [];
+  const oldOutrosItens = oldData.outrosItens || [];
+
+  const oldTerapiasMap = new Map(oldTerapias.map(t => [t.nome, t]));
+  const oldMedicamentosMap = new Map(oldMedicamentos.map(m => [m.nome, m]));
+  const oldCirurgiasMap = new Map(oldCirurgias.map(c => [c.nome, c]));
+  const oldOutrosItensMap = new Map(oldOutrosItens.map(o => [o.nome, o]));
+
+  (newTerapias || []).forEach(nT => {
+    const oT = oldTerapiasMap.get(nT.nome);
+    if (!oT) {
+      changes.push(`Terapia "${nT.nome}" adicionada.`);
+    } else {
+      if (String(oT.quantidade) !== String(nT.quantidade)) changes.push(`Qtd. total da terapia "${nT.nome}" alterada de ${oT.quantidade} para ${nT.quantidade}.`);
+      if (String(oT.ultimoRelatorio || '') !== String(nT.ultimoRelatorio || '')) changes.push(`Último relatório da terapia "${nT.nome}" alterado para ${nT.ultimoRelatorio || 'N/A'}.`);
+      if (String(oT.clinicaProfissional || '') !== String(nT.clinicaProfissional || '')) changes.push(`Clínica/Profissional da terapia "${nT.nome}" alterada para "${nT.clinicaProfissional || 'N/A'}".`);
+      if (oT.desnecessario !== nT.desnecessario) changes.push(`Status "desnecessário" da terapia "${nT.nome}" alterado para ${nT.desnecessario ? 'Sim' : 'Não'}.`);
+    }
+  });
+  oldTerapias.forEach(oT => {
+    if (!newTerapias.some(nT => nT.nome === oT.nome)) {
+      changes.push(`Terapia "${oT.nome}" removida.`);
+    }
+  });
+
+  (newMeds || []).forEach(nM => {
+    const oM = oldMedicamentosMap.get(nM.nome);
+    if (!oM) {
+      changes.push(`Medicamento "${nM.nome}" adicionado.`);
+    } else {
+      if (String(oM.posologia || '') !== String(nM.posologia || '')) changes.push(`Posologia do medicamento "${nM.nome}" alterada para "${nM.posologia || 'N/A'}".`);
+      if (oM.desnecessario !== nM.desnecessario) changes.push(`Status "desnecessário" do medicamento "${nM.nome}" alterado para ${nM.desnecessario ? 'Sim' : 'Não'}.`);
+    }
+  });
+  oldMedicamentos.forEach(oM => {
+    if (!newMeds.some(nM => nM.nome === oM.nome)) {
+      changes.push(`Medicamento "${oM.nome}" removido.`);
+    }
+  });
+
+  (newSurgeries || []).forEach(nS => {
+    const oS = oldCirurgiasMap.get(nS.nome);
+    if (!oS) {
+      changes.push(`Cirurgia "${nS.nome}" adicionada.`);
+    } else {
+      if (String(oS.dataCirurgia || '') !== String(nS.dataCirurgia || '')) changes.push(`Data da cirurgia "${nS.nome}" alterada para ${nS.dataCirurgia || 'N/A'}.`);
+      if (String(oS.status || '') !== String(nS.status || '')) changes.push(`Status da cirurgia "${nS.nome}" alterado para "${nS.status || 'N/A'}".`);
+    }
+  });
+  oldCirurgias.forEach(oS => {
+    if (!newSurgeries.some(nS => nS.nome === oS.nome)) {
+      changes.push(`Cirurgia "${oS.nome}" removida.`);
+    }
+  });
+
+  (newOthers || []).forEach(nO => {
+    const oO = oldOutrosItensMap.get(nO.nome);
+    if (!oO) {
+      changes.push(`Outro item "${nO.nome}" adicionado.`);
+    } else {
+      if (String(oO.descricao || '') !== String(nO.descricao || '')) changes.push(`Descrição do item "${nO.nome}" alterada para "${nO.descricao || 'N/A'}".`);
+    }
+  });
+  oldOutrosItens.forEach(oO => {
+    if (!newOthers.some(nO => nO.nome === oO.nome)) {
+      changes.push(`Outro item "${oO.nome}" removido.`);
+    }
+  });
+
+  if (String(oldData.ultimaprescricao || '') !== String(newPrescription || '')) {
+    changes.push(`Data da prescrição global alterada de ${oldData.ultimaprescricao || 'N/A'} para ${newPrescription || 'N/A'}.`);
+  }
+
+  return changes.length > 0 ? changes.join('; ') : 'Nenhuma alteração específica nos itens.';
+}
