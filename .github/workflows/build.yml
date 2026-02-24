@@ -68,7 +68,7 @@ jobs:
           $publishDir = Join-Path $env:GITHUB_WORKSPACE "publish"
           dotnet publish "${{ steps.detect.outputs.publish_project }}" `
             --configuration Release `
-            --framework net8.0-windows `
+            --framework net8.0-windows7.0 `
             --runtime win-x64 `
             --self-contained true `
             -p:PublishSingleFile=true `
