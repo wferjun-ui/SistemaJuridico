@@ -38,7 +38,10 @@
         </Style>
     </Window.Resources>
 
-    <Grid Margin="18">
+    <Grid x:Name="LayoutRoot" Margin="18" RenderTransformOrigin="0.5,0.5">
+        <Grid.LayoutTransform>
+            <ScaleTransform x:Name="LayoutScale" ScaleX="1" ScaleY="1"/>
+        </Grid.LayoutTransform>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -310,5 +313,5 @@
                 </StackPanel>
             </DockPanel>
         </Border>
-    </Grid>
+        </Grid>
 </Window>

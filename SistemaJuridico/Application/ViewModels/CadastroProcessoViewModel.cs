@@ -12,7 +12,7 @@ namespace SistemaJuridico.ViewModels
 {
     public partial class CadastroProcessoViewModel : ObservableObject
     {
-        private const int MinimoCaracteresNumeroProcesso = 25;
+        private const int QuantidadeDigitosNumeroProcesso = 20;
         private const string FormatoCnjRegex = @"^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$";
         private static readonly string[] TerapiasPadrao =
         {
@@ -319,8 +319,9 @@ namespace SistemaJuridico.ViewModels
 
         internal static string? ValidarFormulario(Processo processo, bool isProcessoSaude, IEnumerable<SaudeItemCadastroViewModel> itensSaudeCadastro)
         {
-            if (string.IsNullOrWhiteSpace(processo.Numero) || processo.Numero.Trim().Length < MinimoCaracteresNumeroProcesso)
-                return $"Número do processo é obrigatório e deve ter no mínimo {MinimoCaracteresNumeroProcesso} caracteres.";
+            var digitosNumeroProcesso = new string((processo.Numero ?? string.Empty).Where(char.IsDigit).ToArray());
+            if (string.IsNullOrWhiteSpace(processo.Numero) || digitosNumeroProcesso.Length != QuantidadeDigitosNumeroProcesso)
+                return $"Número do processo é obrigatório e deve conter {QuantidadeDigitosNumeroProcesso} dígitos.";
 
             if (!Regex.IsMatch(processo.Numero.Trim(), FormatoCnjRegex))
                 return "Número do processo deve seguir o padrão CNJ: 0000000-00.0000.0.00.0000.";
