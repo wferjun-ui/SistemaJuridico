@@ -319,15 +319,14 @@ namespace SistemaJuridico.ViewModels
 
         internal static string? ValidarFormulario(Processo processo, bool isProcessoSaude, IEnumerable<SaudeItemCadastroViewModel> itensSaudeCadastro)
         {
-            var digitosNumeroProcesso = new string((processo.Numero ?? string.Empty).Where(char.IsDigit).ToArray());
-            if (string.IsNullOrWhiteSpace(processo.Numero) || digitosNumeroProcesso.Length != QuantidadeDigitosNumeroProcesso)
-                return $"Número do processo é obrigatório e deve conter {QuantidadeDigitosNumeroProcesso} dígitos.";
+            var numeroFormatado = FormatarNumeroProcesso(processo.Numero);
+            if (string.IsNullOrWhiteSpace(numeroFormatado))
+                return "Número do processo é obrigatório.";
 
-            if (!Regex.IsMatch(processo.Numero.Trim(), FormatoCnjRegex))
+            if (!Regex.IsMatch(numeroFormatado, FormatoCnjRegex))
                 return "Número do processo deve seguir o padrão CNJ: 0000000-00.0000.0.00.0000.";
 
-            if (!ValidarDigitoVerificadorCnj(processo.Numero))
-                return "Número do processo inválido: dígito verificador CNJ não confere.";
+            processo.Numero = numeroFormatado;
 
             if (string.IsNullOrWhiteSpace(processo.Paciente))
                 return "O nome do paciente é obrigatório.";
