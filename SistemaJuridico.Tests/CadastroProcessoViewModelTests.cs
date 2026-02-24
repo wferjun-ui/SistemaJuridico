@@ -18,6 +18,18 @@ public class CadastroProcessoViewModelTests
         Assert.Equal(esperado, resultado);
     }
 
+
+    [Fact]
+    public void ValidarFormulario_DeveRetornarErroQuandoQuantidadeDeDigitosNaoForVinte()
+    {
+        var processo = NovoProcessoValido();
+        processo.Numero = "1234567-89.0123.4.56.789";
+
+        var erro = CadastroProcessoViewModel.ValidarFormulario(processo, isProcessoSaude: false, itensSaudeCadastro: []);
+
+        Assert.Equal("Número do processo é obrigatório e deve conter 20 dígitos.", erro);
+    }
+
     [Fact]
     public void ValidarFormulario_DeveRetornarErroQuandoDigitoVerificadorForInvalido()
     {
