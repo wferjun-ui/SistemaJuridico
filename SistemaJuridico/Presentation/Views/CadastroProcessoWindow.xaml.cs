@@ -8,9 +8,6 @@ namespace SistemaJuridico.Views
 {
     public partial class CadastroProcessoWindow : Window
     {
-        private const double LarguraBase = 1150d;
-        private const double AlturaBase = 780d;
-
         public CadastroProcessoWindow()
         {
             InitializeComponent();
@@ -26,24 +23,6 @@ namespace SistemaJuridico.Views
 
             vm.ItensSaudeCadastro.CollectionChanged += ItensSaudeCadastro_CollectionChanged;
             Closed += (_, _) => vm.ItensSaudeCadastro.CollectionChanged -= ItensSaudeCadastro_CollectionChanged;
-
-            Loaded += (_, _) => AtualizarEscalaLayout();
-            SizeChanged += (_, _) => AtualizarEscalaLayout();
-        }
-
-        private void AtualizarEscalaLayout()
-        {
-            if (LayoutScale == null)
-                return;
-
-            var escalaLargura = ActualWidth / LarguraBase;
-            var escalaAltura = ActualHeight / AlturaBase;
-            var escala = Math.Min(escalaLargura, escalaAltura);
-
-            escala = Math.Clamp(escala, 0.75, 1.5);
-
-            LayoutScale.ScaleX = escala;
-            LayoutScale.ScaleY = escala;
         }
 
         private void ItensSaudeCadastro_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
