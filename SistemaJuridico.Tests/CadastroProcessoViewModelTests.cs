@@ -40,6 +40,15 @@ public class CadastroProcessoViewModelTests
         Assert.Equal("Número do processo é obrigatório.", erro);
     }
 
+
+    [Fact]
+    public void FormatarNumeroProcesso_DeveLimitarA20DigitosEManterMascaraCnjSemValidarCompleto()
+    {
+        var resultado = CadastroProcessoViewModel.FormatarNumeroProcesso("ABC123456789012345678901234");
+
+        Assert.Equal("1234567-89.0123.4.56.7890", resultado);
+    }
+
     private static Processo NovoProcessoValido()
     {
         return new Processo
