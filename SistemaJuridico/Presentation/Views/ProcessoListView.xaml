@@ -14,13 +14,27 @@
             <Setter Property="Background" Value="#4F46E5"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderBrush" Value="#4F46E5"/>
+            <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
 
         <Style x:Key="NeutralButtonStyle" TargetType="Button" BasedOn="{StaticResource UniformButtonStyle}">
             <Setter Property="Background" Value="#64748B"/>
             <Setter Property="BorderBrush" Value="#64748B"/>
         </Style>
+        <Style x:Key="SearchResultButtonStyle" TargetType="Button">
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Height" Value="Auto"/>
+            <Setter Property="MinWidth" Value="0"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#111827"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
     </UserControl.Resources>
 
     <Grid Margin="12">
@@ -39,7 +53,7 @@
                         <Button Style="{StaticResource UniformButtonStyle}" Content="Novo Processo" Command="{Binding NovoProcessoCommand}"/>
                         <Button Style="{StaticResource UniformButtonStyle}" Content="Atualizar" Command="{Binding CarregarCommand}"/>
                         <Button Style="{StaticResource UniformButtonStyle}" Content="Busca avançada" Command="{Binding ToggleBuscaAvancadaCommand}"/>
-                        <Button Style="{StaticResource UniformButtonStyle}" Content="Exportar" Command="{Binding ExportarResultadosCommand}"/>
+                        <Button Style="{StaticResource UniformButtonStyle}" Content="Exportar PDF" Command="{Binding ExportarResultadosCommand}"/>
                     </WrapPanel>
                 </DockPanel>
 
@@ -50,8 +64,8 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <TextBox Grid.Column="0" MinWidth="280" Margin="0,0,8,0" Text="{Binding TextoBusca, UpdateSourceTrigger=PropertyChanged}"/>
-                    <Button Grid.Column="1" Style="{StaticResource UniformButtonStyle}" Content="Buscar" Width="120" Command="{Binding BuscarCommand}"/>
+                    <TextBox Grid.Column="0" MinWidth="280" Margin="0,0,8,0" ToolTip="Pesquisa em tempo real por número, paciente, juiz, genitor, tipo ou status" Text="{Binding TextoBusca, UpdateSourceTrigger=PropertyChanged}"/>
+                    <Button Grid.Column="1" Style="{StaticResource UniformButtonStyle}" Content="Buscar" Width="120" Command="{Binding BuscarCommand}" ToolTip="A busca já é em tempo real; este botão mantém a lista de resultados aberta"/>
                     <Button Grid.Column="2" Style="{StaticResource NeutralButtonStyle}" Content="Limpar" Width="120" Command="{Binding LimparFiltrosCommand}"/>
                 </Grid>
 
@@ -64,15 +78,7 @@
                     <ListBox ItemsSource="{Binding SugestoesBusca}" MaxHeight="220" BorderThickness="0">
                         <ListBox.ItemTemplate>
                             <DataTemplate DataType="{x:Type vm:ProcessoBuscaItemVM}">
-                                <Button Style="{StaticResource UniformButtonStyle}"
-                                        HorizontalContentAlignment="Left"
-                                        Height="Auto"
-                                        MinWidth="0"
-                                        Margin="0"
-                                        Background="Transparent"
-                                        Foreground="#111827"
-                                        BorderBrush="Transparent"
-                                        Padding="8,6"
+                                <Button Style="{StaticResource SearchResultButtonStyle}"
                                         Command="{Binding DataContext.SelecionarSugestaoBuscaCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
                                         CommandParameter="{Binding}">
                                     <StackPanel>
@@ -102,14 +108,7 @@
                         <ListBox ItemsSource="{Binding ResultadosBuscaRapida}" MaxHeight="260" BorderThickness="0">
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type vm:ProcessoBuscaItemVM}">
-                                    <Button Style="{StaticResource UniformButtonStyle}"
-                                            HorizontalContentAlignment="Left"
-                                            Height="Auto"
-                                            MinWidth="0"
-                                            Margin="0"
-                                            Background="Transparent"
-                                            Foreground="#111827"
-                                            BorderBrush="Transparent"
+                                    <Button Style="{StaticResource SearchResultButtonStyle}"
                                             Padding="10,8"
                                             Command="{Binding DataContext.AbrirResultadoBuscaRapidaCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
                                             CommandParameter="{Binding}">

@@ -33,7 +33,14 @@ namespace SistemaJuridico.ViewModels
             set
             {
                 if (SetProperty(ref _textoBusca, value))
+                {
+                    PaginaAtual = 1;
+                    AplicarBusca();
+
+                    var termo = _textoBusca?.Trim() ?? string.Empty;
+                    MostrarResultadosBuscaRapida = termo.Length >= 1;
                     AtualizarBuscaRapida();
+                }
             }
         }
 
@@ -279,9 +286,10 @@ namespace SistemaJuridico.ViewModels
             SugestoesBusca.Clear();
             ResultadosBuscaRapida.Clear();
 
-            if (string.IsNullOrWhiteSpace(termo) || termo.Length < 3)
+            if (string.IsNullOrWhiteSpace(termo))
             {
                 MostrarSugestoesBusca = false;
+                MostrarResultadosBuscaRapida = false;
                 return;
             }
 
@@ -289,7 +297,12 @@ namespace SistemaJuridico.ViewModels
                 .Where(x =>
                     Contem(x.Numero, termo) ||
                     Contem(x.Paciente, termo) ||
-                    Contem(x.Genitor, termo))
+                    Contem(x.Genitor, termo) ||
+                    Contem(x.Juiz, termo) ||
+                    Contem(x.Responsavel, termo) ||
+                    Contem(x.TipoProcesso, termo) ||
+                    Contem(x.StatusCalculado, termo) ||
+                    Contem(x.StatusProcesso, termo))
                 .OrderBy(x => x.Numero)
                 .Take(30)
                 .ToList();
@@ -340,7 +353,7 @@ namespace SistemaJuridico.ViewModels
             PaginaAtual = 1;
             AplicarBusca();
 
-            if (string.IsNullOrWhiteSpace(TextoBusca) || TextoBusca.Trim().Length < 3)
+            if (string.IsNullOrWhiteSpace(TextoBusca) || TextoBusca.Trim().Length < 1)
             {
                 MostrarResultadosBuscaRapida = false;
                 ResultadosBuscaRapida.Clear();
