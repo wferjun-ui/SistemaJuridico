@@ -105,7 +105,7 @@
                                       IsEditable="True"
                                       IsTextSearchEnabled="True"
                                       StaysOpenOnEdit="True"
-                                                      IsDropDownOpen="{Binding IsKeyboardFocusWithin, RelativeSource={RelativeSource Self}}"/>
+                                      IsDropDownOpen="{Binding IsKeyboardFocusWithin, RelativeSource={RelativeSource Self}, Mode=OneWay}"/>
                             <TextBlock Text="Formato: 0000000-00.0000.0.00.0000" FontSize="11" Foreground="#6B7280"/>
                         </StackPanel>
 
@@ -263,7 +263,7 @@
                                                       IsEditable="True"
                                                       IsTextSearchEnabled="True"
                                                       StaysOpenOnEdit="True"
-                                                      IsDropDownOpen="{Binding IsKeyboardFocusWithin, RelativeSource={RelativeSource Self}}"/>
+                                                      IsDropDownOpen="{Binding IsKeyboardFocusWithin, RelativeSource={RelativeSource Self}, Mode=OneWay}"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
