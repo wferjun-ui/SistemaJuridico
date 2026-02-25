@@ -18,56 +18,36 @@ public class CadastroProcessoViewModelTests
         Assert.Equal(esperado, resultado);
     }
 
-
     [Fact]
-    public void ValidarFormulario_DeveRetornarErroQuandoQuantidadeDeDigitosNaoForVinte()
+    public void ValidarFormulario_DeveAceitarNumeroComFormatoParcialQuandoCamposObrigatoriosValidos()
     {
         var processo = NovoProcessoValido();
-        processo.Numero = "1234567-89.0123.4.56.789";
-
-        var erro = CadastroProcessoViewModel.ValidarFormulario(processo, isProcessoSaude: false, itensSaudeCadastro: []);
-
-        Assert.Equal("Número do processo é obrigatório e deve conter 20 dígitos.", erro);
-    }
-
-    [Fact]
-    public void ValidarFormulario_DeveRetornarErroQuandoDigitoVerificadorForInvalido()
-    {
-        var processo = NovoProcessoValido();
-        processo.Numero = "1234567-00.2024.8.26.0100";
-
-        var erro = CadastroProcessoViewModel.ValidarFormulario(processo, isProcessoSaude: false, itensSaudeCadastro: []);
-
-        Assert.Equal("Número do processo inválido: dígito verificador CNJ não confere.", erro);
-    }
-
-    [Fact]
-    public void ValidarFormulario_DeveAceitarNumeroComDigitoVerificadorValido()
-    {
-        var processo = NovoProcessoValido();
-        processo.Numero = GerarNumeroProcessoValido("1234567", "2024", "8", "26", "0100");
+        processo.Numero = "1234567-89.0123";
 
         var erro = CadastroProcessoViewModel.ValidarFormulario(processo, isProcessoSaude: false, itensSaudeCadastro: []);
 
         Assert.Null(erro);
     }
 
+    [Fact]
+    public void ValidarFormulario_DeveRetornarErroQuandoNumeroNaoInformado()
+    {
+        var processo = NovoProcessoValido();
+        processo.Numero = "";
+
+        var erro = CadastroProcessoViewModel.ValidarFormulario(processo, isProcessoSaude: false, itensSaudeCadastro: []);
+
+        Assert.Equal("Número do processo é obrigatório.", erro);
+    }
+
     private static Processo NovoProcessoValido()
     {
         return new Processo
         {
-            Numero = GerarNumeroProcessoValido("1234567", "2024", "8", "26", "0100"),
+            Numero = "1234567-89.0123.4.56.7890",
             Paciente = "Paciente Teste",
             Juiz = "Juiz Teste",
             TipoProcesso = "Saúde"
         };
-    }
-
-    private static string GerarNumeroProcessoValido(string sequencial, string ano, string ramo, string tribunal, string origem)
-    {
-        var baseNumero = $"{sequencial}{ano}{ramo}{tribunal}{origem}";
-        var resto = System.Numerics.BigInteger.Parse(baseNumero) % 97;
-        var digito = 98 - (int)resto;
-        return $"{sequencial}-{digito:00}.{ano}.{ramo}.{tribunal}.{origem}";
     }
 }
