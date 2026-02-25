@@ -71,12 +71,29 @@
                             <Button Content="Buscar" Width="100" Command="{Binding BuscarProcessosCommand}"/>
                             <Button Content="Limpar" Width="100" Background="#64748B" BorderBrush="#64748B" Command="{Binding LimparBuscaCommand}"/>
                         </WrapPanel>
-                        <ComboBox MinWidth="280"
-                                  ItemsSource="{Binding SugestoesBuscaRapida}"
-                                  Text="{Binding TextoBusca, UpdateSourceTrigger=PropertyChanged}"
-                                  IsEditable="True"
-                                  IsTextSearchEnabled="False"
-                                  StaysOpenOnEdit="True"/>
+                        <StackPanel>
+                            <TextBlock Text="Clique em Buscar para habilitar a pesquisa por número de processo."
+                                       Foreground="#6B7280">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding BuscaRapidaAtivada}" Value="True">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            <ComboBox MinWidth="280"
+                                      Margin="0,4,0,0"
+                                      ItemsSource="{Binding SugestoesBuscaRapida}"
+                                      Text="{Binding TextoBusca, UpdateSourceTrigger=PropertyChanged}"
+                                      IsEditable="True"
+                                      IsTextSearchEnabled="False"
+                                      StaysOpenOnEdit="True"
+                                      Visibility="{Binding BuscaRapidaAtivada, Converter={StaticResource BoolToVis}}"/>
+                        </StackPanel>
                     </DockPanel>
 
                     <StackPanel Visibility="{Binding MostrarResultadosBusca, Converter={StaticResource BoolToVis}}">
