@@ -212,14 +212,16 @@ namespace SistemaJuridico.ViewModels
                 IsSaving = true;
                 StatusMensagem = "Salvando processo...";
 
-                NovoProcesso.Representante = TemRepresentante ? NovoProcesso.Representante.Trim() : "Não possui";
+                NovoProcesso.Representante = TemRepresentante
+                    ? (NovoProcesso.Representante ?? string.Empty).Trim()
+                    : "Não possui";
                 NovoProcesso.SemRepresentante = !TemRepresentante;
                 NovoProcesso.Classificacao = NovoProcesso.TipoProcesso;
                 NovoProcesso.UltimaAtualizacao = DateTime.Now.ToString("dd/MM/yyyy");
 
                 NovoProcesso.Numero = FormatarNumeroProcesso(NovoProcesso.Numero);
-                NovoProcesso.Paciente = NovoProcesso.Paciente.Trim();
-                NovoProcesso.Juiz = NovoProcesso.Juiz.Trim();
+                NovoProcesso.Paciente = (NovoProcesso.Paciente ?? string.Empty).Trim();
+                NovoProcesso.Juiz = (NovoProcesso.Juiz ?? string.Empty).Trim();
                 _processService.CriarProcesso(NovoProcesso);
                 _processService.SubstituirReus(NovoProcesso.Id, Reus.Where(r => r.IsAtivo && !string.IsNullOrWhiteSpace(r.Nome)).Select(r => r.Nome.Trim()).ToList());
 
@@ -257,6 +259,11 @@ namespace SistemaJuridico.ViewModels
                 StatusMensagem = "Processo criado com sucesso.";
                 System.Windows.MessageBox.Show("Processo criado.", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
                 FecharTela?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                StatusMensagem = "Não foi possível cadastrar o processo.";
+                System.Windows.MessageBox.Show($"Erro ao cadastrar processo: {ex.Message}", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
