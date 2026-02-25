@@ -43,6 +43,37 @@
             <Setter Property="MinWidth" Value="140"/>
             <Setter Property="Padding" Value="12,6"/>
             <Setter Property="Margin" Value="4,0,0,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Background" Value="#E5E7EB"/>
+            <Setter Property="Foreground" Value="#1F2937"/>
+            <Setter Property="BorderBrush" Value="#D1D5DB"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <Style x:Key="SaudeDataGridTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Padding" Value="8,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="SaudeDataGridComboBoxStyle" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Padding" Value="6,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="SaudeQtdStepperButtonStyle" TargetType="Button">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="MinWidth" Value="18"/>
+            <Setter Property="MinHeight" Value="14"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Background" Value="#EEF2FF"/>
+            <Setter Property="Foreground" Value="#312E81"/>
+            <Setter Property="BorderBrush" Value="#C7D2FE"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
         </Style>
     </Window.Resources>
 
@@ -243,13 +274,14 @@
                                   VerticalAlignment="Top" MinHeight="150" MaxHeight="360"
                                   ScrollViewer.VerticalScrollBarVisibility="Auto"
                                   GridLinesVisibility="Horizontal"
-                                  RowHeight="44">
+                                  RowHeight="52">
                             <DataGrid.Columns>
                                 <DataGridTemplateColumn Header="Tipo" Width="180">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <ComboBox ItemsSource="{Binding TiposDisponiveis}"
                                                       SelectedItem="{Binding Tipo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                      Style="{StaticResource SaudeDataGridComboBoxStyle}"
                                                       VerticalContentAlignment="Center"
                                                       HorizontalContentAlignment="Left"/>
                                         </DataTemplate>
@@ -260,6 +292,7 @@
                                         <DataTemplate>
                                             <ComboBox ItemsSource="{Binding SugestoesNome}"
                                                       Text="{Binding Nome, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                      Style="{StaticResource SaudeDataGridComboBoxStyle}"
                                                       IsEditable="True"
                                                       IsTextSearchEnabled="True"
                                                       StaysOpenOnEdit="True"
@@ -267,24 +300,26 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="Qtd." Width="130">
+                                <DataGridTemplateColumn Header="Qtd." Width="140">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Grid>
+                                            <Grid Margin="0,2,0,2">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="22"/>
+                                                    <ColumnDefinition Width="24"/>
                                                 </Grid.ColumnDefinitions>
-                                                <TextBox Grid.Column="0" Text="{Binding Quantidade, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center"/>
+                                                <TextBox Grid.Column="0"
+                                                         Style="{StaticResource SaudeDataGridTextBoxStyle}"
+                                                         Text="{Binding Quantidade, UpdateSourceTrigger=PropertyChanged}"/>
                                                 <Grid Grid.Column="1" Margin="2,0,0,0">
                                                     <Grid.RowDefinitions>
                                                         <RowDefinition Height="*"/>
                                                         <RowDefinition Height="*"/>
                                                     </Grid.RowDefinitions>
-                                                    <Button Grid.Row="0" Content="▲" FontSize="9" Padding="0" Margin="0,0,0,1"
+                                                    <Button Grid.Row="0" Content="▲" Style="{StaticResource SaudeQtdStepperButtonStyle}" Margin="0,0,0,1"
                                                             Command="{Binding DataContext.IncrementarQuantidadeItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                             CommandParameter="{Binding}"/>
-                                                    <Button Grid.Row="1" Content="▼" FontSize="9" Padding="0" Margin="0,1,0,0"
+                                                    <Button Grid.Row="1" Content="▼" Style="{StaticResource SaudeQtdStepperButtonStyle}" Margin="0,1,0,0"
                                                             Command="{Binding DataContext.DecrementarQuantidadeItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                             CommandParameter="{Binding}"/>
                                                 </Grid>
@@ -295,7 +330,7 @@
                                 <DataGridTemplateColumn Header="Local" Width="220">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <TextBox Text="{Binding Local, UpdateSourceTrigger=PropertyChanged}">
+                                            <TextBox Text="{Binding Local, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SaudeDataGridTextBoxStyle}">
                                                 <TextBox.Style>
                                                     <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
                                                         <Setter Property="IsEnabled" Value="True"/>
