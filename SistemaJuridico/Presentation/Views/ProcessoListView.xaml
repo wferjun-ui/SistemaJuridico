@@ -92,12 +92,13 @@
                         Background="White"
                         Visibility="{Binding MostrarResultadosBuscaRapida, Converter={StaticResource BoolToVis}}">
                     <StackPanel>
-                        <TextBlock Text="Resultados da pesquisa"
-                                   FontWeight="SemiBold"
-                                   Background="#F8FAFC"
-                                   Padding="10,8"
-                                   BorderBrush="#E5E7EB"
-                                   BorderThickness="0,0,0,1"/>
+                        <Border Background="#F8FAFC"
+                                BorderBrush="#E5E7EB"
+                                BorderThickness="0,0,0,1">
+                            <TextBlock Text="Resultados da pesquisa"
+                                       FontWeight="SemiBold"
+                                       Padding="10,8"/>
+                        </Border>
                         <ListBox ItemsSource="{Binding ResultadosBuscaRapida}" MaxHeight="260" BorderThickness="0">
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type vm:ProcessoBuscaItemVM}">

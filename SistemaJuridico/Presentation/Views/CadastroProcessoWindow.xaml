@@ -44,8 +44,7 @@
         </Style>
     </Window.Resources>
 
-    <Viewbox Stretch="Uniform">
-        <Grid Margin="18" Width="1114" Height="744">
+    <Grid Margin="18">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -320,6 +319,5 @@
                 </StackPanel>
             </DockPanel>
         </Border>
-            </Grid>
-    </Viewbox>
+    </Grid>
 </Window>
