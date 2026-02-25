@@ -27,6 +27,8 @@
             <Setter Property="Height" Value="34"/>
             <Setter Property="Padding" Value="8,0"/>
             <Setter Property="BorderBrush" Value="#CBD5E1"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
         </Style>
         <Style x:Key="Card" TargetType="Border">
             <Setter Property="Background" Value="White"/>
@@ -102,7 +104,8 @@
                                       Text="{Binding NumeroProcesso, UpdateSourceTrigger=PropertyChanged}"
                                       IsEditable="True"
                                       IsTextSearchEnabled="True"
-                                      StaysOpenOnEdit="True"/>
+                                      StaysOpenOnEdit="True"
+                                                      IsDropDownOpen="{Binding IsKeyboardFocusWithin, RelativeSource={RelativeSource Self}}"/>
                             <TextBlock Text="Formato: 0000000-00.0000.0.00.0000" FontSize="11" Foreground="#6B7280"/>
                         </StackPanel>
 
@@ -150,13 +153,17 @@
                         <StackPanel Grid.Row="2" Margin="0,0,12,0">
                             <TextBlock Text="📁 Tipo de Processo *" FontWeight="SemiBold"/>
                             <ComboBox ItemsSource="{Binding TiposProcessoDisponiveis}"
-                                      SelectedItem="{Binding SelectedTipoProcesso, UpdateSourceTrigger=PropertyChanged}"/>
+                                      SelectedItem="{Binding SelectedTipoProcesso, UpdateSourceTrigger=PropertyChanged}"
+                                      VerticalContentAlignment="Center"
+                                      HorizontalContentAlignment="Left"/>
                         </StackPanel>
 
                         <StackPanel Grid.Column="1" Grid.Row="2" Margin="12,0,0,0">
                             <TextBlock Text="ℹ Status Inicial do Processo *" FontWeight="SemiBold"/>
                             <ComboBox ItemsSource="{Binding StatusInicialDisponiveis}"
-                                      SelectedItem="{Binding NovoProcesso.StatusFase, UpdateSourceTrigger=PropertyChanged}"/>
+                                      SelectedItem="{Binding NovoProcesso.StatusFase, UpdateSourceTrigger=PropertyChanged}"
+                                      VerticalContentAlignment="Center"
+                                      HorizontalContentAlignment="Left"/>
                         </StackPanel>
                     </Grid>
                 </Border>
@@ -235,13 +242,16 @@
                                   HeadersVisibility="Column" RowHeaderWidth="0"
                                   VerticalAlignment="Top" MinHeight="150" MaxHeight="360"
                                   ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                  GridLinesVisibility="Horizontal">
+                                  GridLinesVisibility="Horizontal"
+                                  RowHeight="44">
                             <DataGrid.Columns>
                                 <DataGridTemplateColumn Header="Tipo" Width="180">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <ComboBox ItemsSource="{Binding TiposDisponiveis}"
-                                                      SelectedItem="{Binding Tipo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                      SelectedItem="{Binding Tipo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                      VerticalContentAlignment="Center"
+                                                      HorizontalContentAlignment="Left"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -252,14 +262,33 @@
                                                       Text="{Binding Nome, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                       IsEditable="True"
                                                       IsTextSearchEnabled="True"
-                                                      StaysOpenOnEdit="True"/>
+                                                      StaysOpenOnEdit="True"
+                                                      IsDropDownOpen="{Binding IsKeyboardFocusWithin, RelativeSource={RelativeSource Self}}"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
                                 <DataGridTemplateColumn Header="Qtd." Width="130">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <TextBox Text="{Binding Quantidade, UpdateSourceTrigger=PropertyChanged}"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="22"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox Grid.Column="0" Text="{Binding Quantidade, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center"/>
+                                                <Grid Grid.Column="1" Margin="2,0,0,0">
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="*"/>
+                                                        <RowDefinition Height="*"/>
+                                                    </Grid.RowDefinitions>
+                                                    <Button Grid.Row="0" Content="▲" FontSize="9" Padding="0" Margin="0,0,0,1"
+                                                            Command="{Binding DataContext.IncrementarQuantidadeItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}"/>
+                                                    <Button Grid.Row="1" Content="▼" FontSize="9" Padding="0" Margin="0,1,0,0"
+                                                            Command="{Binding DataContext.DecrementarQuantidadeItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}"/>
+                                                </Grid>
+                                            </Grid>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -282,10 +311,10 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="Ações" Width="130">
+                                <DataGridTemplateColumn Header="Ações" Width="150">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Content="Remover" Style="{StaticResource UniformActionButton}" MinWidth="100" Height="32" Command="{Binding DataContext.RemoverSaudeItemCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
+                                            <Button Content="Remover" Style="{StaticResource UniformActionButton}" MinWidth="110" Height="34" Margin="0" Command="{Binding DataContext.RemoverSaudeItemCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>

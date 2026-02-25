@@ -174,6 +174,26 @@ namespace SistemaJuridico.ViewModels
         }
 
         [RelayCommand]
+        private void IncrementarQuantidadeItem(SaudeItemCadastroViewModel? item)
+        {
+            if (item == null)
+                return;
+
+            var atual = ParseQuantidade(item.Quantidade);
+            item.Quantidade = (atual + 1).ToString();
+        }
+
+        [RelayCommand]
+        private void DecrementarQuantidadeItem(SaudeItemCadastroViewModel? item)
+        {
+            if (item == null)
+                return;
+
+            var atual = ParseQuantidade(item.Quantidade);
+            item.Quantidade = Math.Max(0, atual - 1).ToString();
+        }
+
+        [RelayCommand]
         private async Task SalvarAsync()
         {
             if (IsSaving)
@@ -385,14 +405,7 @@ namespace SistemaJuridico.ViewModels
 
         public static string FormatarNumeroProcesso(string? valor)
         {
-            var digitos = new string((valor ?? string.Empty).Where(char.IsDigit).ToArray());
-            if (digitos.Length > 20)
-                digitos = digitos[..20];
-
-            if (digitos.Length != 20)
-                return valor?.Trim() ?? string.Empty;
-
-            return $"{digitos[..7]}-{digitos.Substring(7, 2)}.{digitos.Substring(9, 4)}.{digitos.Substring(13, 1)}.{digitos.Substring(14, 2)}.{digitos.Substring(16, 4)}";
+            return FormatarNumeroProcessoParcial(valor);
         }
 
         public static string FormatarNumeroProcessoParcial(string? valor)
@@ -423,6 +436,14 @@ namespace SistemaJuridico.ViewModels
             }
 
             return formatado;
+        }
+
+        private static int ParseQuantidade(string? valor)
+        {
+            if (string.IsNullOrWhiteSpace(valor))
+                return 0;
+
+            return int.TryParse(valor, out var numero) && numero > 0 ? numero : 0;
         }
 
         private List<ItemSaude> ObterItensSaudeParaPersistencia()

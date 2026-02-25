@@ -22,6 +22,7 @@ namespace SistemaJuridico.ViewModels
         public ObservableCollection<string> PainelAAtrasarResumo { get; } = new();
         public ObservableCollection<ActiveUserActivityVM> UsuariosAtivosRecentemente { get; } = new();
         public ObservableCollection<ProcessoBuscaDashboardVM> ProcessosBusca { get; } = new();
+        public ObservableCollection<string> SugestoesBuscaRapida { get; } = new();
 
         [ObservableProperty]
         private int _totalAtrasados;
@@ -47,6 +48,9 @@ namespace SistemaJuridico.ViewModels
         [ObservableProperty]
         private int _totalBusca;
 
+        [ObservableProperty]
+        private bool _mostrarResultadosBusca;
+
         public DashboardViewModel()
         {
             var db = new DatabaseService();
@@ -60,7 +64,7 @@ namespace SistemaJuridico.ViewModels
 
         partial void OnTextoBuscaChanged(string value)
         {
-            AplicarBuscaProcessos();
+            AplicarSugestoesBuscaRapida();
         }
 
         [RelayCommand]
@@ -120,6 +124,7 @@ namespace SistemaJuridico.ViewModels
         private void BuscarProcessos()
         {
             AplicarBuscaProcessos();
+            MostrarResultadosBusca = !string.IsNullOrWhiteSpace(TextoBusca);
         }
 
         [RelayCommand]
@@ -127,6 +132,8 @@ namespace SistemaJuridico.ViewModels
         {
             TextoBusca = string.Empty;
             AplicarBuscaProcessos();
+            AplicarSugestoesBuscaRapida();
+            MostrarResultadosBusca = false;
         }
 
         [RelayCommand]
@@ -246,6 +253,33 @@ namespace SistemaJuridico.ViewModels
                 : $"{processosNaoConcluidos} processo(s) com alterações não salvas (Rascunho/Em edição).";
 
             AplicarBuscaProcessos();
+            AplicarSugestoesBuscaRapida();
+            MostrarResultadosBusca = false;
+        }
+
+        private void AplicarSugestoesBuscaRapida()
+        {
+            SugestoesBuscaRapida.Clear();
+
+            if (string.IsNullOrWhiteSpace(TextoBusca))
+                return;
+
+            var termo = TextoBusca.Trim();
+            var sugestoes = _todosBusca
+                .Where(x =>
+                    Contem(x.Numero, termo) ||
+                    Contem(x.Paciente, termo) ||
+                    Contem(x.Genitor, termo) ||
+                    Contem(x.Juiz, termo) ||
+                    Contem(x.TipoProcesso, termo) ||
+                    Contem(x.StatusCalculado, termo))
+                .Select(x => $"{x.Numero} — {x.Paciente}")
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Take(12)
+                .ToList();
+
+            foreach (var item in sugestoes)
+                SugestoesBuscaRapida.Add(item);
         }
 
         private void AplicarBuscaProcessos()
