@@ -36,6 +36,12 @@
             <Setter Property="BorderBrush" Value="#E5E7EB"/>
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
+        <Style x:Key="UniformActionButton" TargetType="Button">
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="MinWidth" Value="140"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Margin" Value="4,0,0,0"/>
+        </Style>
     </Window.Resources>
 
     <Viewbox Stretch="Uniform">
@@ -158,15 +164,7 @@
 
                 <Border Style="{StaticResource Card}">
                     <StackPanel>
-                        <DockPanel Margin="0,0,0,8">
-                            <TextBlock DockPanel.Dock="Left" Text="Réus" FontSize="16" FontWeight="SemiBold"/>
-                            <Button DockPanel.Dock="Right"
-                                    Content="+ Adicionar Réu"
-                                    Command="{Binding AdicionarReuCommand}"
-                                    Background="{StaticResource PrimaryBrush}"
-                                    Foreground="White"
-                                    BorderBrush="{StaticResource PrimaryBrush}"/>
-                        </DockPanel>
+                        <TextBlock Text="Réus" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
 
                         <ItemsControl ItemsSource="{Binding Reus}">
                             <ItemsControl.ItemTemplate>
@@ -194,6 +192,7 @@
                                                  StaysOpenOnEdit="True"/>
                                         <Button Grid.Column="1"
                                                 Content="Desativar"
+                                                Style="{StaticResource UniformActionButton}"
                                                 Margin="8,0,0,0"
                                                 MinWidth="110"
                                                 Command="{Binding DataContext.RemoverReuCommand, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -202,6 +201,15 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
+
+                        <Button Content="+ Adicionar Réu"
+                                Style="{StaticResource UniformActionButton}"
+                                HorizontalAlignment="Left"
+                                Margin="0,8,0,0"
+                                Command="{Binding AdicionarReuCommand}"
+                                Background="{StaticResource PrimaryBrush}"
+                                Foreground="White"
+                                BorderBrush="{StaticResource PrimaryBrush}"/>
                     </StackPanel>
                 </Border>
 
@@ -218,18 +226,10 @@
                             </Style>
                         </StackPanel.Style>
 
-                        <DockPanel Margin="0,0,0,10">
-                            <TextBlock DockPanel.Dock="Left"
-                                       Text="Dados de Saúde"
-                                       FontSize="16"
-                                       FontWeight="SemiBold"/>
-                            <Button DockPanel.Dock="Right"
-                                    Content="+ Adicionar item"
-                                    Command="{Binding AdicionarItemSaudeCommand}"
-                                    Background="{StaticResource PrimaryBrush}"
-                                    Foreground="White"
-                                    BorderBrush="{StaticResource PrimaryBrush}"/>
-                        </DockPanel>
+                        <TextBlock Text="Dados de Saúde"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,0,10"/>
 
                         <DataGrid x:Name="ItensSaudeDataGrid" AutoGenerateColumns="False" CanUserAddRows="False" ItemsSource="{Binding ItensSaudeCadastro}"
                                   EnableRowVirtualization="True" EnableColumnVirtualization="True" VirtualizingPanel.ScrollUnit="Pixel"
@@ -283,15 +283,24 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="Ações" Width="110">
+                                <DataGridTemplateColumn Header="Ações" Width="130">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Content="Remover" Command="{Binding DataContext.RemoverSaudeItemCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
+                                            <Button Content="Remover" Style="{StaticResource UniformActionButton}" MinWidth="100" Height="32" Command="{Binding DataContext.RemoverSaudeItemCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
                             </DataGrid.Columns>
                         </DataGrid>
+
+                        <Button Content="+ Adicionar item"
+                                Style="{StaticResource UniformActionButton}"
+                                HorizontalAlignment="Left"
+                                Margin="0,8,0,0"
+                                Command="{Binding AdicionarItemSaudeCommand}"
+                                Background="{StaticResource PrimaryBrush}"
+                                Foreground="White"
+                                BorderBrush="{StaticResource PrimaryBrush}"/>
                     </StackPanel>
                 </Border>
             </StackPanel>
@@ -305,8 +314,8 @@
                            Text="{Binding StatusMensagem}"/>
 
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="✕ Cancelar" Width="130" Margin="0,0,8,0" Command="{Binding CancelarCommand}"/>
-                    <Button Content="💾 Salvar" Width="160" Command="{Binding SalvarCommand}"
+                    <Button Content="✕ Cancelar" Style="{StaticResource UniformActionButton}" Width="150" Margin="0,0,8,0" Command="{Binding CancelarCommand}"/>
+                    <Button Content="💾 Salvar" Style="{StaticResource UniformActionButton}" Width="150" Command="{Binding SalvarCommand}"
                             Background="{StaticResource PrimaryBrush}" Foreground="White" BorderBrush="{StaticResource PrimaryBrush}"/>
                 </StackPanel>
             </DockPanel>

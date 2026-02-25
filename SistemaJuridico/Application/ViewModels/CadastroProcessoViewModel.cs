@@ -4,8 +4,6 @@ using SistemaJuridico.Models;
 using SistemaJuridico.Services;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Numerics;
-using System.Text.RegularExpressions;
 using System.Windows;
 
 namespace SistemaJuridico.ViewModels
@@ -13,7 +11,6 @@ namespace SistemaJuridico.ViewModels
     public partial class CadastroProcessoViewModel : ObservableObject
     {
         private const int QuantidadeDigitosNumeroProcesso = 20;
-        private const string FormatoCnjRegex = @"^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$";
         private static readonly string[] TerapiasPadrao =
         {
             "Consulta neuro", "Equoterapia", "Fisioterapia", "Fonoaudiologia ABA", "Fonoaudiologia",
@@ -323,8 +320,6 @@ namespace SistemaJuridico.ViewModels
             if (string.IsNullOrWhiteSpace(numeroFormatado))
                 return "Número do processo é obrigatório.";
 
-            if (!Regex.IsMatch(numeroFormatado, FormatoCnjRegex))
-                return "Número do processo deve seguir o padrão CNJ: 0000000-00.0000.0.00.0000.";
 
             processo.Numero = numeroFormatado;
 
@@ -428,27 +423,6 @@ namespace SistemaJuridico.ViewModels
             }
 
             return formatado;
-        }
-
-        public static bool ValidarDigitoVerificadorCnj(string? numeroProcesso)
-        {
-            var digitos = new string((numeroProcesso ?? string.Empty).Where(char.IsDigit).ToArray());
-            if (digitos.Length != 20)
-                return false;
-
-            var sequencial = digitos[..7];
-            var digitoInformado = digitos.Substring(7, 2);
-            var ano = digitos.Substring(9, 4);
-            var ramo = digitos.Substring(13, 1);
-            var tribunal = digitos.Substring(14, 2);
-            var origem = digitos.Substring(16, 4);
-
-            var numeroBase = $"{sequencial}{ano}{ramo}{tribunal}{origem}";
-            var resto = (int)(BigInteger.Parse(numeroBase) % 97);
-            var digitoCalculado = 98 - resto;
-            var digitoCalculadoTexto = digitoCalculado.ToString("00");
-
-            return string.Equals(digitoInformado, digitoCalculadoTexto, StringComparison.Ordinal);
         }
 
         private List<ItemSaude> ObterItensSaudeParaPersistencia()

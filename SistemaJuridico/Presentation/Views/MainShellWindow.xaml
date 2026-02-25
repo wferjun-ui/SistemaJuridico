@@ -34,7 +34,7 @@
                 <WrapPanel DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center" ItemHeight="36">
                     <Button Content="Relatórios / Busca" Padding="14,6" Margin="0,0,8,0" Command="{Binding OpenRelatoriosCommand}"/>
                     <Button Content="Configurações do App" Padding="14,6" Margin="0,0,8,0" Command="{Binding OpenAdminCommand}"/>
-                    <Button Content="Debug" Padding="8,4" FontSize="12" MinWidth="62" Height="28" Command="{Binding OpenDebugConsoleCommand}"/>
+                    <Button Content="Debug" Padding="14,6" Margin="0,0,8,0" MinWidth="120" Height="36" Command="{Binding OpenDebugConsoleCommand}"/>
                 </WrapPanel>
             </DockPanel>
         </Border>

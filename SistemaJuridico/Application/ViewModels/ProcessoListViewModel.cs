@@ -16,6 +16,8 @@ namespace SistemaJuridico.ViewModels
         private List<ProcessoBuscaItemVM> _filtrados = new();
 
         public ObservableCollection<ProcessoBuscaItemVM> Processos { get; } = new();
+        public ObservableCollection<ProcessoBuscaItemVM> SugestoesBusca { get; } = new();
+        public ObservableCollection<ProcessoBuscaItemVM> ResultadosBuscaRapida { get; } = new();
 
         private ProcessoBuscaItemVM? _processoSelecionado;
         public ProcessoBuscaItemVM? ProcessoSelecionado
@@ -31,8 +33,22 @@ namespace SistemaJuridico.ViewModels
             set
             {
                 if (SetProperty(ref _textoBusca, value))
-                    AplicarBusca();
+                    AtualizarBuscaRapida();
             }
+        }
+
+        private bool _mostrarSugestoesBusca;
+        public bool MostrarSugestoesBusca
+        {
+            get => _mostrarSugestoesBusca;
+            set => SetProperty(ref _mostrarSugestoesBusca, value);
+        }
+
+        private bool _mostrarResultadosBuscaRapida;
+        public bool MostrarResultadosBuscaRapida
+        {
+            get => _mostrarResultadosBuscaRapida;
+            set => SetProperty(ref _mostrarResultadosBuscaRapida, value);
         }
 
         private string _statusFiltro = string.Empty;
@@ -128,6 +144,8 @@ namespace SistemaJuridico.ViewModels
         public RelayCommand ExportarResultadosCommand { get; }
         public RelayCommand ProximaPaginaCommand { get; }
         public RelayCommand PaginaAnteriorCommand { get; }
+        public RelayCommand<ProcessoBuscaItemVM?> SelecionarSugestaoBuscaCommand { get; }
+        public RelayCommand<ProcessoBuscaItemVM?> AbrirResultadoBuscaRapidaCommand { get; }
 
         public ProcessoListViewModel()
         {
@@ -136,12 +154,14 @@ namespace SistemaJuridico.ViewModels
             CarregarCommand = new RelayCommand(async () => await Carregar());
             NovoProcessoCommand = new RelayCommand(NovoProcesso);
             AbrirProcessoCommand = new RelayCommand<ProcessoBuscaItemVM?>(AbrirProcesso);
-            BuscarCommand = new RelayCommand(AplicarBusca);
+            BuscarCommand = new RelayCommand(Buscar);
             LimparFiltrosCommand = new RelayCommand(LimparFiltros);
             ToggleBuscaAvancadaCommand = new RelayCommand(() => MostrarBuscaAvancada = !MostrarBuscaAvancada);
             ExportarResultadosCommand = new RelayCommand(ExportarResultados);
             ProximaPaginaCommand = new RelayCommand(() => MudarPagina(+1));
             PaginaAnteriorCommand = new RelayCommand(() => MudarPagina(-1));
+            SelecionarSugestaoBuscaCommand = new RelayCommand<ProcessoBuscaItemVM?>(SelecionarSugestaoBusca);
+            AbrirResultadoBuscaRapidaCommand = new RelayCommand<ProcessoBuscaItemVM?>(AbrirProcesso);
 
             CarregarComSeguranca();
         }
@@ -248,6 +268,52 @@ namespace SistemaJuridico.ViewModels
                 .Select(x => $"{x.Key}: {x.Count()}");
 
             ResumoEstatistico = $"Resultados: {TotalResultados} | " + string.Join(" | ", porStatus.Take(5));
+
+            AtualizarBuscaRapida();
+        }
+
+        private void AtualizarBuscaRapida()
+        {
+            var termo = TextoBusca?.Trim() ?? string.Empty;
+
+            SugestoesBusca.Clear();
+            ResultadosBuscaRapida.Clear();
+
+            if (string.IsNullOrWhiteSpace(termo) || termo.Length < 3)
+            {
+                MostrarSugestoesBusca = false;
+                return;
+            }
+
+            var resultados = _todos
+                .Where(x =>
+                    Contem(x.Numero, termo) ||
+                    Contem(x.Paciente, termo) ||
+                    Contem(x.Genitor, termo))
+                .OrderBy(x => x.Numero)
+                .Take(30)
+                .ToList();
+
+            foreach (var item in resultados.Take(8))
+                SugestoesBusca.Add(item);
+
+            MostrarSugestoesBusca = SugestoesBusca.Count > 0;
+
+            if (MostrarResultadosBuscaRapida)
+            {
+                foreach (var item in resultados)
+                    ResultadosBuscaRapida.Add(item);
+            }
+        }
+
+        private void SelecionarSugestaoBusca(ProcessoBuscaItemVM? processo)
+        {
+            if (processo == null)
+                return;
+
+            TextoBusca = processo.Numero;
+            MostrarSugestoesBusca = false;
+            AbrirProcesso(processo);
         }
 
         private static bool Contem(string? fonte, string termo)
@@ -263,7 +329,27 @@ namespace SistemaJuridico.ViewModels
             ValorMaximo = null;
             PalavraChaveHistorico = string.Empty;
             PaginaAtual = 1;
+            MostrarSugestoesBusca = false;
+            MostrarResultadosBuscaRapida = false;
+            ResultadosBuscaRapida.Clear();
             AplicarBusca();
+        }
+
+        private void Buscar()
+        {
+            PaginaAtual = 1;
+            AplicarBusca();
+
+            if (string.IsNullOrWhiteSpace(TextoBusca) || TextoBusca.Trim().Length < 3)
+            {
+                MostrarResultadosBuscaRapida = false;
+                ResultadosBuscaRapida.Clear();
+                return;
+            }
+
+            MostrarResultadosBuscaRapida = true;
+            AtualizarBuscaRapida();
+            MostrarSugestoesBusca = false;
         }
 
         private void MudarPagina(int delta)
@@ -326,6 +412,9 @@ namespace SistemaJuridico.ViewModels
         {
             if (processo == null || string.IsNullOrWhiteSpace(processo.Id))
                 return;
+
+            MostrarSugestoesBusca = false;
+            MostrarResultadosBuscaRapida = false;
 
             var window = new ProcessoDetalhesWindow(processo.Id);
             window.ShowDialog();

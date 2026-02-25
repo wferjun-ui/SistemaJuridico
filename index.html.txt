@@ -218,6 +218,31 @@
     .toast i {
       margin-right: 0.5rem;
     }
+
+
+    .btn-uniform {
+      min-height: 40px;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      white-space: nowrap;
+    }
+
+    .btn-icon-danger {
+      min-width: 2.25rem;
+      min-height: 2.25rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.375rem;
+      flex-shrink: 0;
+    }
+
   </style>
 </head>
 
@@ -232,10 +257,10 @@
             Sincronizando... </span>
         <h1 class="text-3xl font-bold text-gray-800"><i class="fas fa-gavel mr-2"></i>Controle de Processos</h1>
         <div class="flex space-x-2">
-          <button id="open-report-advanced-search-modal-btn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300">
+          <button id="open-report-advanced-search-modal-btn" class="btn-uniform bg-gray-200 text-gray-700 hover:bg-gray-300">
        <i class="fas fa-chart-bar mr-2"></i>Relatórios / Busca
       </button>
-          <button id="open-admin-config-modal-btn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300">
+          <button id="open-admin-config-modal-btn" class="btn-uniform bg-gray-200 text-gray-700 hover:bg-gray-300">
        <i class="fas fa-users-cog mr-2"></i>Configurações do App
       </button>
         </div>
@@ -267,15 +292,26 @@
           <!-- Content for search and new process -->
           <div class="relative" id="custom-process-selector">
             <label for="search-select-input" class="block text-sm font-medium text-gray-700"><i class="fas fa-search mr-1"></i>Pesquisar e Selecionar Processo</label>
-            <input type="text" id="search-select-input" placeholder="Digite 3+ letras para pesquisar ou clique para ver a lista..." class="w-full mt-1 p-2 border border-gray-300 rounded-md shadow-sm pr-10 focus:ring-2 focus:ring-indigo-500" autocomplete="off">
-            <div class="pointer-events-none absolute inset-y-0 right-0 top-7 flex items-center px-3 text-gray-400">
-              <i class="fas fa-caret-down"></i>
+            <div class="flex gap-2 mt-1">
+              <div class="relative flex-1">
+                <input type="text" id="search-select-input" placeholder="Digite 3+ letras para pesquisar ou clique para ver a lista..." class="w-full p-2 border border-gray-300 rounded-md shadow-sm pr-10 focus:ring-2 focus:ring-indigo-500" autocomplete="off">
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                  <i class="fas fa-caret-down"></i>
+                </div>
+                <div id="options-panel"
+                  class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto hidden">
+                </div>
+              </div>
+              <button id="search-open-results-btn" type="button" class="btn-uniform bg-indigo-600 text-white hover:bg-indigo-700">
+                <i class="fas fa-search"></i>Buscar
+              </button>
             </div>
-            <div id="options-panel"
-              class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto hidden">
+            <div id="search-results-window" class="hidden mt-3 border border-gray-200 rounded-md bg-white shadow-sm">
+              <div class="px-3 py-2 border-b bg-gray-50 text-sm font-semibold text-gray-700">Resultados da pesquisa</div>
+              <div id="search-results-window-content" class="max-h-72 overflow-y-auto"></div>
             </div>
           </div>
-          <button id="open-novo-processo-modal-btn" class="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex-shrink-0">
+          <button id="open-novo-processo-modal-btn" class="btn-uniform w-full bg-indigo-600 text-white hover:bg-indigo-700 flex-shrink-0">
        <i class="fas fa-plus mr-2"></i>Novo Processo
       </button>
         </div>
@@ -338,12 +374,14 @@
           <h4 class="font-semibold text-lg mb-2"><i class="fas fa-file-alt mr-2"></i>Gerar Relatório Resumo
           </h4>
           <p class="text-sm text-gray-600 mb-3">Obtenha contagens totais de processos por status e tipo.</p>
-          <button id="generate-report-btn" class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700">
-         <i class="fas fa-sync-alt mr-2"></i>Gerar Relatório
+          <div class="flex flex-wrap gap-2">
+          <button id="generate-report-btn" class="btn-uniform bg-purple-600 text-white hover:bg-purple-700">
+         <i class="fas fa-sync-alt"></i>Gerar Relatório
         </button>
-          <button id="export-pdf-btn" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 ml-2">
+          <button id="export-pdf-btn" class="btn-uniform bg-red-600 text-white hover:bg-red-700">
          <i class="fas fa-file-pdf mr-2"></i>Exportar para PDF
         </button>
+          </div>
           <div id="report-summary-output"
             class="mt-4 p-3 bg-gray-50 rounded-md text-sm max-h-60 overflow-y-auto hidden">
           </div>
@@ -462,7 +500,6 @@
     };
 // --- FIM DA SELEÇÃO PARA SUBSTITUIÇÃO ---
   // Constantes e Utilitários Globais
-  const MIN_PROCESS_NUMBER_LENGTH = 15;
   /**
    * @module Utils
    * Funções utilitárias e auxiliares.
@@ -2196,7 +2233,7 @@ const getFormHtml = () => {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium"><i class="fas fa-hashtag mr-1"></i>Número do Processo<span class="text-red-500 ml-1">*</span></label>
-                    <input type="text" id="novo-numero" maxlength="25" minlength="25" pattern="\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}" title="Use o padrão CNJ: NNNNNNN-DD.AAAA.J.TR.OOOO" placeholder="0000000-00.0000.0.00.0000" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm border" required autocomplete="off" inputmode="numeric">
+                    <input type="text" id="novo-numero" maxlength="25" placeholder="0000000-00.0000.0.00.0000" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm border" required autocomplete="off" inputmode="numeric">
                 </div>
                 <div>
                     <label class="block text-sm font-medium"><i class="fas fa-user-tie mr-1"></i>Nome do Juiz(a)<span class="text-red-500 ml-1">*</span></label>
@@ -2241,12 +2278,13 @@ const getFormHtml = () => {
             <!-- SEÇÕES DE FORMULÁRIO (AGORA ESCONDIDAS POR PADRÃO) -->
             <div id="terapias-section" class="border-t pt-4 hidden">
                 <h4 class="font-semibold text-md mb-2"><i class="fas fa-hand-holding-medical mr-2"></i>Adicionar Terapia</h4>
-                <div class="flex items-center gap-2 mb-2">
-                    <select id="terapia-select-cadastro" class="flex-grow p-2 border-gray-300 rounded-md shadow-sm bg-white border">
+                <div class="space-y-2">
+                    <label for="terapia-select-cadastro" class="block text-sm font-medium">Nome da Terapia</label>
+                    <select id="terapia-select-cadastro" class="w-full p-2 border-gray-300 rounded-md shadow-sm bg-white border">
                         <option value="" selected disabled>Selecione uma terapia...</option>
                         ${tiposDeTerapiaOptions}
                     </select>
-                    <button type="button" id="add-terapia-btn-cadastro" class="bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300 text-sm flex-shrink-0"><i class="fas fa-plus mr-2"></i>Adicionar</button>
+                    <button type="button" id="add-terapia-btn-cadastro" class="btn-uniform w-full bg-gray-200 text-gray-800 hover:bg-gray-300 text-sm"><i class="fas fa-plus"></i>Adicionar Terapia</button>
                 </div>
             </div>
             <div id="medicamentos-section" class="border-t pt-4 hidden">
@@ -2254,36 +2292,56 @@ const getFormHtml = () => {
                 <div id="add-medicamento-form" class="space-y-2">
                     <p class="text-xs text-gray-500">Inclua o nome da denominação comum e o nome comercial.</p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <input type="text" id="medicamento-nome-input-cadastro" placeholder="Nome do Medicamento" class="p-2 border-gray-300 rounded-md shadow-sm border" autocomplete="off">
-                        <input type="text" id="medicamento-posologia-input-cadastro" placeholder="Posologia" class="p-2 border-gray-300 rounded-md shadow-sm border" autocomplete="off">
+                        <div>
+                            <label for="medicamento-nome-input-cadastro" class="block text-sm font-medium mb-1">Nome do Medicamento</label>
+                            <input type="text" id="medicamento-nome-input-cadastro" placeholder="Nome do Medicamento" class="w-full p-2 border-gray-300 rounded-md shadow-sm border" autocomplete="off">
+                        </div>
+                        <div>
+                            <label for="medicamento-posologia-input-cadastro" class="block text-sm font-medium mb-1">Posologia</label>
+                            <input type="text" id="medicamento-posologia-input-cadastro" placeholder="Posologia" class="w-full p-2 border-gray-300 rounded-md shadow-sm border" autocomplete="off">
+                        </div>
                     </div>
-                    <!-- CAMPO DE DATA DA PRESCRIÇÃO MOVIDO PARA DENTRO DO FORMULÁRIO -->
                     <div id="ultimaprescricao-group">
                         <label for="novo-ultimaprescricao" class="block text-sm font-medium"><i class="fas fa-calendar-alt mr-1"></i>Data da Última Prescrição</label>
                         <input type="date" id="novo-ultimaprescricao" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm border" autocomplete="off">
                     </div>
-                    <button type="button" id="add-medicamento-btn-cadastro" class="w-full bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300 text-sm"><i class="fas fa-plus mr-2"></i>Adicionar Medicamento</button>
+                    <button type="button" id="add-medicamento-btn-cadastro" class="btn-uniform w-full bg-gray-200 text-gray-800 hover:bg-gray-300 text-sm"><i class="fas fa-plus"></i>Adicionar Medicamento</button>
                 </div>
             </div>
             <div id="cirurgias-section" class="border-t pt-4 hidden">
                 <h4 class="font-semibold text-md mb-1"><i class="fas fa-cut mr-2"></i>Adicionar Cirurgia</h4>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
-                    <input type="text" id="cirurgia-nome-input-cadastro" placeholder="Nome da Cirurgia" class="p-2 border-gray-300 rounded-md shadow-sm border" autocomplete="off">
-                    <input type="date" id="cirurgia-data-input-cadastro" class="p-2 border-gray-300 rounded-md shadow-sm border" autocomplete="off">
-                    <select id="cirurgia-status-select-cadastro" class="p-2 border-gray-300 rounded-md shadow-sm bg-white border col-span-full">
-                        <option value="" disabled selected>Status da Cirurgia...</option>
-                        ${statusDeCirurgiaOptions}
-                    </select>
+                    <div>
+                        <label for="cirurgia-nome-input-cadastro" class="block text-sm font-medium mb-1">Nome da Cirurgia</label>
+                        <input type="text" id="cirurgia-nome-input-cadastro" placeholder="Nome da Cirurgia" class="w-full p-2 border-gray-300 rounded-md shadow-sm border" autocomplete="off">
+                    </div>
+                    <div>
+                        <label for="cirurgia-data-input-cadastro" class="block text-sm font-medium mb-1">Data da Cirurgia</label>
+                        <input type="date" id="cirurgia-data-input-cadastro" class="w-full p-2 border-gray-300 rounded-md shadow-sm border" autocomplete="off">
+                    </div>
+                    <div class="col-span-full">
+                        <label for="cirurgia-status-select-cadastro" class="block text-sm font-medium mb-1">Status da Cirurgia</label>
+                        <select id="cirurgia-status-select-cadastro" class="w-full p-2 border-gray-300 rounded-md shadow-sm bg-white border">
+                            <option value="" disabled selected>Status da Cirurgia...</option>
+                            ${statusDeCirurgiaOptions}
+                        </select>
+                    </div>
                 </div>
-                <button type="button" id="add-cirurgia-btn-cadastro" class="w-full bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300 text-sm"><i class="fas fa-plus mr-2"></i>Adicionar Cirurgia</button>
+                <button type="button" id="add-cirurgia-btn-cadastro" class="btn-uniform w-full bg-gray-200 text-gray-800 hover:bg-gray-300 text-sm"><i class="fas fa-plus"></i>Adicionar Cirurgia</button>
             </div>
             <div id="outros-section" class="border-t pt-4 hidden">
                 <h4 class="font-semibold text-md mb-1"><i class="fas fa-microscope mr-2"></i>Adicionar Outro Item/Serviço</h4>
                 <div class="grid grid-cols-1 gap-2 mb-2">
-                    <input type="text" id="outro-nome-input-cadastro" placeholder="Nome do Item/Serviço" class="p-2 border-gray-300 rounded-md shadow-sm border" autocomplete="off">
-                    <textarea id="outro-descricao-input-cadastro" rows="2" placeholder="Descrição detalhada (opcional)" class="p-2 border-gray-300 rounded-md shadow-sm border"></textarea>
+                    <div>
+                        <label for="outro-nome-input-cadastro" class="block text-sm font-medium mb-1">Nome do Item/Serviço</label>
+                        <input type="text" id="outro-nome-input-cadastro" placeholder="Nome do Item/Serviço" class="w-full p-2 border-gray-300 rounded-md shadow-sm border" autocomplete="off">
+                    </div>
+                    <div>
+                        <label for="outro-descricao-input-cadastro" class="block text-sm font-medium mb-1">Descrição</label>
+                        <textarea id="outro-descricao-input-cadastro" rows="2" placeholder="Descrição detalhada (opcional)" class="w-full p-2 border-gray-300 rounded-md shadow-sm border"></textarea>
+                    </div>
                 </div>
-                <button type="button" id="add-outro-btn-cadastro" class="w-full bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300 text-sm"><i class="fas fa-plus mr-2"></i>Adicionar Item</button>
+                <button type="button" id="add-outro-btn-cadastro" class="btn-uniform w-full bg-gray-200 text-gray-800 hover:bg-gray-300 text-sm"><i class="fas fa-plus"></i>Adicionar Item</button>
             </div>
             
             <div id="cadastro-itens-adicionados-list" class="space-y-4 pt-4 border-t mt-4">
@@ -2305,9 +2363,9 @@ const getFormHtml = () => {
                  </div>
             </div>
 
-            <div class="text-right border-t pt-4 mt-4">
-                <button type="button" id="cancel-novo-processo-btn" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 mr-2"><i class="fas fa-times mr-2"></i>Cancelar</button>
-                <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"><i class="fas fa-save mr-2"></i>Salvar</button>
+            <div class="flex flex-wrap justify-end gap-2 border-t pt-4 mt-4">
+                <button type="button" id="cancel-novo-processo-btn" class="btn-uniform min-w-[140px] bg-gray-200 text-gray-800 hover:bg-gray-300"><i class="fas fa-times"></i>Cancelar</button>
+                <button type="submit" class="btn-uniform min-w-[140px] bg-indigo-600 text-white hover:bg-indigo-700"><i class="fas fa-save"></i>Salvar</button>
             </div>
         </div>`;
     };
@@ -2891,7 +2949,7 @@ const getFormHtml = () => {
     <input type="number" value="${terapia.quantidade}" min="1" class="w-16 p-1 border rounded-md" data-list="terapiasAdicionadas" data-index="${index}" autocomplete="off">
     <label class="text-sm ml-2">Clínica/Profissional:</label>
     <input type="text" value="${terapia.clinicaProfissional || ''}" placeholder="Nome da clínica/prof." class="w-32 p-1 border rounded-md text-sm" data-list="terapiasAdicionadas" data-index="${index}" data-field="clinicaProfissional" autocomplete="off">
-    <button type="button" class="text-red-500 hover:text-red-700 remove-btn" data-list="terapiasAdicionadas" data-index="${index}"><i class="fas fa-trash-alt"></i></button>
+    <button type="button" class="btn-icon-danger text-red-500 hover:text-red-700 remove-btn border border-red-200" data-list="terapiasAdicionadas" data-index="${index}"><i class="fas fa-trash-alt"></i></button>
    </div>`;
 
 /**
@@ -2899,21 +2957,21 @@ const getFormHtml = () => {
 */
   const renderMedicamentoItem = (med, index) => `
    <div class="flex-grow"><p class="font-semibold"><i class="fas fa-capsules mr-1"></i>${med.nome}</p><p class="text-xs text-gray-600"><i class="fas fa-prescription-bottle mr-1"></i>Posologia: ${med.posologia}</p></div>
-   <button type="button" class="text-red-500 hover:text-red-700 remove-btn mt-2 sm:mt-0" data-list="medicamentosAdicionadas" data-index="${index}"><i class="fas fa-trash-alt"></i></button>`;
+   <button type="button" class="btn-icon-danger text-red-500 hover:text-red-700 remove-btn border border-red-200 mt-2 sm:mt-0" data-list="medicamentosAdicionadas" data-index="${index}"><i class="fas fa-trash-alt"></i></button>`;
 
 /**
 * Renderiza um item de cirurgia para o formulário de registo/edição.
 */
   const renderCirurgiaItem = (cirurgia, index) => `
    <div class="flex-grow"><p class="font-semibold"><i class="fas fa-hospital-symbol mr-1"></i>${cirurgia.nome}</p><p class="text-xs text-gray-600"><i class="fas fa-calendar-day mr-1"></i>Data: ${cirurgia.dataCirurgia || 'N/A'} - <i class="fas fa-info-circle mr-1"></i>Estado: ${cirurgia.status || 'N/A'}</p></div>
-   <button type="button" class="text-red-500 hover:text-red-700 remove-btn mt-2 sm:mt-0" data-list="cirurgiasAdicionadas" data-index="${index}"><i class="fas fa-trash-alt"></i></button>`;
+   <button type="button" class="btn-icon-danger text-red-500 hover:text-red-700 remove-btn border border-red-200 mt-2 sm:mt-0" data-list="cirurgiasAdicionadas" data-index="${index}"><i class="fas fa-trash-alt"></i></button>`;
 
 /**
 * Renderiza um item genérico para o formulário de registo/edição.
 */
   const renderOutroItem = (item, index) => `
    <div class="flex-grow"><p class="font-semibold"><i class="fas fa-cubes mr-1"></i>${item.nome}</p><p class="text-xs text-gray-600"><i class="fas fa-file-alt mr-1"></i>Descrição: ${item.descricao || 'N/A'}</p></div>
-   <button type="button" class="text-red-500 hover:text-red-700 remove-btn mt-2 sm:mt-0" data-list="outrosItensAdicionadas" data-index="${index}"><i class="fas fa-trash-alt"></i></button>`;
+   <button type="button" class="btn-icon-danger text-red-500 hover:text-red-700 remove-btn border border-red-200 mt-2 sm:mt-0" data-list="outrosItensAdicionadas" data-index="${index}"><i class="fas fa-trash-alt"></i></button>`;
 
 /**
 * Renderiza o modal de gestão de utilizadores.
@@ -3069,6 +3127,50 @@ const getFormHtml = () => {
    paginationDiv.classList.remove('hidden');
   }
 
+function getFilteredProcesses(searchTerm = '', minimumChars = 0) {
+   const processes = appState.db.processos || [];
+   const normalizedTerm = String(searchTerm || '').toLowerCase().trim();
+   if (!normalizedTerm || normalizedTerm.length < minimumChars) {
+    return processes;
+   }
+   return processes.filter(p =>
+    String(p.numero || '').toLowerCase().includes(normalizedTerm) ||
+    String(p.paciente || '').toLowerCase().includes(normalizedTerm) ||
+    String(p.genitor || '').toLowerCase().includes(normalizedTerm)
+   );
+  }
+
+  function renderSearchResultsWindow(searchTerm = '') {
+   const resultsContainer = document.getElementById('search-results-window-content');
+   const resultsWindow = document.getElementById('search-results-window');
+   if (!resultsContainer || !resultsWindow) return;
+
+   const results = getFilteredProcesses(searchTerm, 1);
+   resultsContainer.innerHTML = '';
+
+   if (results.length === 0) {
+    resultsContainer.innerHTML = '<p class="p-3 text-sm text-gray-500">Nenhum processo encontrado.</p>';
+    resultsWindow.classList.remove('hidden');
+    return;
+   }
+
+   results.forEach(proc => {
+    const row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'w-full text-left p-3 hover:bg-gray-50 border-b last:border-b-0';
+    row.innerHTML = `<p class="font-semibold text-sm text-gray-800">${proc.paciente || 'Sem paciente'} <span class="font-normal text-gray-500">(${proc.numero || 'Sem número'})</span></p>
+    <p class="text-xs text-gray-600">${proc.genitor ? `Genitor: ${proc.genitor}` : 'Sem genitor informado'}</p>`;
+    row.addEventListener('click', () => {
+     UIService.selectProcesso(proc);
+     resultsWindow.classList.add('hidden');
+     document.getElementById('options-panel')?.classList.add('hidden');
+    });
+    resultsContainer.appendChild(row);
+   });
+
+   resultsWindow.classList.remove('hidden');
+  }
+
 /**
 * Renderiza as opções de processo no painel de pesquisa.
 */
@@ -3081,18 +3183,7 @@ async function renderOptionsPanel(searchTerm = '', filters = {}) {
     return;
    }
 
-   let processesToDisplay = appState.db.processos || [];
-
-   // LÓGICA DE FILTRO CORRIGIDA
-   if (searchTerm && searchTerm.trim().length >= 3) {
-    const lowerCaseSearchTerm = searchTerm.toLowerCase().trim();
-    processesToDisplay = processesToDisplay.filter(p =>
-     String(p.numero || '').toLowerCase().includes(lowerCaseSearchTerm) ||
-     String(p.paciente || '').toLowerCase().includes(lowerCaseSearchTerm) ||
-     String(p.genitor || '').toLowerCase().includes(lowerCaseSearchTerm)
-    );
-   }
-   // Se o termo de busca for menor que 3 caracteres, a lista completa será usada.
+   const processesToDisplay = getFilteredProcesses(searchTerm, 3);
 
    panel.innerHTML = '';
    if (processesToDisplay.length === 0) {
@@ -3127,6 +3218,7 @@ async function renderOptionsPanel(searchTerm = '', filters = {}) {
       Modals.closeModal('report-advanced-search-modal');
      }
      panel.classList.add('hidden'); // Esconde o painel após a seleção
+     document.getElementById('search-results-window')?.classList.add('hidden');
     });
     panel.appendChild(div);
    });
@@ -3214,6 +3306,7 @@ return {
     renderAdvancedSearchResultsPage,
     handleSearchInput, // <-- ADICIONADO AQUI
     handleSearchFocus, // <-- ADICIONADO AQUI
+    renderSearchResultsWindow,
     renderOptionsPanel,
     renderUIForUser // <-- ADICIONE ESTA LINHA
 
@@ -4066,11 +4159,6 @@ const handleAddOutro = () => {
     ultimaprescricao: document.getElementById('novo-ultimaprescricao').value.trim()
     };
 
-    if (!/^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$/.test(values.numero)) {
-    Utils.showMessageBox('Número do processo inválido. Use o padrão CNJ: NNNNNNN-DD.AAAA.J.TR.OOOO.', 'warning');
-    document.getElementById('novo-numero').focus();
-    return;
-    }
     
     if (appState.isEditing) {
     // A lógica de edição continua a mesma
@@ -4726,6 +4814,10 @@ const init = async () => {
     document.getElementById('open-novo-processo-modal-btn').addEventListener('click', Handlers.openCreateModal);
     document.getElementById('search-select-input').addEventListener('input', UIService.handleSearchInput);
     document.getElementById('search-select-input').addEventListener('focus', UIService.handleSearchFocus);
+    document.getElementById('search-open-results-btn').addEventListener('click', () => {
+      const term = document.getElementById('search-select-input').value.trim();
+      UIService.renderSearchResultsWindow(term);
+    });
     document.getElementById('open-admin-config-modal-btn').addEventListener('click', openAdminLoginModal);
     document.getElementById('open-report-advanced-search-modal-btn').addEventListener('click', Handlers.openReportAdvancedSearchModal);
     document.getElementById('generate-report-btn').addEventListener('click', Handlers.generateReportSummary);
@@ -4742,15 +4834,14 @@ const init = async () => {
     
     // Listener para fechar a barra de pesquisa ao clicar fora
     document.addEventListener('click', (event) => {
-        const searchInput = document.getElementById('search-select-input');
+        const customProcessSelector = document.getElementById('custom-process-selector');
         const optionsPanel = document.getElementById('options-panel');
-        if (!optionsPanel || optionsPanel.classList.contains('hidden')) {
-            return; 
-        }
-        const isClickInsideSearch = searchInput.contains(event.target);
-        const isClickInsidePanel = optionsPanel.contains(event.target);
-        if (!isClickInsideSearch && !isClickInsidePanel) {
+        const resultsWindow = document.getElementById('search-results-window');
+        if (!customProcessSelector || !optionsPanel || !resultsWindow) return;
+
+        if (!customProcessSelector.contains(event.target)) {
             optionsPanel.classList.add('hidden');
+            resultsWindow.classList.add('hidden');
         }
     });
 
