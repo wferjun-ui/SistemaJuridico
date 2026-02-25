@@ -10,7 +10,6 @@ namespace SistemaJuridico.ViewModels
         private DebugConsoleWindow? _debugWindow;
 
         public RelayCommand OpenDashboardCommand { get; }
-        public RelayCommand OpenProcessosCommand { get; }
         public RelayCommand OpenRelatoriosCommand { get; }
         public RelayCommand OpenAdminCommand { get; }
         public RelayCommand OpenCadastroUsuarioCommand { get; }
@@ -24,9 +23,6 @@ namespace SistemaJuridico.ViewModels
 
             OpenDashboardCommand = new RelayCommand(() =>
                 _navigator.Navigate(NavigationKey.Dashboard));
-
-            OpenProcessosCommand = new RelayCommand(() =>
-                _navigator.Navigate(NavigationKey.Processos));
 
             OpenRelatoriosCommand = new RelayCommand(() =>
             {

@@ -29,7 +29,6 @@
                                Margin="0,0,16,0"/>
 
                     <Button Content="Dashboard" Margin="0,0,8,0" Padding="12,8" Command="{Binding OpenDashboardCommand}"/>
-                    <Button Content="Processos" Margin="0,0,8,0" Padding="12,8" Command="{Binding OpenProcessosCommand}"/>
                 </StackPanel>
 
                 <WrapPanel DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center" ItemHeight="36">

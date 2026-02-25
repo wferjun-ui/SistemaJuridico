@@ -14,21 +14,20 @@ namespace SistemaJuridico.ViewModels
         private readonly ProcessoCacheService _cacheService;
         private readonly ActiveSessionService _activeSessionService;
 
+        private readonly List<ProcessoBuscaDashboardVM> _todosBusca = new();
+
         public ObservableCollection<ProcessoPrazoVM> ProcessosAtrasados { get; } = new();
         public ObservableCollection<ProcessoPrazoVM> ProcessosAAtrasar { get; } = new();
-        public ObservableCollection<string> ProcessosBloqueados { get; } = new();
         public ObservableCollection<string> PainelAtrasadosResumo { get; } = new();
         public ObservableCollection<string> PainelAAtrasarResumo { get; } = new();
         public ObservableCollection<ActiveUserActivityVM> UsuariosAtivosRecentemente { get; } = new();
+        public ObservableCollection<ProcessoBuscaDashboardVM> ProcessosBusca { get; } = new();
 
         [ObservableProperty]
         private int _totalAtrasados;
 
         [ObservableProperty]
         private int _totalAAtrasar;
-
-        [ObservableProperty]
-        private int _totalBloqueados;
 
         [ObservableProperty]
         private string _usuarioLogadoTexto = "";
@@ -39,6 +38,15 @@ namespace SistemaJuridico.ViewModels
         [ObservableProperty]
         private bool _carregandoEmSegundoPlano;
 
+        [ObservableProperty]
+        private string _textoBusca = string.Empty;
+
+        [ObservableProperty]
+        private ProcessoBuscaDashboardVM? _processoBuscaSelecionado;
+
+        [ObservableProperty]
+        private int _totalBusca;
+
         public DashboardViewModel()
         {
             var db = new DatabaseService();
@@ -48,6 +56,11 @@ namespace SistemaJuridico.ViewModels
 
             RegistrarAtividadeUsuarioAtual();
             Carregar();
+        }
+
+        partial void OnTextoBuscaChanged(string value)
+        {
+            AplicarBuscaProcessos();
         }
 
         [RelayCommand]
@@ -93,7 +106,6 @@ namespace SistemaJuridico.ViewModels
                         col.Item().Text($"Total monitorados: {total}");
                         col.Item().Text($"Atrasados: {TotalAtrasados}");
                         col.Item().Text($"A atrasar: {TotalAAtrasar}");
-                        col.Item().Text($"Bloqueados: {TotalBloqueados}");
                         col.Item().PaddingTop(10).Text("Processos atrasados").Bold();
                         foreach (var p in ProcessosAtrasados.Take(20))
                             col.Item().Text($"• {p.NumeroProcesso} - {p.Paciente} - prazo {p.PrazoTexto}");
@@ -104,18 +116,47 @@ namespace SistemaJuridico.ViewModels
             System.Windows.MessageBox.Show("Resumo PDF exportado com sucesso.");
         }
 
+        [RelayCommand]
+        private void BuscarProcessos()
+        {
+            AplicarBuscaProcessos();
+        }
+
+        [RelayCommand]
+        private void LimparBusca()
+        {
+            TextoBusca = string.Empty;
+            AplicarBuscaProcessos();
+        }
+
+        [RelayCommand]
+        private void NovoProcesso()
+        {
+            var window = new CadastroProcessoWindow();
+            window.ShowDialog();
+            Carregar();
+        }
+
+        [RelayCommand]
+        private void AbrirProcessoBusca(ProcessoBuscaDashboardVM? processo)
+        {
+            if (processo == null || string.IsNullOrWhiteSpace(processo.Id))
+                return;
+
+            AbrirProcessoDetalhe(processo.Id, processo.Numero, processo.Paciente);
+        }
+
         private void AplicarResumo(List<ProcessoResumoCacheItem> processos)
         {
             ProcessosAtrasados.Clear();
             ProcessosAAtrasar.Clear();
-            ProcessosBloqueados.Clear();
             PainelAtrasadosResumo.Clear();
             PainelAAtrasarResumo.Clear();
             UsuariosAtivosRecentemente.Clear();
+            _todosBusca.Clear();
 
             int atrasados = 0;
             int aAtrasar = 0;
-            int bloqueados = 0;
             int processosNaoConcluidos = 0;
 
             var hoje = DateTime.Today;
@@ -128,12 +169,16 @@ namespace SistemaJuridico.ViewModels
                 if (!string.Equals(p.SituacaoRascunho, "Concluído", StringComparison.OrdinalIgnoreCase))
                     processosNaoConcluidos++;
 
-                var usuarioLock = _service.UsuarioEditando(p.ProcessoId);
-                if (!string.IsNullOrWhiteSpace(usuarioLock) && usuarioLock != atual)
+                _todosBusca.Add(new ProcessoBuscaDashboardVM
                 {
-                    bloqueados++;
-                    ProcessosBloqueados.Add($"{p.Numero} - {usuarioLock}");
-                }
+                    Id = p.ProcessoId,
+                    Numero = p.Numero,
+                    Paciente = p.Paciente,
+                    Genitor = p.Genitor,
+                    Juiz = p.Juiz,
+                    TipoProcesso = p.TipoProcesso,
+                    StatusCalculado = p.StatusCalculado ?? p.StatusProcesso
+                });
 
                 if (!TryParsePrazo(p.PrazoFinal, out var prazo))
                     continue;
@@ -145,10 +190,8 @@ namespace SistemaJuridico.ViewModels
                     Paciente = p.Paciente,
                     Juiz = p.Juiz,
                     StatusCalculado = p.StatusCalculado ?? p.StatusProcesso,
-                    DescricaoDiligencia = "Prazo da última verificação",
                     Prazo = prazo,
-                    SituacaoRascunho = string.IsNullOrWhiteSpace(p.SituacaoRascunho) ? "Concluído" : p.SituacaoRascunho,
-                    MotivoRascunho = p.MotivoRascunho
+                    SituacaoRascunho = string.IsNullOrWhiteSpace(p.SituacaoRascunho) ? "Concluído" : p.SituacaoRascunho
                 };
 
                 if (prazo.Date < hoje)
@@ -197,13 +240,38 @@ namespace SistemaJuridico.ViewModels
 
             TotalAtrasados = atrasados;
             TotalAAtrasar = aAtrasar;
-            TotalBloqueados = bloqueados;
 
             ResumoRascunhosTexto = processosNaoConcluidos == 0
                 ? "Sem processos em rascunho ou edição pendente."
                 : $"{processosNaoConcluidos} processo(s) com alterações não salvas (Rascunho/Em edição).";
+
+            AplicarBuscaProcessos();
         }
 
+        private void AplicarBuscaProcessos()
+        {
+            IEnumerable<ProcessoBuscaDashboardVM> consulta = _todosBusca;
+
+            if (!string.IsNullOrWhiteSpace(TextoBusca))
+            {
+                var termo = TextoBusca.Trim();
+                consulta = consulta.Where(x =>
+                    Contem(x.Numero, termo) ||
+                    Contem(x.Paciente, termo) ||
+                    Contem(x.Genitor, termo) ||
+                    Contem(x.Juiz, termo) ||
+                    Contem(x.TipoProcesso, termo) ||
+                    Contem(x.StatusCalculado, termo));
+            }
+
+            var ordenados = consulta.OrderBy(x => x.Numero).Take(200).ToList();
+
+            ProcessosBusca.Clear();
+            foreach (var item in ordenados)
+                ProcessosBusca.Add(item);
+
+            TotalBusca = consulta.Count();
+        }
 
         private void RegistrarAtividadeUsuarioAtual()
         {
@@ -226,24 +294,32 @@ namespace SistemaJuridico.ViewModels
                 || DateTime.TryParse(prazo, out data);
         }
 
+        private static bool Contem(string? fonte, string termo)
+            => !string.IsNullOrWhiteSpace(fonte) && fonte.Contains(termo, StringComparison.OrdinalIgnoreCase);
+
         [RelayCommand]
         private void AbrirProcesso(ProcessoPrazoVM? processoPrazo)
         {
             if (processoPrazo == null || string.IsNullOrWhiteSpace(processoPrazo.ProcessoId))
                 return;
 
+            AbrirProcessoDetalhe(processoPrazo.ProcessoId, processoPrazo.NumeroProcesso, processoPrazo.Paciente);
+        }
+
+        private void AbrirProcessoDetalhe(string processoId, string numeroProcesso, string paciente)
+        {
             var usuario = App.Session.UsuarioAtual;
             if (usuario != null)
             {
                 _activeSessionService.RecordUserActivity(
                     usuario.Email,
                     usuario.Nome,
-                    processoPrazo.ProcessoId,
-                    processoPrazo.NumeroProcesso,
-                    processoPrazo.Paciente);
+                    processoId,
+                    numeroProcesso,
+                    paciente);
             }
 
-            var tela = new ProcessoDetalhesWindow(processoPrazo.ProcessoId);
+            var tela = new ProcessoDetalhesWindow(processoId);
             tela.ShowDialog();
 
             Carregar();
@@ -257,16 +333,25 @@ namespace SistemaJuridico.ViewModels
         public string Paciente { get; set; } = string.Empty;
         public string Juiz { get; set; } = string.Empty;
         public string StatusCalculado { get; set; } = string.Empty;
-        public string DescricaoDiligencia { get; set; } = string.Empty;
         public DateTime Prazo { get; set; }
         public string SituacaoRascunho { get; set; } = "Concluído";
-        public string? MotivoRascunho { get; set; }
 
         public string PrazoTexto => Prazo.ToString("dd/MM/yyyy");
 
         public string StatusSalvamentoTexto => string.Equals(SituacaoRascunho, "Concluído", StringComparison.OrdinalIgnoreCase)
             ? "Salvo"
             : $"Não salvo ({SituacaoRascunho})";
+    }
+
+    public class ProcessoBuscaDashboardVM
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Numero { get; set; } = string.Empty;
+        public string Paciente { get; set; } = string.Empty;
+        public string? Genitor { get; set; }
+        public string Juiz { get; set; } = string.Empty;
+        public string? TipoProcesso { get; set; }
+        public string? StatusCalculado { get; set; }
     }
 
     public class ActiveUserActivityVM
@@ -318,5 +403,4 @@ namespace SistemaJuridico.ViewModels
             }
         }
     }
-
 }
