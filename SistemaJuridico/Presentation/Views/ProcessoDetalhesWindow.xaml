@@ -39,6 +39,40 @@
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
 
+        <Style x:Key="SectionLabelStyle" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="#111827"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+
+        <Style x:Key="InputTextStyle" TargetType="TextBox">
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="BorderBrush" Value="#9CA3AF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,2"/>
+        </Style>
+
+        <Style x:Key="DetailsTabControlStyle" TargetType="TabControl">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+
+        <Style x:Key="DetailsTabItemStyle" TargetType="TabItem">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Padding" Value="18,8"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#374151"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Foreground" Value="#2563EB"/>
+                    <Setter Property="BorderBrush" Value="#2563EB"/>
+                    <Setter Property="BorderThickness" Value="0,0,0,2"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
     </Window.Resources>
 
     <Grid Margin="15">
@@ -67,7 +101,7 @@
                 <ColumnDefinition Width="340"/>
             </Grid.ColumnDefinitions>
 
-            <TabControl Grid.Column="0" Margin="0,0,12,0">
+            <TabControl Grid.Column="0" Margin="0,0,12,0" Style="{StaticResource DetailsTabControlStyle}" ItemContainerStyle="{StaticResource DetailsTabItemStyle}">
                 <TabItem Header="Cadastro">
                     <Grid Margin="10">
                         <Grid.ColumnDefinitions>
@@ -84,19 +118,24 @@
                             <RowDefinition Height="120"/>
                         </Grid.RowDefinitions>
 
-                        <TextBlock Text="Número:" VerticalAlignment="Center"/>
-                        <TextBox Grid.Column="1" Text="{Binding Processo.Numero}" IsEnabled="{Binding PodeEditarProcesso}"/>
+                        <TextBlock Text="Número:" Style="{StaticResource SectionLabelStyle}"/>
+                        <TextBox Grid.Column="1" Style="{StaticResource InputTextStyle}" Text="{Binding Processo.Numero}" IsEnabled="{Binding PodeEditarProcesso}"/>
 
-                        <TextBlock Grid.Row="1" Text="Paciente:" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Processo.Paciente}" IsEnabled="{Binding PodeEditarProcesso}"/>
+                        <TextBlock Grid.Row="1" Text="Paciente:" Style="{StaticResource SectionLabelStyle}"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource InputTextStyle}" Text="{Binding Processo.Paciente}" IsEnabled="{Binding PodeEditarProcesso}"/>
 
-                        <TextBlock Grid.Row="2" Text="Juiz:" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Processo.Juiz}" IsEnabled="{Binding PodeEditarProcesso}"/>
+                        <TextBlock Grid.Row="2" Text="Juiz:" Style="{StaticResource SectionLabelStyle}"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource InputTextStyle}" Text="{Binding Processo.Juiz}" IsEnabled="{Binding PodeEditarProcesso}"/>
 
-                        <TextBlock Grid.Row="3" Text="Classificação:" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding Processo.Classificacao}" IsEnabled="{Binding PodeEditarProcesso}"/>
+                        <TextBlock Grid.Row="3" Text="Classificação:" Style="{StaticResource SectionLabelStyle}"/>
+                        <ComboBox Grid.Row="3" Grid.Column="1" SelectedValuePath="Content" SelectedValue="{Binding Processo.Classificacao, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeEditarProcesso}">
+                            <ComboBoxItem Content="Saúde"/>
+                            <ComboBoxItem Content="Educação"/>
+                            <ComboBoxItem Content="Assistência"/>
+                            <ComboBoxItem Content="Outros"/>
+                        </ComboBox>
 
-                        <TextBlock Grid.Row="4" Text="Fase:" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="4" Text="Fase:" Style="{StaticResource SectionLabelStyle}"/>
                         <ComboBox Grid.Row="4"
                                   Grid.Column="1"
                                   SelectedValuePath="Content"
@@ -107,17 +146,20 @@
                             <ComboBoxItem Content="Arquivado"/>
                         </ComboBox>
 
-                        <TextBlock Grid.Row="5" Text="Observações:" VerticalAlignment="Top"/>
+                        <TextBlock Grid.Row="5" Text="Observações:" Style="{StaticResource SectionLabelStyle}" VerticalAlignment="Top"/>
                         <TextBox Grid.Row="5"
                                  Grid.Column="1"
                                  Text="{Binding Processo.ObservacaoFixa}"
+                                 BorderBrush="#9CA3AF"
+                                 BorderThickness="1"
+                                 Padding="8"
                                  AcceptsReturn="True"
                                  VerticalScrollBarVisibility="Auto"
                                  IsEnabled="{Binding PodeEditarProcesso}"/>
                     </Grid>
                 </TabItem>
 
-                <TabItem Header="Verificação" Visibility="{Binding PodeAcessarAbaVerificacao, Converter={StaticResource BoolToVis}}">
+                <TabItem Header="Verificação Geral" Visibility="{Binding PodeAcessarAbaVerificacao, Converter={StaticResource BoolToVis}}">
                     <DockPanel Margin="10">
                         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
                             <Button Content="Nova verificação"
@@ -144,7 +186,7 @@
                     </DockPanel>
                 </TabItem>
 
-                <TabItem Header="Contas">
+                <TabItem Header="Prestação de Contas">
                     <views:ContasView ProcessoId="{Binding Processo.Id}" />
                 </TabItem>
 
@@ -207,6 +249,9 @@
             <Button Content="Concluir edição"
                     Width="140"
                     Margin="5,0"
+                    Background="#E5E7EB"
+                    BorderBrush="#9CA3AF"
+                    Foreground="#111827"
                     Command="{Binding ConcluirEdicaoCommand}"
                     Style="{StaticResource CampoBloqueavel}" />
 
@@ -227,6 +272,8 @@
             <Button Content="Fechar"
                     Width="100"
                     Margin="5"
+                    Background="#2563EB"
+                    BorderBrush="#2563EB"
                     Click="Fechar_Click"/>
         </StackPanel>
     </Grid>

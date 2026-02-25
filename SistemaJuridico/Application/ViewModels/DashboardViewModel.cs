@@ -51,6 +51,9 @@ namespace SistemaJuridico.ViewModels
         [ObservableProperty]
         private bool _mostrarResultadosBusca;
 
+        [ObservableProperty]
+        private bool _buscaRapidaAtivada;
+
         public DashboardViewModel()
         {
             var db = new DatabaseService();
@@ -65,6 +68,12 @@ namespace SistemaJuridico.ViewModels
         partial void OnTextoBuscaChanged(string value)
         {
             AplicarSugestoesBuscaRapida();
+
+            if (!BuscaRapidaAtivada)
+                return;
+
+            AplicarBuscaProcessos();
+            MostrarResultadosBusca = !string.IsNullOrWhiteSpace(TextoBusca) && ProcessosBusca.Count > 0;
         }
 
         [RelayCommand]
@@ -123,14 +132,16 @@ namespace SistemaJuridico.ViewModels
         [RelayCommand]
         private void BuscarProcessos()
         {
+            BuscaRapidaAtivada = true;
             AplicarBuscaProcessos();
-            MostrarResultadosBusca = !string.IsNullOrWhiteSpace(TextoBusca);
+            MostrarResultadosBusca = !string.IsNullOrWhiteSpace(TextoBusca) && ProcessosBusca.Count > 0;
         }
 
         [RelayCommand]
         private void LimparBusca()
         {
             TextoBusca = string.Empty;
+            BuscaRapidaAtivada = false;
             AplicarBuscaProcessos();
             AplicarSugestoesBuscaRapida();
             MostrarResultadosBusca = false;
@@ -254,6 +265,7 @@ namespace SistemaJuridico.ViewModels
 
             AplicarBuscaProcessos();
             AplicarSugestoesBuscaRapida();
+            BuscaRapidaAtivada = false;
             MostrarResultadosBusca = false;
         }
 
