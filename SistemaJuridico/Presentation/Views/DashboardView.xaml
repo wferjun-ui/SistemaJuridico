@@ -28,7 +28,7 @@
             <Border Grid.Row="0" Padding="14" Margin="0,0,0,14" CornerRadius="10" Background="#FFFFFF" BorderThickness="1" BorderBrush="#E5E7EB">
                 <StackPanel>
                     <TextBlock Text="Controle de Processos" FontSize="30" FontWeight="SemiBold" Foreground="#1F2937"/>
-                    <TextBlock Text="Painel de prazos, bloqueios e atividade recente." Margin="0,4,0,0" Foreground="#6B7280"/>
+                    <TextBlock Text="Painel de prazos, pesquisa e atividade recente." Margin="0,4,0,0" Foreground="#6B7280"/>
 
                     <TextBlock Text="Sincronizando..." Visibility="{Binding CarregandoEmSegundoPlano, Converter={StaticResource BoolToVis}}" Margin="0,8,0,0" Foreground="#B45309" FontWeight="SemiBold"/>
 
@@ -62,29 +62,42 @@
                 </Border>
             </Grid>
 
-            <Border Grid.Row="2" Margin="0,0,0,14" Padding="12" CornerRadius="10" BorderThickness="1" BorderBrush="#D9DEE7" Background="#F9FBFD">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
+            <Border Grid.Row="2" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,14" Background="#FFF8FAFC">
+                <StackPanel>
+                    <DockPanel Margin="0,0,0,8" LastChildFill="True">
+                        <TextBlock DockPanel.Dock="Left" Text="Pesquisar e selecionar processo" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                        <WrapPanel DockPanel.Dock="Right" HorizontalAlignment="Right">
+                            <Button Content="Novo Processo" Command="{Binding NovoProcessoCommand}"/>
+                            <Button Content="Buscar" Width="100" Command="{Binding BuscarProcessosCommand}"/>
+                            <Button Content="Limpar" Width="100" Background="#64748B" BorderBrush="#64748B" Command="{Binding LimparBuscaCommand}"/>
+                        </WrapPanel>
+                        <TextBox MinWidth="280" Text="{Binding TextoBusca, UpdateSourceTrigger=PropertyChanged}"/>
+                    </DockPanel>
 
-                    <StackPanel Grid.Column="0" Margin="0,0,12,0">
-                        <TextBlock Text="Atrasados" FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding TotalAtrasados}" FontSize="24" FontWeight="Bold"/>
-                    </StackPanel>
+                    <TextBlock Text="{Binding TotalBusca, StringFormat=Resultados: {0}}" Margin="0,0,0,6" FontStyle="Italic" Opacity="0.85"/>
 
-                    <StackPanel Grid.Column="1" Margin="0,0,12,0">
-                        <TextBlock Text="A atrasar (7 dias)" FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding TotalAAtrasar}" FontSize="24" FontWeight="Bold"/>
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="2">
-                        <TextBlock Text="Bloqueados" FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding TotalBloqueados}" FontSize="24" FontWeight="Bold"/>
-                    </StackPanel>
-                </Grid>
+                    <DataGrid ItemsSource="{Binding ProcessosBusca}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              SelectedItem="{Binding ProcessoBuscaSelecionado}"
+                              MinHeight="180">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Número" Binding="{Binding Numero}" Width="150"/>
+                            <DataGridTextColumn Header="Paciente" Binding="{Binding Paciente}" Width="2*"/>
+                            <DataGridTextColumn Header="Genitor" Binding="{Binding Genitor}" Width="*"/>
+                            <DataGridTextColumn Header="Juiz" Binding="{Binding Juiz}" Width="*"/>
+                            <DataGridTextColumn Header="Tipo" Binding="{Binding TipoProcesso}" Width="*"/>
+                            <DataGridTextColumn Header="Status" Binding="{Binding StatusCalculado}" Width="*"/>
+                            <DataGridTemplateColumn Header="Ação" Width="110">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="Abrir" Command="{Binding DataContext.AbrirProcessoBuscaCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
             </Border>
 
             <GroupBox Grid.Row="3" Header="Processos atrasados" Margin="0,0,0,14">
@@ -145,10 +158,6 @@
                             <DataGridTextColumn Header="Último processo" Binding="{Binding UltimoProcessoTexto}" Width="*"/>
                         </DataGrid.Columns>
                     </DataGrid>
-                </GroupBox>
-
-                <GroupBox Header="Processos bloqueados">
-                    <ListBox ItemsSource="{Binding ProcessosBloqueados}" MinHeight="90"/>
                 </GroupBox>
             </StackPanel>
         </Grid>
