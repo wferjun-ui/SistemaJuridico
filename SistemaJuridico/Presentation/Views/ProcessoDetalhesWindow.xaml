@@ -4,78 +4,60 @@
         xmlns:views="clr-namespace:SistemaJuridico.Views"
         x:Name="RootWindow"
         Title="Detalhes do Processo"
-        Height="660"
-        Width="1200"
-        WindowStartupLocation="CenterScreen">
+        Height="720"
+        Width="1260"
+        WindowStartupLocation="CenterScreen"
+        Background="#F3F4F6">
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-        <SolidColorBrush x:Key="PrimaryBrush" Color="#4F46E5"/>
 
         <Style x:Key="CardStyle" TargetType="Border">
             <Setter Property="Background" Value="White"/>
             <Setter Property="BorderBrush" Value="#E5E7EB"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Padding" Value="12"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="14"/>
         </Style>
 
-        <Style x:Key="CampoBloqueavel" TargetType="Control">
-            <Setter Property="IsEnabled" Value="True"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding ModoSomenteLeitura}" Value="True">
-                    <Setter Property="IsEnabled" Value="False"/>
-                    <Setter Property="Opacity" Value="0.9"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-        <Style x:Key="RoundedButton" TargetType="Button">
-            <Setter Property="Padding" Value="12,7"/>
-            <Setter Property="Margin" Value="5,0"/>
-            <Setter Property="Background" Value="#4F46E5"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#4F46E5"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Cursor" Value="Hand"/>
-        </Style>
-
-        <Style x:Key="SectionLabelStyle" TargetType="TextBlock">
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Foreground" Value="#111827"/>
+        <Style x:Key="TabItemStyle" TargetType="TabItem">
+            <Setter Property="Padding" Value="16,8"/>
             <Setter Property="FontSize" Value="14"/>
-        </Style>
-
-        <Style x:Key="InputTextStyle" TargetType="TextBox">
-            <Setter Property="Height" Value="30"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="BorderBrush" Value="#9CA3AF"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="8,2"/>
-        </Style>
-
-        <Style x:Key="DetailsTabControlStyle" TargetType="TabControl">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-        </Style>
-
-        <Style x:Key="DetailsTabItemStyle" TargetType="TabItem">
-            <Setter Property="FontSize" Value="16"/>
-            <Setter Property="Padding" Value="18,8"/>
+            <Setter Property="Foreground" Value="#374151"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#374151"/>
             <Style.Triggers>
                 <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Foreground" Value="#2563EB"/>
-                    <Setter Property="BorderBrush" Value="#2563EB"/>
+                    <Setter Property="Foreground" Value="#4F46E5"/>
+                    <Setter Property="BorderBrush" Value="#4F46E5"/>
                     <Setter Property="BorderThickness" Value="0,0,0,2"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
 
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="Background" Value="#4F46E5"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#4F46E5"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="4,0"/>
+        </Style>
+
+        <Style x:Key="MutedButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+            <Setter Property="Background" Value="#E5E7EB"/>
+            <Setter Property="Foreground" Value="#111827"/>
+            <Setter Property="BorderBrush" Value="#D1D5DB"/>
+        </Style>
+
+        <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+            <Setter Property="Background" Value="#B91C1C"/>
+            <Setter Property="BorderBrush" Value="#B91C1C"/>
+        </Style>
     </Window.Resources>
 
-    <Grid Margin="15">
+    <Grid Margin="14">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -90,135 +72,38 @@
                 Padding="10"
                 Margin="0,0,0,10"
                 Visibility="{Binding ModoSomenteLeitura, Converter={StaticResource BoolToVis}}">
-            <TextBlock Text="{Binding UsuarioEditandoTexto}"
-                       FontWeight="SemiBold"
-                       Foreground="#92400E"/>
+            <TextBlock Text="{Binding UsuarioEditandoTexto}" FontWeight="SemiBold" Foreground="#92400E"/>
         </Border>
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="350"/>
+                <ColumnDefinition Width="14"/>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="340"/>
             </Grid.ColumnDefinitions>
 
-            <TabControl Grid.Column="0" Margin="0,0,12,0" Style="{StaticResource DetailsTabControlStyle}" ItemContainerStyle="{StaticResource DetailsTabItemStyle}">
-                <TabItem Header="Cadastro">
-                    <Grid Margin="10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="180"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="40"/>
-                            <RowDefinition Height="40"/>
-                            <RowDefinition Height="40"/>
-                            <RowDefinition Height="40"/>
-                            <RowDefinition Height="40"/>
-                            <RowDefinition Height="120"/>
-                        </Grid.RowDefinitions>
-
-                        <TextBlock Text="Número:" Style="{StaticResource SectionLabelStyle}"/>
-                        <TextBox Grid.Column="1" Style="{StaticResource InputTextStyle}" Text="{Binding Processo.Numero}" IsEnabled="{Binding PodeEditarProcesso}"/>
-
-                        <TextBlock Grid.Row="1" Text="Paciente:" Style="{StaticResource SectionLabelStyle}"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource InputTextStyle}" Text="{Binding Processo.Paciente}" IsEnabled="{Binding PodeEditarProcesso}"/>
-
-                        <TextBlock Grid.Row="2" Text="Juiz:" Style="{StaticResource SectionLabelStyle}"/>
-                        <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource InputTextStyle}" Text="{Binding Processo.Juiz}" IsEnabled="{Binding PodeEditarProcesso}"/>
-
-                        <TextBlock Grid.Row="3" Text="Classificação:" Style="{StaticResource SectionLabelStyle}"/>
-                        <ComboBox Grid.Row="3" Grid.Column="1" SelectedValuePath="Content" SelectedValue="{Binding Processo.Classificacao, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeEditarProcesso}">
-                            <ComboBoxItem Content="Saúde"/>
-                            <ComboBoxItem Content="Educação"/>
-                            <ComboBoxItem Content="Assistência"/>
-                            <ComboBoxItem Content="Outros"/>
-                        </ComboBox>
-
-                        <TextBlock Grid.Row="4" Text="Fase:" Style="{StaticResource SectionLabelStyle}"/>
-                        <ComboBox Grid.Row="4"
-                                  Grid.Column="1"
-                                  SelectedValuePath="Content"
-                                  SelectedValue="{Binding Processo.StatusFase, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                  IsEnabled="{Binding PodeEditarProcesso}">
-                            <ComboBoxItem Content="Conhecimento"/>
-                            <ComboBoxItem Content="Execução"/>
-                            <ComboBoxItem Content="Arquivado"/>
-                        </ComboBox>
-
-                        <TextBlock Grid.Row="5" Text="Observações:" Style="{StaticResource SectionLabelStyle}" VerticalAlignment="Top"/>
-                        <TextBox Grid.Row="5"
-                                 Grid.Column="1"
-                                 Text="{Binding Processo.ObservacaoFixa}"
-                                 BorderBrush="#9CA3AF"
-                                 BorderThickness="1"
-                                 Padding="8"
-                                 AcceptsReturn="True"
-                                 VerticalScrollBarVisibility="Auto"
-                                 IsEnabled="{Binding PodeEditarProcesso}"/>
-                    </Grid>
-                </TabItem>
-
-                <TabItem Header="Verificação Geral" Visibility="{Binding PodeAcessarAbaVerificacao, Converter={StaticResource BoolToVis}}">
-                    <DockPanel Margin="10">
-                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
-                            <Button Content="Nova verificação"
-                                    Width="160"
-                                    Margin="0,0,8,0"
-                                    HorizontalAlignment="Left"
-                                    Command="{Binding NovaVerificacaoCommand}"/>
-                            <Button Content="Desfazer última"
-                                    Width="140"
-                                    HorizontalAlignment="Left"
-                                    Command="{Binding DesfazerUltimaVerificacaoCommand}"
-                                    Visibility="{Binding PodeAcessarAbaVerificacao, Converter={StaticResource BoolToVis}}"/>
-                        </StackPanel>
-                        <DataGrid ItemsSource="{Binding Verificacoes}"
-                                  AutoGenerateColumns="False"
-                                  IsReadOnly="True">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Data" Binding="{Binding DataHora}" Width="140"/>
-                                <DataGridTextColumn Header="Status" Binding="{Binding StatusProcesso}" Width="*"/>
-                                <DataGridTextColumn Header="Responsável" Binding="{Binding Responsavel}" Width="180"/>
-                                <DataGridTextColumn Header="Pendência" Binding="{Binding PendenciaDescricao}" Width="250"/>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </DockPanel>
-                </TabItem>
-
-                <TabItem Header="Prestação de Contas">
-                    <views:ContasView ProcessoId="{Binding Processo.Id}" />
-                </TabItem>
-
-                <TabItem Header="Histórico">
-                    <DataGrid Margin="10"
-                              ItemsSource="{Binding Historicos}"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Data/Hora" Binding="{Binding DataHora}" Width="130"/>
-                            <DataGridTextColumn Header="Ação" Binding="{Binding Acao}" Width="220"/>
-                            <DataGridTextColumn Header="Usuário" Binding="{Binding Usuario}" Width="190"/>
-                            <DataGridTextColumn Header="Detalhes" Binding="{Binding Detalhes}" Width="*"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </TabItem>
-            </TabControl>
-
-            <Border Grid.Column="1" Background="#FFF" BorderBrush="#DDD" BorderThickness="1" CornerRadius="8" Padding="12">
+            <Border Grid.Column="0" Style="{StaticResource CardStyle}">
                 <StackPanel>
-                    <TextBlock Text="Resumo do Processo" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                    <TextBlock Text="Resumo do Processo" FontSize="19" FontWeight="Bold" Margin="0,0,0,14"/>
 
                     <TextBlock Text="Paciente" FontWeight="SemiBold"/>
                     <TextBlock Text="{Binding Processo.Paciente}" Margin="0,0,0,8"/>
 
-                    <TextBlock Text="Juiz" FontWeight="SemiBold"/>
-                    <TextBlock Text="{Binding Processo.Juiz}" Margin="0,0,0,8"/>
+                    <TextBlock Text="Representante" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding Processo.Representante}" Margin="0,0,0,8"/>
 
                     <TextBlock Text="Número" FontWeight="SemiBold"/>
                     <TextBlock Text="{Binding Processo.Numero}" Margin="0,0,0,8"/>
 
-                    <TextBlock Text="Saldo de contas a prestar" FontWeight="SemiBold"/>
+                    <TextBlock Text="Juiz" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding Processo.Juiz}" Margin="0,0,0,8"/>
+
+                    <TextBlock Text="Status" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding Processo.StatusFase}" Margin="0,0,0,8"/>
+
+                    <Separator Margin="0,8"/>
+
+                    <TextBlock Text="Saldo a prestar" FontWeight="SemiBold"/>
                     <TextBlock Text="{Binding TotalContasAPrestar, StringFormat=R$ {0:N2}}" Margin="0,0,0,8"/>
 
                     <TextBlock Text="Última verificação" FontWeight="SemiBold"/>
@@ -227,54 +112,164 @@
                     <TextBlock Text="Último responsável" FontWeight="SemiBold"/>
                     <TextBlock Text="{Binding UltimaVerificacaoResponsavel}" Margin="0,0,0,8"/>
 
-                    <TextBlock Text="Hash do processo" FontWeight="SemiBold"/>
+                    <TextBlock Text="Hash" FontWeight="SemiBold"/>
                     <TextBlock Text="{Binding HashProcesso}" Margin="0,0,0,8"/>
 
-                    <TextBlock Text="Data da prescrição (90 dias)" FontWeight="SemiBold"/>
+                    <TextBlock Text="Data da prescrição" FontWeight="SemiBold"/>
                     <TextBlock Text="{Binding DataPrescricao}" Margin="0,0,0,8"/>
 
                     <TextBlock Text="Status da atualização" FontWeight="SemiBold"/>
-                    <TextBlock Text="{Binding PrescricaoStatus}" Foreground="DarkRed"/>
+                    <TextBlock Text="{Binding PrescricaoStatus}" Foreground="#B45309"/>
                 </StackPanel>
+            </Border>
+
+            <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+                <TabControl BorderThickness="0" Background="Transparent" ItemContainerStyle="{StaticResource TabItemStyle}">
+                    <TabItem Header="Verificação Geral">
+                        <Grid Margin="4">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,8">
+                                <TextBlock Text="Status do Processo" Margin="0,0,0,4" FontWeight="SemiBold"/>
+                                <TextBox Text="{Binding StatusVerificacao, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="0" Grid.Column="1" Margin="8,0,0,8">
+                                <TextBlock Text="Responsável" Margin="0,0,0,4" FontWeight="SemiBold"/>
+                                <TextBox Text="{Binding ResponsavelVerificacao, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <TextBlock Text="Descrição" Margin="0,0,0,4" FontWeight="SemiBold"/>
+                                <TextBox Height="70" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding DescricaoVerificacao, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
+                            </StackPanel>
+
+                            <Grid Grid.Row="2" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                    <CheckBox Content="Diligência realizada" IsChecked="{Binding DiligenciaRealizada}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
+                                    <TextBlock Text="Descrição da diligência" Margin="0,8,0,4" FontWeight="SemiBold"/>
+                                    <TextBox Height="60" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding DescricaoDiligencia, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                    <CheckBox Content="Possui pendências" IsChecked="{Binding PossuiPendencias}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
+                                    <TextBlock Text="Descrição das pendências" Margin="0,8,0,4" FontWeight="SemiBold"/>
+                                    <TextBox Height="60" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding DescricaoPendencias, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Margin="0,0,0,10">
+                                <TextBlock Text="Prazo da diligência" Margin="0,0,0,4" FontWeight="SemiBold"/>
+                                <TextBox Text="{Binding PrazoDiligencia, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
+                            </StackPanel>
+
+                            <DockPanel Grid.Row="4">
+                                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+                                    <Button Content="Salvar Verificação" Width="150" Command="{Binding NovaVerificacaoCommand}" Style="{StaticResource PrimaryButton}"/>
+                                    <Button Content="Desfazer última" Width="130" Command="{Binding DesfazerUltimaVerificacaoCommand}" Style="{StaticResource MutedButton}"/>
+                                </StackPanel>
+
+                                <DataGrid ItemsSource="{Binding Verificacoes}" AutoGenerateColumns="False" IsReadOnly="True">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Data" Binding="{Binding DataHora}" Width="160"/>
+                                        <DataGridTextColumn Header="Status" Binding="{Binding StatusProcesso}" Width="*"/>
+                                        <DataGridTextColumn Header="Responsável" Binding="{Binding Responsavel}" Width="180"/>
+                                        <DataGridTextColumn Header="Pendência" Binding="{Binding PendenciaDescricao}" Width="250"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </DockPanel>
+                        </Grid>
+                    </TabItem>
+
+                    <TabItem Header="Prestação de Contas">
+                        <views:ContasView ProcessoId="{Binding Processo.Id}" />
+                    </TabItem>
+
+                    <TabItem Header="Histórico">
+                        <DataGrid Margin="6" ItemsSource="{Binding Historicos}" AutoGenerateColumns="False" IsReadOnly="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Data/Hora" Binding="{Binding DataHora}" Width="150"/>
+                                <DataGridTextColumn Header="Ação" Binding="{Binding Acao}" Width="220"/>
+                                <DataGridTextColumn Header="Usuário" Binding="{Binding Usuario}" Width="180"/>
+                                <DataGridTextColumn Header="Detalhes" Binding="{Binding Detalhes}" Width="*"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </TabItem>
+                </TabControl>
             </Border>
         </Grid>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 10 0 0">
-            <Button Content="Salvar rascunho"
-                    Width="140"
-                    Margin="5,0"
-                    Command="{Binding SalvarRascunhoCommand}"
-                    Style="{StaticResource CampoBloqueavel}"/>
-
-            <Button Content="Concluir edição"
-                    Width="140"
-                    Margin="5,0"
-                    Background="#E5E7EB"
-                    BorderBrush="#9CA3AF"
-                    Foreground="#111827"
-                    Command="{Binding ConcluirEdicaoCommand}"
-                    Style="{StaticResource CampoBloqueavel}" />
-
-            <Button Content="Salvar processo"
-                    Width="140"
-                    Command="{Binding SalvarProcessoCommand}"
-                    IsEnabled="{Binding PodeEditarProcesso}"
-                    Style="{StaticResource RoundedButton}"/>
-
-            <Button Content="Excluir processo"
-                    Width="140"
-                    Command="{Binding ExcluirProcessoCommand}"
-                    Visibility="{Binding PodeEditarProcesso, Converter={StaticResource BoolToVis}}"
-                    Background="#B91C1C"
-                    BorderBrush="#B91C1C"
-                    Style="{StaticResource RoundedButton}"/>
-
-            <Button Content="Fechar"
-                    Width="100"
-                    Margin="5"
-                    Background="#2563EB"
-                    BorderBrush="#2563EB"
-                    Click="Fechar_Click"/>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="Salvar rascunho" Width="130" Command="{Binding SalvarRascunhoCommand}" Style="{StaticResource MutedButton}"/>
+            <Button Content="Concluir edição" Width="130" Command="{Binding ConcluirEdicaoCommand}" Style="{StaticResource MutedButton}"/>
+            <Button Content="Editar processo" Width="130" Command="{Binding AbrirEdicaoProcessoCommand}" Style="{StaticResource PrimaryButton}"/>
+            <Button Content="Excluir processo" Width="130" Command="{Binding AbrirConfirmacaoExclusaoCommand}" Style="{StaticResource DangerButton}"/>
+            <Button Content="Fechar" Width="100" Background="#2563EB" BorderBrush="#2563EB" Foreground="White" Margin="4,0" Click="Fechar_Click"/>
         </StackPanel>
+
+        <Border Grid.RowSpan="3"
+                Background="#99000000"
+                Visibility="{Binding IsEditDialogOpen, Converter={StaticResource BoolToVis}}">
+            <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="560">
+                <Border Style="{StaticResource CardStyle}" Padding="16">
+                    <StackPanel>
+                        <TextBlock Text="Editar Processo" FontSize="18" FontWeight="Bold" Margin="0,0,0,12"/>
+
+                        <TextBlock Text="Número"/>
+                        <TextBox Text="{Binding NumeroEdicao, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8"/>
+
+                        <TextBlock Text="Paciente"/>
+                        <TextBox Text="{Binding PacienteEdicao, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8"/>
+
+                        <TextBlock Text="Representante"/>
+                        <TextBox Text="{Binding RepresentanteEdicao, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8"/>
+
+                        <TextBlock Text="Juiz"/>
+                        <TextBox Text="{Binding JuizEdicao, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8"/>
+
+                        <TextBlock Text="Status"/>
+                        <TextBox Text="{Binding StatusFaseEdicao, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,12"/>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Cancelar" Width="110" Style="{StaticResource MutedButton}" Command="{Binding CancelarEdicaoProcessoCommand}"/>
+                            <Button Content="Salvar" Width="110" Style="{StaticResource PrimaryButton}" Command="{Binding ConfirmarEdicaoProcessoCommand}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <Border Grid.RowSpan="3"
+                Background="#99000000"
+                Visibility="{Binding IsDeleteDialogOpen, Converter={StaticResource BoolToVis}}">
+            <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">
+                <Border Style="{StaticResource CardStyle}" Padding="18">
+                    <StackPanel>
+                        <TextBlock Text="Excluir processo" FontSize="18" FontWeight="Bold" Margin="0,0,0,8"/>
+                        <TextBlock TextWrapping="Wrap" Text="Deseja excluir permanentemente este processo e todos os dados vinculados? Esta ação não pode ser desfeita." Margin="0,0,0,14"/>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Cancelar" Width="110" Style="{StaticResource MutedButton}" Command="{Binding CancelarExclusaoCommand}"/>
+                            <Button Content="Excluir" Width="110" Style="{StaticResource DangerButton}" Command="{Binding ExcluirProcessoCommand}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
     </Grid>
 </Window>
