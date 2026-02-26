@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
+using System.Threading.Tasks;
 using QuestPDF.Infrastructure;
 using Forms = System.Windows.Forms;
 
@@ -28,17 +29,21 @@ namespace SistemaJuridico
             QuestPDF.Settings.License = LicenseType.Community;
 
             RegistrarTratamentoGlobalExcecoes();
+            _logger.Info("Inicializando aplicação SistemaJuridico.");
 
             try
             {
                 var pastaSql = GarantirPastaBanco();
+                _logger.Info($"Pasta do banco selecionada: {pastaSql}");
                 _database = new DatabaseService(pastaSql);
                 _database.Initialize();
+                _logger.Info("Banco de dados inicializado com sucesso.");
 
                 var versionador = new DatabaseVersionService(_database);
                 versionador.GarantirAtualizacao();
 
                 var loginWindow = new LoginWindow();
+                _logger.Info("Tela de login carregada.");
                 var vm = new LoginViewModel();
                 vm.LoginSucesso += OnLoginSucesso;
 
@@ -70,6 +75,12 @@ namespace SistemaJuridico
             {
                 if (args.ExceptionObject is Exception ex)
                     _logger.Error("Exceção não tratada no AppDomain", ex);
+            };
+
+            TaskScheduler.UnobservedTaskException += (_, args) =>
+            {
+                _logger.Error("Exceção não observada em Task", args.Exception);
+                args.SetObserved();
             };
         }
 
@@ -117,6 +128,8 @@ namespace SistemaJuridico
                     new ViewFactoryService(),
                     viewRegistry));
 
+                _logger.Info("Login concluído com sucesso. Abrindo shell principal.");
+
                 var mainShell = new MainShellWindow(
                     navigationService,
                     mainShellVM);
@@ -125,6 +138,7 @@ namespace SistemaJuridico
 
                 MainWindow = mainShell;
                 mainShell.Show();
+                _logger.Info("Shell principal exibido.");
 
                 loginWindow?.Close();
             }
