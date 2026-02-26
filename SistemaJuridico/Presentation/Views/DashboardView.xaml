@@ -22,7 +22,6 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <TextBlock Grid.Row="0"
@@ -65,10 +64,11 @@
                     <StackPanel>
                         <TextBlock Text="🔎 Pesquisar e Selecionar Processo" FontWeight="SemiBold" Foreground="#374151"/>
                         <TextBox Margin="0,8,0,0"
+                                 GotFocus="SearchTextBox_OnGotFocus"
                                  Text="{Binding TextoBusca, UpdateSourceTrigger=PropertyChanged}"
                                  MinHeight="34"
-                                 ToolTip="Digite 3+ letras para pesquisar processos"/>
-                        <TextBlock Margin="0,6,0,0" Foreground="#6B7280" FontSize="12" Text="Digite 3+ letras para pesquisar por número, paciente, genitor, juiz, tipo ou status."/>
+                                 ToolTip="Digite 3+ letras para pesquisar processos ou clique para ver a lista"/>
+                        <TextBlock Margin="0,6,0,0" Foreground="#6B7280" FontSize="12" Text="Digite 3+ letras para pesquisar por número, paciente, genitor, juiz, tipo ou status, ou clique no campo para ver a lista."/>
 
                         <ListBox Margin="0,8,0,0"
                                  MaxHeight="220"
@@ -124,47 +124,6 @@
                     <TextBlock Text="{Binding UsuarioLogadoTexto}" Margin="0,3,0,0" Opacity="0.72"/>
                 </StackPanel>
             </Border>
-
-            <Grid Grid.Row="4">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <GroupBox Header="Processos atrasados" Margin="0,0,0,14">
-                    <DataGrid ItemsSource="{Binding ProcessosAtrasados}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" MinHeight="170">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Processo" Binding="{Binding NumeroProcesso}" Width="140"/>
-                            <DataGridTextColumn Header="Paciente" Binding="{Binding Paciente}" Width="*"/>
-                            <DataGridTextColumn Header="Prazo" Binding="{Binding PrazoTexto}" Width="110"/>
-                            <DataGridTemplateColumn Header="Ação" Width="110">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Button Content="Abrir" Command="{Binding DataContext.AbrirProcessoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </GroupBox>
-
-                <GroupBox Grid.Row="1" Header="Processos a atrasar (próximos 7 dias)">
-                    <DataGrid ItemsSource="{Binding ProcessosAAtrasar}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" MinHeight="170">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Processo" Binding="{Binding NumeroProcesso}" Width="140"/>
-                            <DataGridTextColumn Header="Paciente" Binding="{Binding Paciente}" Width="*"/>
-                            <DataGridTextColumn Header="Prazo" Binding="{Binding PrazoTexto}" Width="110"/>
-                            <DataGridTemplateColumn Header="Ação" Width="110">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Button Content="Abrir" Command="{Binding DataContext.AbrirProcessoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </GroupBox>
-            </Grid>
         </Grid>
     </ScrollViewer>
 </UserControl>

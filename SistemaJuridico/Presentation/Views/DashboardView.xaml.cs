@@ -1,4 +1,6 @@
+using System.Windows;
 using System.Windows.Controls;
+using SistemaJuridico.ViewModels;
 
 namespace SistemaJuridico.Views
 {
@@ -7,6 +9,14 @@ namespace SistemaJuridico.Views
         public DashboardView()
         {
             InitializeComponent();
+        }
+
+        private void SearchTextBox_OnGotFocus(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is DashboardViewModel vm)
+            {
+                vm.ExibirListaBuscaCompleta();
+            }
         }
     }
 }
