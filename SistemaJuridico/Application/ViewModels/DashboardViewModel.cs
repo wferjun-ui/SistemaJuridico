@@ -73,6 +73,14 @@ namespace SistemaJuridico.ViewModels
             MostrarResultadosBusca = BuscaRapidaAtivada && ProcessosBusca.Count > 0;
         }
 
+
+        public void ExibirListaBuscaCompleta()
+        {
+            BuscaRapidaAtivada = true;
+            AplicarBuscaProcessos();
+            MostrarResultadosBusca = ProcessosBusca.Count > 0;
+        }
+
         [RelayCommand]
         private void Carregar()
         {

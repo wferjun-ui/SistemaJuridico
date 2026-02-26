@@ -20,6 +20,17 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+          cache: true
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~\.nuget\packages
+            ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', '**/packages.lock.json', 'global.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
 
       - name: Detect solution and app project
         id: detect
@@ -77,9 +88,17 @@ jobs:
             -p:DebugSymbols=false `
             -o "$publishDir"
 
-      - name: Install Inno Setup
+      - name: Ensure Inno Setup is available
         shell: pwsh
-        run: choco install innosetup --no-progress -y
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (Test-Path $iscc) {
+            Write-Host "Inno Setup already available."
+            exit 0
+          }
+
+          Write-Host "Inno Setup not found. Installing via Chocolatey..."
+          choco install innosetup --no-progress -y
 
       - name: Build Windows installer
         id: installer
