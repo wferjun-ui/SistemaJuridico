@@ -40,6 +40,9 @@ namespace SistemaJuridico.ViewModels
         private string _resumoRascunhosTexto = "Sem processos em rascunho ou edição pendente.";
 
         [ObservableProperty]
+        private string _painelDetalhesProcessoTexto = "Nenhum processo selecionado. Pesquise ou selecione um processo para visualizar os detalhes abaixo.";
+
+        [ObservableProperty]
         private bool _carregandoEmSegundoPlano;
 
         [ObservableProperty]
@@ -383,6 +386,9 @@ namespace SistemaJuridico.ViewModels
                 }
 
                 _logger.Info($"Abrindo processo {processoId} ({numeroProcesso}) a partir do dashboard.");
+                PainelDetalhesProcessoTexto = $"Processo selecionado: {numeroProcesso} - {paciente}.
+
+A janela de detalhes foi aberta para edição completa, e esta área permanece sincronizada com a seleção no dashboard.";
 
                 var window = new ProcessoDetalhesWindow(processoId)
                 {

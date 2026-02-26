@@ -20,6 +20,14 @@ namespace SistemaJuridico.Models
 
         public bool IsDesnecessario { get; set; }
 
+        public bool IsQuantidadeModificada { get; set; }
+
+        public bool IsLocalTratamentoModificado { get; set; }
+
+        public bool IsSus { get; set; }
+
+        public bool IsParticular { get; set; }
+
         public bool TemBloqueio { get; set; }
     }
 }
