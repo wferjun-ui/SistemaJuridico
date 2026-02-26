@@ -18,6 +18,7 @@ namespace SistemaJuridico.ViewModels
         private readonly ContaService _service;
         private readonly VerificacaoService _verificacaoService;
         private readonly AuditService _auditService;
+        private readonly HistoricoService _historicoService;
         private readonly string _processoId;
         private readonly AppStateViewModel _appState;
 
@@ -73,6 +74,7 @@ namespace SistemaJuridico.ViewModels
             _service = new ContaService(db);
             _verificacaoService = new VerificacaoService(db);
             _auditService = new AuditService(db);
+            _historicoService = new HistoricoService(db);
 
             Carregar();
             CarregarRascunhos();
@@ -237,6 +239,7 @@ namespace SistemaJuridico.ViewModels
             {
                 conta.ProcessoId = _processoId;
                 _service.Inserir(conta);
+                _historicoService.Registrar(_processoId, "Lançamento contábil incluído", MontarResumoConta(conta));
                 _auditService.Registrar(
                     "Conta.Criada",
                     "processo",
@@ -298,6 +301,7 @@ namespace SistemaJuridico.ViewModels
                 EdicaoConta.TerapiaMedicamentoNome = TerapiaManual.Trim();
 
             _service.Atualizar(EdicaoConta);
+            _historicoService.Registrar(_processoId, "Conta individual editada", MontarResumoConta(EdicaoConta));
             _auditService.Registrar(
                 "Conta.Editada",
                 "processo",
@@ -322,6 +326,7 @@ namespace SistemaJuridico.ViewModels
 
             if (System.Windows.MessageBox.Show("Excluir conta?", "Confirma", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
+                _historicoService.Registrar(_processoId, "Conta individual excluída", MontarResumoConta(ContaSelecionada));
                 _service.Excluir(ContaSelecionada.Id);
                 _auditService.Registrar(
                     "Conta.Excluida",
@@ -433,6 +438,7 @@ namespace SistemaJuridico.ViewModels
                 return;
 
             _service.FecharConta(ContaSelecionada.Id);
+            _historicoService.Registrar(_processoId, "Conta fechada", $"{MontarResumoConta(ContaSelecionada)}. Status: fechada.");
             _auditService.Registrar("Conta.Fechada", "processo", _processoId, $"Conta {ContaSelecionada.Id} fechada");
             Carregar();
         }
@@ -470,6 +476,12 @@ namespace SistemaJuridico.ViewModels
                     System.Windows.MessageBox.Show("Valor do Alvará deve ser maior que zero.");
                     return false;
                 }
+
+                if (string.IsNullOrWhiteSpace(conta.NumNfAlvara))
+                {
+                    System.Windows.MessageBox.Show("Número de NF/Alvará é obrigatório para lançamentos do tipo Alvará.");
+                    return false;
+                }
             }
             else
             {
@@ -487,6 +499,27 @@ namespace SistemaJuridico.ViewModels
                 {
                     System.Windows.MessageBox.Show("Valor da Conta deve ser maior que zero.");
                     return false;
+                }
+
+                if (ExibirCamposReferencia)
+                {
+                    if (string.IsNullOrWhiteSpace(conta.Quantidade))
+                    {
+                        System.Windows.MessageBox.Show("Quantidade é obrigatória para Tratamento e Despesa Geral.");
+                        return false;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(conta.MesReferencia) && (!int.TryParse(conta.MesReferencia, out var mes) || mes < 1 || mes > 12))
+                    {
+                        System.Windows.MessageBox.Show("Mês de referência inválido. Informe valor entre 1 e 12.");
+                        return false;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(conta.AnoReferencia) && (!int.TryParse(conta.AnoReferencia, out var ano) || ano < 1900 || ano > 3000))
+                    {
+                        System.Windows.MessageBox.Show("Ano de referência inválido.");
+                        return false;
+                    }
                 }
             }
 
@@ -620,6 +653,13 @@ namespace SistemaJuridico.ViewModels
             var usuario = App.Session.UsuarioAtual?.Id ?? "anonimo";
             var processo = string.IsNullOrWhiteSpace(_processoId) ? "sem-processo" : _processoId;
             return Path.Combine(basePath, $"{usuario}-{processo}.json");
+        }
+
+        private static string MontarResumoConta(Conta conta)
+        {
+            return $"Data {conta.DataMovimentacao}, tipo {conta.TipoLancamento}, mov. {conta.MovProcesso ?? "N/A"}, " +
+                   $"entrada {conta.ValorAlvara.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))}, " +
+                   $"saída {conta.ValorConta.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))}, histórico: {conta.Historico}";
         }
     }
 

@@ -184,8 +184,8 @@
 
                             <DockPanel Grid.Row="4">
                                 <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
-                                    <Button Content="Salvar Verificação" Width="150" Command="{Binding NovaVerificacaoCommand}" Style="{StaticResource PrimaryButton}"/>
-                                    <Button Content="Desfazer última" Width="130" Command="{Binding DesfazerUltimaVerificacaoCommand}" Style="{StaticResource MutedButton}"/>
+                                    <Button Content="Salvar Verificação" MinWidth="170" Padding="14,7" Command="{Binding NovaVerificacaoCommand}" Style="{StaticResource PrimaryButton}"/>
+                                    <Button Content="Desfazer Última Verificação" MinWidth="220" Padding="14,7" Command="{Binding DesfazerUltimaVerificacaoCommand}" IsEnabled="{Binding PodeDesfazerUltimaVerificacao}" Style="{StaticResource MutedButton}"/>
                                 </StackPanel>
 
                                 <DataGrid ItemsSource="{Binding Verificacoes}" AutoGenerateColumns="False" IsReadOnly="True">
@@ -237,6 +237,12 @@
                                                     <Run Text="Alterações (como estava / o que mudou): " FontWeight="SemiBold"/>
                                                     <Run Text="{Binding AlteracoesTexto}"/>
                                                 </TextBlock>
+                                                <TextBlock Margin="0,6,0,0" TextWrapping="Wrap" Foreground="#4B5563">
+                                                    <Run Text="Registro de diligência: " FontWeight="SemiBold"/>
+                                                    <Run Text="{Binding DiligenciaRealizada}"/>
+                                                    <Run Text=" | Possui pendências: " FontWeight="SemiBold"/>
+                                                    <Run Text="{Binding DiligenciaPendente}"/>
+                                                </TextBlock>
                                             </StackPanel>
                                         </Border>
                                     </DataTemplate>
@@ -248,13 +254,13 @@
             </Border>
         </Grid>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
-            <Button Content="Salvar rascunho" Width="130" Command="{Binding SalvarRascunhoCommand}" Style="{StaticResource MutedButton}"/>
-            <Button Content="Concluir edição" Width="130" Command="{Binding ConcluirEdicaoCommand}" Style="{StaticResource MutedButton}"/>
-            <Button Content="Editar processo" Width="130" Command="{Binding AbrirEdicaoProcessoCommand}" Style="{StaticResource PrimaryButton}"/>
-            <Button Content="Excluir processo" Width="130" Command="{Binding AbrirConfirmacaoExclusaoCommand}" Style="{StaticResource DangerButton}"/>
-            <Button Content="Fechar" Width="100" Background="#2563EB" BorderBrush="#2563EB" Foreground="White" Margin="4,0" Click="Fechar_Click"/>
-        </StackPanel>
+        <WrapPanel Grid.Row="2" HorizontalAlignment="Right" Margin="0,10,0,0" ItemHeight="36">
+            <Button Content="Salvar rascunho" MinWidth="140" Command="{Binding SalvarRascunhoCommand}" Style="{StaticResource MutedButton}"/>
+            <Button Content="Concluir edição" MinWidth="140" Command="{Binding ConcluirEdicaoCommand}" Style="{StaticResource MutedButton}"/>
+            <Button Content="Editar processo" MinWidth="140" Command="{Binding AbrirEdicaoProcessoCommand}" Style="{StaticResource PrimaryButton}"/>
+            <Button Content="Excluir processo" MinWidth="140" Command="{Binding AbrirConfirmacaoExclusaoCommand}" Style="{StaticResource DangerButton}"/>
+            <Button Content="Fechar" MinWidth="110" Background="#2563EB" BorderBrush="#2563EB" Foreground="White" Margin="4,0" Padding="12,7" Click="Fechar_Click"/>
+        </WrapPanel>
 
         <Border Grid.RowSpan="3"
                 Background="#99000000"

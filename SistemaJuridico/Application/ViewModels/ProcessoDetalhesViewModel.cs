@@ -235,6 +235,19 @@ namespace SistemaJuridico.ViewModels
             }
         }
 
+        public bool PodeDesfazerUltimaVerificacao
+            => _appState.PodeDesfazerVerificacao &&
+               Verificacoes.Count(v => !new[]
+               {
+                   "Lançamento Contábil de Lote",
+                   "Edição de Conta Individual",
+                   "Exclusão de Conta Individual",
+                   "Edição de Conta Antiga",
+                   "Exclusão de Conta Antiga",
+                   "Lote de Contas Desfeito",
+                   "Verificação Desfeita"
+               }.Contains(v.StatusProcesso)) > 1;
+
         private void RecarregarTudo()
         {
             CarregarContas();
@@ -357,6 +370,7 @@ namespace SistemaJuridico.ViewModels
             OnPropertyChanged(nameof(UltimaVerificacaoResponsavel));
             OnPropertyChanged(nameof(DataPrescricao));
             OnPropertyChanged(nameof(PrescricaoStatus));
+            OnPropertyChanged(nameof(PodeDesfazerUltimaVerificacao));
         }
 
         private static DateTime? ParseData(string? valor)
