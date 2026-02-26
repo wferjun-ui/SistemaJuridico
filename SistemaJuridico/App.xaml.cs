@@ -156,7 +156,7 @@ namespace SistemaJuridico
                 e.Handled = true;
                 var bubbleEvent = new MouseWheelEventArgs(e.MouseDevice, e.Timestamp, e.Delta)
                 {
-                    RoutedEvent = MouseWheelEvent,
+                    RoutedEvent = UIElement.MouseWheelEvent,
                     Source = sender
                 };
 

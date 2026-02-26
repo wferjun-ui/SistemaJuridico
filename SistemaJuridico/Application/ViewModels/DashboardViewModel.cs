@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using QuestPDF.Fluent;
 using SistemaJuridico.Services;
 using SistemaJuridico.Views;
+using System.Windows;
 using System.Collections.ObjectModel;
 using System.Globalization;
 
@@ -377,8 +378,10 @@ namespace SistemaJuridico.ViewModels
                     paciente);
             }
 
-            var tela = new ProcessoDetalhesWindow(processoId);
-            tela.ShowDialog();
+            if (Application.Current.MainWindow is MainShellWindow mainShell)
+            {
+                _ = mainShell.AbrirProcessoDetalhesAsync(processoId);
+            }
 
             Carregar();
         }

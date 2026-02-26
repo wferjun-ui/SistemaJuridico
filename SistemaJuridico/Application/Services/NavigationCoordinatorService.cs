@@ -41,5 +41,17 @@ namespace SistemaJuridico.Services
             if (view.DataContext is ProcessoEditorHostViewModel editorHostVm)
                 await editorHostVm.CarregarAsync(id);
         }
+
+        public async Task NavigateWithParameterAsync(
+            NavigationKey key,
+            string processoId)
+        {
+            var (viewType, vmType) = _registry.Resolve(key);
+            var view = _factory.CreateView(viewType, vmType);
+            _navigation.Navigate(view);
+
+            if (view.DataContext is ProcessoDetalhesHostViewModel detalhesHostVm)
+                await detalhesHostVm.CarregarProcessoAsync(processoId);
+        }
     }
 }

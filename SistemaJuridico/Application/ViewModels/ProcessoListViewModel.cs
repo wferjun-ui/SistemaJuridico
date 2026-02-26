@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Windows;
 
 namespace SistemaJuridico.ViewModels
 {
@@ -429,9 +430,16 @@ namespace SistemaJuridico.ViewModels
             MostrarSugestoesBusca = false;
             MostrarResultadosBuscaRapida = false;
 
-            var window = new ProcessoDetalhesWindow(processo.Id);
-            window.ShowDialog();
-            CarregarComSeguranca();
+            if (Application.Current.MainWindow is MainShellWindow mainShell)
+            {
+                _ = mainShell.AbrirProcessoDetalhesAsync(processo.Id);
+            }
+            else
+            {
+                var window = new ProcessoDetalhesWindow(processo.Id);
+                window.ShowDialog();
+                CarregarComSeguranca();
+            }
         }
     }
 
