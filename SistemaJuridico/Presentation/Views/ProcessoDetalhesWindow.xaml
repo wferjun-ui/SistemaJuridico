@@ -141,7 +141,9 @@
 
                             <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,8">
                                 <TextBlock Text="Status do Processo" Margin="0,0,0,4" FontWeight="SemiBold"/>
-                                <TextBox Text="{Binding StatusVerificacao, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
+                                <ComboBox ItemsSource="{Binding StatusProcessoOpcoes}"
+                                          SelectedItem="{Binding StatusVerificacao, UpdateSourceTrigger=PropertyChanged}"
+                                          IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
                             </StackPanel>
 
                             <StackPanel Grid.Row="0" Grid.Column="1" Margin="8,0,0,8">
@@ -163,7 +165,9 @@
                                 <StackPanel Grid.Column="0" Margin="0,0,8,0">
                                     <CheckBox Content="Diligência realizada" IsChecked="{Binding DiligenciaRealizada}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
                                     <TextBlock Text="Descrição da diligência" Margin="0,8,0,4" FontWeight="SemiBold"/>
-                                    <TextBox Height="60" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding DescricaoDiligencia, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
+                                    <ComboBox ItemsSource="{Binding DiligenciaOpcoes}"
+                                              SelectedItem="{Binding DescricaoDiligencia, UpdateSourceTrigger=PropertyChanged}"
+                                              IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="1" Margin="8,0,0,0">

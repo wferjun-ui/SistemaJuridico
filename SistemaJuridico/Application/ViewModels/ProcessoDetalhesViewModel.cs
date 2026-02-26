@@ -40,6 +40,30 @@ namespace SistemaJuridico.ViewModels
         private bool _diligenciaRealizada;
         private bool _possuiPendencias;
 
+        public IReadOnlyList<string> StatusProcessoOpcoes { get; } = new[]
+        {
+            "Cumprimento de Sentença",
+            "Cumprimento Provisório de Sentença",
+            "Conhecimento",
+            "Recurso Inominado",
+            "Apelação",
+            "Agravo",
+            "Suspenso",
+            "Arquivado",
+            "Cumprimento Extinto",
+            "Desistência da Parte"
+        };
+
+        public IReadOnlyList<string> DiligenciaOpcoes { get; } = new[]
+        {
+            "Concluída",
+            "Pendente",
+            "Infrutífera"
+        };
+
+        public bool IsStatusFinalizado => new[] { "Arquivado", "Desistência da Parte", "Cumprimento Extinto" }
+            .Contains(StatusVerificacao);
+
         public Processo Processo { get; private set; }
 
         public ObservableCollection<Conta> Contas { get; } = new();
@@ -78,7 +102,23 @@ namespace SistemaJuridico.ViewModels
         public string StatusVerificacao
         {
             get => _statusVerificacao;
-            set => SetProperty(ref _statusVerificacao, value);
+            set
+            {
+                if (!SetProperty(ref _statusVerificacao, value))
+                    return;
+
+                if (IsStatusFinalizado)
+                {
+                    DescricaoVerificacao = string.Empty;
+                    DescricaoDiligencia = string.Empty;
+                    DescricaoPendencias = string.Empty;
+                    PrazoDiligencia = string.Empty;
+                    DiligenciaRealizada = false;
+                    PossuiPendencias = false;
+                }
+
+                OnPropertyChanged(nameof(IsStatusFinalizado));
+            }
         }
 
         public string DescricaoVerificacao
@@ -437,6 +477,18 @@ namespace SistemaJuridico.ViewModels
             if (string.IsNullOrWhiteSpace(StatusVerificacao))
             {
                 System.Windows.MessageBox.Show("Informe o status do processo.");
+                return;
+            }
+
+            if (!IsStatusFinalizado && string.IsNullOrWhiteSpace(DescricaoDiligencia))
+            {
+                System.Windows.MessageBox.Show("Informe a diligência.");
+                return;
+            }
+
+            if (!IsStatusFinalizado && string.IsNullOrWhiteSpace(DescricaoVerificacao))
+            {
+                System.Windows.MessageBox.Show("Descreva o que foi feito na verificação.");
                 return;
             }
 
