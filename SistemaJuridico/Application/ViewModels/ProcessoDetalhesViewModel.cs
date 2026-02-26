@@ -31,6 +31,14 @@ namespace SistemaJuridico.ViewModels
         private DateTime? _ultimaVerificacaoDate;
         private string _ultimaVerificacaoData = "Sem verificação";
         private string _ultimaVerificacaoResponsavel = "N/D";
+        private string _statusVerificacao = "";
+        private string _descricaoVerificacao = "";
+        private string _descricaoDiligencia = "";
+        private string _descricaoPendencias = "";
+        private string _prazoDiligencia = "";
+        private string _responsavelVerificacao = "";
+        private bool _diligenciaRealizada;
+        private bool _possuiPendencias;
 
         public Processo Processo { get; private set; }
 
@@ -45,6 +53,75 @@ namespace SistemaJuridico.ViewModels
 
         [ObservableProperty]
         private string _usuarioEditandoTexto = "";
+
+        [ObservableProperty]
+        private bool _isEditDialogOpen;
+
+        [ObservableProperty]
+        private bool _isDeleteDialogOpen;
+
+        [ObservableProperty]
+        private string _numeroEdicao = "";
+
+        [ObservableProperty]
+        private string _pacienteEdicao = "";
+
+        [ObservableProperty]
+        private string _representanteEdicao = "";
+
+        [ObservableProperty]
+        private string _juizEdicao = "";
+
+        [ObservableProperty]
+        private string _statusFaseEdicao = "";
+
+        public string StatusVerificacao
+        {
+            get => _statusVerificacao;
+            set => SetProperty(ref _statusVerificacao, value);
+        }
+
+        public string DescricaoVerificacao
+        {
+            get => _descricaoVerificacao;
+            set => SetProperty(ref _descricaoVerificacao, value);
+        }
+
+        public string DescricaoDiligencia
+        {
+            get => _descricaoDiligencia;
+            set => SetProperty(ref _descricaoDiligencia, value);
+        }
+
+        public string DescricaoPendencias
+        {
+            get => _descricaoPendencias;
+            set => SetProperty(ref _descricaoPendencias, value);
+        }
+
+        public string PrazoDiligencia
+        {
+            get => _prazoDiligencia;
+            set => SetProperty(ref _prazoDiligencia, value);
+        }
+
+        public string ResponsavelVerificacao
+        {
+            get => _responsavelVerificacao;
+            set => SetProperty(ref _responsavelVerificacao, value);
+        }
+
+        public bool DiligenciaRealizada
+        {
+            get => _diligenciaRealizada;
+            set => SetProperty(ref _diligenciaRealizada, value);
+        }
+
+        public bool PossuiPendencias
+        {
+            get => _possuiPendencias;
+            set => SetProperty(ref _possuiPendencias, value);
+        }
 
         partial void OnModoSomenteLeituraChanged(bool value)
         {
@@ -71,6 +148,7 @@ namespace SistemaJuridico.ViewModels
                 ?? new Processo { Id = processoId };
 
             _appState.DefinirContexto(App.Session.UsuarioAtual, Processo);
+            ResponsavelVerificacao = App.Session.UsuarioAtual?.Nome ?? "Sistema";
             ValidarLock();
             RecarregarTudo();
         }
@@ -124,6 +202,8 @@ namespace SistemaJuridico.ViewModels
             CarregarVerificacoes();
             CarregarDiligencias();
             CarregarHistorico();
+            if (string.IsNullOrWhiteSpace(StatusVerificacao))
+                StatusVerificacao = Processo.StatusFase;
         }
 
         private void ValidarLock()
@@ -354,19 +434,39 @@ namespace SistemaJuridico.ViewModels
             if (ModoSomenteLeitura || !_appState.PodeAcessarVerificacao)
                 return;
 
-            var facade = new VerificacaoFacadeService();
-            var status = Microsoft.VisualBasic.Interaction.InputBox("Informe o status do processo:");
-            if (string.IsNullOrWhiteSpace(status))
+            if (string.IsNullOrWhiteSpace(StatusVerificacao))
+            {
+                System.Windows.MessageBox.Show("Informe o status do processo.");
                 return;
+            }
 
-            var descricao = Microsoft.VisualBasic.Interaction.InputBox("Descrição da verificação:");
-            var responsavel = App.Session.UsuarioAtual?.Nome ?? "Sistema";
+            var facade = new VerificacaoFacadeService();
+            facade.CriarVerificacaoCompleta(
+                processoId: _processoId,
+                statusProcesso: StatusVerificacao,
+                responsavel: string.IsNullOrWhiteSpace(ResponsavelVerificacao) ? (App.Session.UsuarioAtual?.Nome ?? "Sistema") : ResponsavelVerificacao,
+                descricao: DescricaoVerificacao,
+                diligenciaRealizada: DiligenciaRealizada,
+                descricaoDiligencia: DescricaoDiligencia,
+                possuiPendencias: PossuiPendencias,
+                descricaoPendencias: DescricaoPendencias,
+                prazoDiligencia: PrazoDiligencia,
+                proximoPrazoPadrao: string.Empty,
+                dataNotificacao: string.Empty,
+                itensSnapshot: ItensSaude.ToList());
 
-            facade.CriarVerificacao(_processoId, status, responsavel, descricao, ItensSaude.ToList());
             System.Windows.MessageBox.Show("Verificação registrada.");
+
+            DescricaoVerificacao = string.Empty;
+            DiligenciaRealizada = false;
+            DescricaoDiligencia = string.Empty;
+            PossuiPendencias = false;
+            DescricaoPendencias = string.Empty;
+            PrazoDiligencia = string.Empty;
 
             CarregarVerificacoes();
             CarregarItensSaude();
+            CarregarHistorico();
             OnPropertyChanged(nameof(UltimaVerificacaoData));
             OnPropertyChanged(nameof(UltimaVerificacaoResponsavel));
             OnPropertyChanged(nameof(DataPrescricao));
@@ -460,22 +560,51 @@ namespace SistemaJuridico.ViewModels
         }
 
         [RelayCommand]
+        private void AbrirEdicaoProcesso()
+        {
+            NumeroEdicao = Processo.Numero;
+            PacienteEdicao = Processo.Paciente;
+            RepresentanteEdicao = Processo.Representante;
+            JuizEdicao = Processo.Juiz;
+            StatusFaseEdicao = Processo.StatusFase;
+            IsEditDialogOpen = true;
+        }
+
+        [RelayCommand]
+        private void CancelarEdicaoProcesso() => IsEditDialogOpen = false;
+
+        [RelayCommand]
+        private void ConfirmarEdicaoProcesso()
+        {
+            if (!PodeEditarProcesso)
+                return;
+
+            Processo.Numero = NumeroEdicao;
+            Processo.Paciente = PacienteEdicao;
+            Processo.Representante = RepresentanteEdicao;
+            Processo.Juiz = JuizEdicao;
+            Processo.StatusFase = StatusFaseEdicao;
+
+            SalvarProcesso();
+            OnPropertyChanged(nameof(Processo));
+            IsEditDialogOpen = false;
+        }
+
+        [RelayCommand]
+        private void AbrirConfirmacaoExclusao() => IsDeleteDialogOpen = true;
+
+        [RelayCommand]
+        private void CancelarExclusao() => IsDeleteDialogOpen = false;
+
+        [RelayCommand]
         private void ExcluirProcesso()
         {
             if (!_appState.IsAdministrador)
                 return;
 
-            var confirmar = System.Windows.MessageBox.Show(
-                "Deseja excluir permanentemente este processo e todos os dados vinculados?",
-                "Confirmação",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-
-            if (confirmar != MessageBoxResult.Yes)
-                return;
-
             _processService.ExcluirProcesso(_processoId);
             _auditService.Registrar("Processo.Excluido", "processo", _processoId, "Exclusão completa de processo");
+            IsDeleteDialogOpen = false;
             System.Windows.MessageBox.Show("Processo excluído com sucesso.");
             LiberarLock();
 
