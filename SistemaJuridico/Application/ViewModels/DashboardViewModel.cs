@@ -3,7 +3,6 @@ using CommunityToolkit.Mvvm.Input;
 using QuestPDF.Fluent;
 using SistemaJuridico.Infrastructure;
 using SistemaJuridico.Services;
-using SistemaJuridico.Views;
 using System.Windows;
 using System.Collections.ObjectModel;
 using System.Globalization;
@@ -59,6 +58,9 @@ namespace SistemaJuridico.ViewModels
 
         [ObservableProperty]
         private bool _buscaRapidaAtivada;
+
+        [ObservableProperty]
+        private ProcessoDetalhesViewModel? _processoDetalhesSelecionado;
 
         public DashboardViewModel()
         {
@@ -374,6 +376,14 @@ namespace SistemaJuridico.ViewModels
         {
             try
             {
+                if (ProcessoDetalhesSelecionado != null)
+                {
+                    if (!ProcessoDetalhesSelecionado.PodeFechar())
+                        return;
+
+                    ProcessoDetalhesSelecionado.LiberarLock();
+                }
+
                 var usuario = App.Session.UsuarioAtual;
                 if (usuario != null)
                 {
@@ -388,15 +398,9 @@ namespace SistemaJuridico.ViewModels
                 _logger.Info($"Abrindo processo {processoId} ({numeroProcesso}) a partir do dashboard.");
                 PainelDetalhesProcessoTexto =
                     $"Processo selecionado: {numeroProcesso} - {paciente}.{Environment.NewLine}{Environment.NewLine}" +
-                    "A janela de detalhes foi aberta para edição completa, e esta área permanece sincronizada com a seleção no dashboard.";
+                    "As abas de verificação, contas e histórico foram carregadas abaixo no próprio dashboard.";
 
-                var window = new ProcessoDetalhesWindow(processoId)
-                {
-                    Owner = System.Windows.Application.Current.MainWindow
-                };
-
-                window.ShowDialog();
-                Carregar();
+                ProcessoDetalhesSelecionado = new ProcessoDetalhesViewModel(processoId, _service);
             }
             catch (Exception ex)
             {
@@ -407,6 +411,15 @@ namespace SistemaJuridico.ViewModels
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
             }
+        }
+
+        public void FecharProcessoSelecionado()
+        {
+            if (ProcessoDetalhesSelecionado == null)
+                return;
+
+            ProcessoDetalhesSelecionado.LiberarLock();
+            ProcessoDetalhesSelecionado = null;
         }
     }
 
