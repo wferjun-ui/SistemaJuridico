@@ -430,16 +430,13 @@ namespace SistemaJuridico.ViewModels
             MostrarSugestoesBusca = false;
             MostrarResultadosBuscaRapida = false;
 
-            if (System.Windows.Application.Current.MainWindow is MainShellWindow mainShell)
+            var window = new ProcessoDetalhesWindow(processo.Id)
             {
-                _ = mainShell.AbrirProcessoDetalhesAsync(processo.Id);
-            }
-            else
-            {
-                var window = new ProcessoDetalhesWindow(processo.Id);
-                window.ShowDialog();
-                CarregarComSeguranca();
-            }
+                Owner = System.Windows.Application.Current.MainWindow
+            };
+
+            window.ShowDialog();
+            CarregarComSeguranca();
         }
     }
 
