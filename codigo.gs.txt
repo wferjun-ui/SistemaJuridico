@@ -33,6 +33,7 @@ const ACTIVE_SESSIONS_SHEET_NAME = 'ActiveSessions';
 const VERIFICACOES_SHEET_NAME = 'Verificacoes';
 const CONTAS_SHEET_NAME = 'Contas';
 const DATA_START_ROW = 2;
+const MIN_PROCESS_NUMBER_LENGTH = 15;
 const CACHE_EXPIRATION_SECONDS = 360; // Cache de 6 minutos para os dados iniciais
 
 // Cabeçalhos das planilhas
@@ -563,7 +564,7 @@ function checkEditorAccess() {
 
 function validateProcessPayload(payload) {
   if (!payload || typeof payload !== 'object') throw new Error('Dados do processo inválidos ou ausentes.');
-  if (!payload.numero || !payload.numero.trim()) throw new Error('Número do processo é obrigatório.');
+  if (!payload.numero || payload.numero.trim().length < MIN_PROCESS_NUMBER_LENGTH) throw new Error(`Número do processo é obrigatório e deve ter no mínimo ${MIN_PROCESS_NUMBER_LENGTH} caracteres.`);
   if (!payload.paciente?.trim()) throw new Error('Nome do paciente é obrigatório.');
   if (!payload.juiz?.trim()) throw new Error('Nome do Juiz(a) é obrigatório.');
   const tiposProcessoValidos = getAppConfiguration().tiposDeProcesso;
