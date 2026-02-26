@@ -24,5 +24,12 @@ namespace SistemaJuridico.ViewModels
 
             await InnerViewModel.CarregarAsync(processo);
         }
+
+        public async Task CarregarProcessoAsync(string processoId)
+        {
+            var processo = await _facade.ObterProcessoCompletoAsync(processoId);
+
+            await InnerViewModel.CarregarAsync(processo);
+        }
     }
 }

@@ -69,6 +69,11 @@ namespace SistemaJuridico.Services
             return Task.FromResult(CarregarProcessoCompleto(processoId.ToString()));
         }
 
+        public Task<ProcessoCompletoDTO> ObterProcessoCompletoAsync(string processoId)
+        {
+            return Task.FromResult(CarregarProcessoCompleto(processoId));
+        }
+
         public Task<ProcessoLockInfo> ObterEstadoEdicaoAsync(int processoId)
         {
             return Task.FromResult(new ProcessoLockInfo());

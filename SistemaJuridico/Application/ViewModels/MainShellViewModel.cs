@@ -1,6 +1,7 @@
 using SistemaJuridico.Infrastructure;
 using SistemaJuridico.Services;
 using SistemaJuridico.Views;
+using System.Threading.Tasks;
 
 namespace SistemaJuridico.ViewModels
 {
@@ -73,6 +74,15 @@ namespace SistemaJuridico.ViewModels
 
                 _debugWindow.Activate();
             });
+        }
+
+
+        public async Task AbrirProcessoDetalhesAsync(string processoId)
+        {
+            if (string.IsNullOrWhiteSpace(processoId))
+                return;
+
+            await _navigator.NavigateWithParameterAsync(NavigationKey.ProcessoDetalhes, processoId);
         }
 
         public void LoadInitialView()

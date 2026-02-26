@@ -1,6 +1,7 @@
 using SistemaJuridico.Services;
 using SistemaJuridico.ViewModels;
 using System.Windows;
+using System.Threading.Tasks;
 using UserControl = System.Windows.Controls.UserControl;
 
 namespace SistemaJuridico.Views
@@ -21,6 +22,14 @@ namespace SistemaJuridico.Views
             {
                 vm.LoadInitialView();
             };
+        }
+
+        public Task AbrirProcessoDetalhesAsync(string processoId)
+        {
+            if (DataContext is not MainShellViewModel vm)
+                return Task.CompletedTask;
+
+            return vm.AbrirProcessoDetalhesAsync(processoId);
         }
     }
 }
