@@ -127,78 +127,106 @@
             <Border Grid.Column="2" Style="{StaticResource CardStyle}">
                 <TabControl BorderThickness="0" Background="Transparent" ItemContainerStyle="{StaticResource TabItemStyle}">
                     <TabItem Header="Verificação Geral">
-                        <Grid Margin="4">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
+                        <ScrollViewer Margin="4" VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
 
-                            <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,8">
-                                <TextBlock Text="Status do Processo" Margin="0,0,0,4" FontWeight="SemiBold"/>
-                                <ComboBox ItemsSource="{Binding StatusProcessoOpcoes}"
-                                          SelectedItem="{Binding StatusVerificacao, UpdateSourceTrigger=PropertyChanged}"
-                                          IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
-                            </StackPanel>
+                                    <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                        <TextBlock Text="Status do Processo" Margin="0,0,0,4" FontWeight="SemiBold"/>
+                                        <ComboBox MinHeight="34"
+                                                  ItemsSource="{Binding StatusProcessoOpcoes}"
+                                                  SelectedItem="{Binding StatusVerificacao, UpdateSourceTrigger=PropertyChanged}"
+                                                  IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
+                                    </StackPanel>
 
-                            <StackPanel Grid.Row="0" Grid.Column="1" Margin="8,0,0,8">
-                                <TextBlock Text="Responsável" Margin="0,0,0,4" FontWeight="SemiBold"/>
-                                <TextBox Text="{Binding ResponsavelVerificacao, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
-                            </StackPanel>
+                                    <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                        <TextBlock Text="Responsável" Margin="0,0,0,4" FontWeight="SemiBold"/>
+                                        <TextBox MinHeight="34" Text="{Binding ResponsavelVerificacao, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
+                                    </StackPanel>
+                                </Grid>
 
-                            <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,0,0,8">
-                                <TextBlock Text="Descrição" Margin="0,0,0,4" FontWeight="SemiBold"/>
-                                <TextBox Height="70" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding DescricaoVerificacao, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
-                            </StackPanel>
-
-                            <Grid Grid.Row="2" Grid.ColumnSpan="2" Margin="0,0,0,8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-
-                                <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                                    <CheckBox Content="Diligência realizada" IsChecked="{Binding DiligenciaRealizada}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
-                                    <TextBlock Text="Descrição da diligência" Margin="0,8,0,4" FontWeight="SemiBold"/>
-                                    <ComboBox ItemsSource="{Binding DiligenciaOpcoes}"
-                                              SelectedItem="{Binding DescricaoDiligencia, UpdateSourceTrigger=PropertyChanged}"
-                                              IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
+                                <StackPanel Margin="0,0,0,8">
+                                    <TextBlock Text="O que foi feito?" Margin="0,0,0,4" FontWeight="SemiBold"/>
+                                    <TextBox MinHeight="74" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding DescricaoVerificacao, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
                                 </StackPanel>
 
-                                <StackPanel Grid.Column="1" Margin="8,0,0,0">
-                                    <CheckBox Content="Possui pendências" IsChecked="{Binding PossuiPendencias}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
-                                    <TextBlock Text="Descrição das pendências" Margin="0,8,0,4" FontWeight="SemiBold"/>
-                                    <TextBox Height="60" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding DescricaoPendencias, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                        <TextBlock Text="Diligências" Margin="0,0,0,4" FontWeight="SemiBold"/>
+                                        <ComboBox MinHeight="34"
+                                                  ItemsSource="{Binding DiligenciaOpcoes}"
+                                                  SelectedItem="{Binding DescricaoDiligencia, UpdateSourceTrigger=PropertyChanged}"
+                                                  IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                        <TextBlock Text="Prazo da diligência" Margin="0,0,0,4" FontWeight="SemiBold"/>
+                                        <TextBox MinHeight="34" Text="{Binding PrazoDiligencia, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <StackPanel Margin="0,0,0,12">
+                                    <TextBlock Text="Diligências pendentes" Margin="0,0,0,4" FontWeight="SemiBold"/>
+                                    <TextBox MinHeight="64" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding DescricaoPendencias, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
                                 </StackPanel>
-                            </Grid>
 
-                            <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Margin="0,0,0,10">
-                                <TextBlock Text="Prazo da diligência" Margin="0,0,0,4" FontWeight="SemiBold"/>
-                                <TextBox Text="{Binding PrazoDiligencia, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
-                            </StackPanel>
+                                <Border BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Padding="10" Background="#F9FAFB" Margin="0,0,0,10">
+                                    <StackPanel>
+                                        <TextBlock Text="Verificação de Itens de Saúde" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,8"/>
 
-                            <DockPanel Grid.Row="4">
-                                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+                                        <ItemsControl ItemsSource="{Binding ItensSaude}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="6" Padding="8" Margin="0,0,0,8" Background="White">
+                                                        <StackPanel>
+                                                            <TextBlock FontWeight="SemiBold" Foreground="#1F2937">
+                                                                <Run Text="{Binding Nome}"/>
+                                                                <Run Text=" ("/>
+                                                                <Run Text="{Binding Tipo}"/>
+                                                                <Run Text=")"/>
+                                                            </TextBlock>
+
+                                                            <UniformGrid Columns="2" Margin="0,6,0,0">
+                                                                <StackPanel Margin="0,0,8,0">
+                                                                    <TextBlock Text="Quantidade prescrita" FontSize="12"/>
+                                                                    <TextBox MinHeight="32" Text="{Binding Qtd, UpdateSourceTrigger=PropertyChanged}"/>
+                                                                </StackPanel>
+                                                                <StackPanel Margin="8,0,0,0">
+                                                                    <TextBlock Text="Local de tratamento" FontSize="12"/>
+                                                                    <TextBox MinHeight="32" Text="{Binding Local, UpdateSourceTrigger=PropertyChanged}"/>
+                                                                </StackPanel>
+                                                            </UniformGrid>
+
+                                                            <WrapPanel Margin="0,8,0,0">
+                                                                <CheckBox Content="Tratamento desnecessário" IsChecked="{Binding IsDesnecessario}" Margin="0,0,14,4"/>
+                                                                <CheckBox Content="Modificação na quantidade" IsChecked="{Binding IsQuantidadeModificada}" Margin="0,0,14,4"/>
+                                                                <CheckBox Content="Modificação no local" IsChecked="{Binding IsLocalTratamentoModificado}" Margin="0,0,14,4"/>
+                                                                <CheckBox Content="SUS" IsChecked="{Binding IsSus}" Margin="0,0,14,4"/>
+                                                                <CheckBox Content="Particular" IsChecked="{Binding IsParticular}" Margin="0,0,14,4"/>
+                                                            </WrapPanel>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Border>
+
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                     <Button Content="Salvar Verificação" MinWidth="170" Padding="14,7" Command="{Binding NovaVerificacaoCommand}" Style="{StaticResource PrimaryButton}"/>
                                     <Button Content="Desfazer Última Verificação" MinWidth="220" Padding="14,7" Command="{Binding DesfazerUltimaVerificacaoCommand}" IsEnabled="{Binding PodeDesfazerUltimaVerificacao}" Style="{StaticResource MutedButton}"/>
                                 </StackPanel>
-
-                                <DataGrid ItemsSource="{Binding Verificacoes}" AutoGenerateColumns="False" IsReadOnly="True">
-                                    <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Data" Binding="{Binding DataHora}" Width="160"/>
-                                        <DataGridTextColumn Header="Status" Binding="{Binding StatusProcesso}" Width="*"/>
-                                        <DataGridTextColumn Header="Responsável" Binding="{Binding Responsavel}" Width="180"/>
-                                        <DataGridTextColumn Header="Pendência" Binding="{Binding PendenciaDescricao}" Width="250"/>
-                                    </DataGrid.Columns>
-                                </DataGrid>
-                            </DockPanel>
-                        </Grid>
+                            </StackPanel>
+                        </ScrollViewer>
                     </TabItem>
 
                     <TabItem Header="Prestação de Contas">

@@ -22,6 +22,7 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
             <TextBlock Grid.Row="0"
@@ -124,6 +125,16 @@
                     <TextBlock Text="{Binding UsuarioLogadoTexto}" Margin="0,3,0,0" Opacity="0.72"/>
                 </StackPanel>
             </Border>
+
+            <Border Grid.Row="4" Padding="14" CornerRadius="10" BorderThickness="1" BorderBrush="#E5E7EB" Background="White">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" MinHeight="220">
+                    <StackPanel>
+                        <TextBlock Text="Detalhes do Processo" FontSize="18" FontWeight="SemiBold" Foreground="#1F2937"/>
+                        <TextBlock Margin="0,10,0,0" Text="{Binding PainelDetalhesProcessoTexto}" Foreground="#6B7280" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
         </Grid>
     </ScrollViewer>
 </UserControl>
