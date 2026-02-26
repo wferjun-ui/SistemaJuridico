@@ -378,7 +378,7 @@ namespace SistemaJuridico.ViewModels
                     paciente);
             }
 
-            if (Application.Current.MainWindow is MainShellWindow mainShell)
+            if (System.Windows.Application.Current.MainWindow is MainShellWindow mainShell)
             {
                 _ = mainShell.AbrirProcessoDetalhesAsync(processoId);
             }
