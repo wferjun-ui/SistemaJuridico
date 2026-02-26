@@ -5,6 +5,8 @@ using SistemaJuridico.Views;
 using System;
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Threading;
 using QuestPDF.Infrastructure;
 using Forms = System.Windows.Forms;
@@ -135,5 +137,33 @@ namespace SistemaJuridico
                     MessageBoxImage.Error);
             }
         }
+
+        private void ScrollViewer_OnPreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (sender is not ScrollViewer scrollViewer)
+                return;
+
+            var canScroll = scrollViewer.ScrollableHeight > 0;
+            if (!canScroll)
+                return;
+
+            var scrollingUp = e.Delta > 0;
+            var atTop = scrollViewer.VerticalOffset <= 0;
+            var atBottom = scrollViewer.VerticalOffset >= scrollViewer.ScrollableHeight;
+
+            if ((scrollingUp && atTop) || (!scrollingUp && atBottom))
+            {
+                e.Handled = true;
+                var bubbleEvent = new MouseWheelEventArgs(e.MouseDevice, e.Timestamp, e.Delta)
+                {
+                    RoutedEvent = MouseWheelEvent,
+                    Source = sender
+                };
+
+                if (sender is FrameworkElement element && element.Parent is UIElement parent)
+                    parent.RaiseEvent(bubbleEvent);
+            }
+        }
+
     }
 }

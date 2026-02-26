@@ -6,7 +6,8 @@
         Title="Sistema Jurídico"
         Width="1200"
         Height="800"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        WindowState="Maximized">
 
    <Grid>
     <views:DashboardView>

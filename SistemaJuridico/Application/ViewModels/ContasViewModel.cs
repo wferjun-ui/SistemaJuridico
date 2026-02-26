@@ -212,6 +212,30 @@ namespace SistemaJuridico.ViewModels
         }
 
         [RelayCommand]
+        private void EditarRascunho(Conta? conta)
+        {
+            if (conta is null)
+                return;
+
+            if (!PodeEditar)
+            {
+                System.Windows.MessageBox.Show("Seu perfil não possui permissão para editar contas.");
+                return;
+            }
+
+            EdicaoConta = CloneConta(conta);
+            TipoLancamentoSelecionado = EdicaoConta.TipoLancamento;
+
+            if (IsMovimentoOpcional)
+            {
+                var mov = EdicaoConta.MovProcesso ?? string.Empty;
+                var isAnexo = string.Equals(mov, "Anexo", StringComparison.OrdinalIgnoreCase);
+                ModoMovimentoConta = isAnexo ? "Anexo" : "Digitar";
+                MovimentoContaDigitado = isAnexo ? string.Empty : mov;
+            }
+        }
+
+        [RelayCommand]
         private void LimparRascunhos()
         {
             ContasRascunho.Clear();
@@ -249,6 +273,64 @@ namespace SistemaJuridico.ViewModels
             ContasRascunho.Clear();
             PersistirRascunhos();
             Carregar();
+        }
+
+        [RelayCommand]
+        private void ConfirmarRascunho(Conta? conta)
+        {
+            if (conta is null)
+                return;
+
+            if (!PodeCadastrar)
+            {
+                System.Windows.MessageBox.Show("Seu perfil não possui permissão para cadastrar contas.");
+                return;
+            }
+
+            conta.ProcessoId = _processoId;
+            conta.StatusConta = "lancado";
+            _service.Inserir(conta);
+
+            _historicoService.Registrar(_processoId, "Lançamento contábil incluído", MontarResumoConta(conta));
+            _auditService.Registrar(
+                "Conta.Criada",
+                "processo",
+                _processoId,
+                $"Nova conta {conta.TipoLancamento} em {conta.DataMovimentacao}: +{conta.ValorAlvara} -{conta.ValorConta}");
+
+            ContasRascunho.Remove(conta);
+            PersistirRascunhos();
+            Carregar();
+        }
+
+        [RelayCommand]
+        private void EditarContaHistorico(ContaHistoricoLinha? linha)
+        {
+            if (linha is null)
+                return;
+
+            ContaSelecionada = linha.Conta;
+            EditarConta();
+        }
+
+        [RelayCommand]
+        private void ExcluirContaHistorico(ContaHistoricoLinha? linha)
+        {
+            if (linha is null)
+                return;
+
+            ContaSelecionada = linha.Conta;
+            ExcluirConta();
+        }
+
+        [RelayCommand]
+        private void LancarContaHistorico(ContaHistoricoLinha? linha)
+        {
+            if (linha is null)
+                return;
+
+            ContaSelecionada = linha.Conta;
+            FecharConta();
         }
 
         [RelayCommand]
