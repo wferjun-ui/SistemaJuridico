@@ -3,6 +3,105 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:views="clr-namespace:SistemaJuridico.Views"
              mc:Ignorable="d">
-    <Grid />
+    <UserControl.Resources>
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="Background" Value="#4F46E5"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#4F46E5"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="4,0"/>
+        </Style>
+
+        <Style x:Key="MutedButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+            <Setter Property="Background" Value="#E5E7EB"/>
+            <Setter Property="Foreground" Value="#111827"/>
+            <Setter Property="BorderBrush" Value="#D1D5DB"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="0,8,0,0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="320"/>
+            <ColumnDefinition Width="14"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="10" Padding="14">
+            <StackPanel>
+                <TextBlock Text="Resumo do Processo" FontSize="17" FontWeight="Bold" Margin="0,0,0,10"/>
+                <TextBlock Text="Paciente" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding Processo.Paciente}" Margin="0,0,0,8"/>
+                <TextBlock Text="Número" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding Processo.Numero}" Margin="0,0,0,8"/>
+                <TextBlock Text="Status" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding Processo.StatusFase}" Margin="0,0,0,8"/>
+                <TextBlock Text="Última verificação" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding UltimaVerificacaoData}" Margin="0,0,0,8"/>
+                <TextBlock Text="Último responsável" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding UltimaVerificacaoResponsavel}" Margin="0,0,0,8"/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Column="2" Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="10" Padding="14">
+            <TabControl>
+                <TabItem Header="Verificação">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="4">
+                            <TextBlock Text="Status do processo" FontWeight="SemiBold"/>
+                            <ComboBox Margin="0,4,0,10"
+                                      ItemsSource="{Binding StatusProcessoOpcoes}"
+                                      SelectedItem="{Binding StatusVerificacao, UpdateSourceTrigger=PropertyChanged}"
+                                      IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
+
+                            <TextBlock Text="Responsável" FontWeight="SemiBold"/>
+                            <TextBox Margin="0,4,0,10" Text="{Binding ResponsavelVerificacao, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
+
+                            <TextBlock Text="Descrição da verificação" FontWeight="SemiBold"/>
+                            <TextBox Margin="0,4,0,10" MinHeight="80" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding DescricaoVerificacao, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
+
+                            <TextBlock Text="Diligência" FontWeight="SemiBold"/>
+                            <TextBox Margin="0,4,0,10" Text="{Binding DescricaoDiligencia, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
+
+                            <TextBlock Text="Pendências" FontWeight="SemiBold"/>
+                            <TextBox Margin="0,4,0,10" MinHeight="70" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding DescricaoPendencias, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
+
+                            <TextBlock Text="Prazo da diligência" FontWeight="SemiBold"/>
+                            <TextBox Margin="0,4,0,12" Text="{Binding PrazoDiligencia, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
+
+                            <WrapPanel HorizontalAlignment="Right">
+                                <Button Content="Salvar Verificação" MinWidth="170" Command="{Binding NovaVerificacaoCommand}" Style="{StaticResource PrimaryButton}"/>
+                                <Button Content="Desfazer Última Verificação" MinWidth="220" Command="{Binding DesfazerUltimaVerificacaoCommand}" IsEnabled="{Binding PodeDesfazerUltimaVerificacao}" Style="{StaticResource MutedButton}"/>
+                            </WrapPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <TabItem Header="Prestação de Contas">
+                    <views:ContasView ProcessoId="{Binding Processo.Id}" />
+                </TabItem>
+
+                <TabItem Header="Histórico">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Historicos}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="0,0,0,8" Padding="10" BorderThickness="1" BorderBrush="#E5E7EB" CornerRadius="8">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Acao}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding Detalhes}" TextWrapping="Wrap" Foreground="#4B5563" Margin="0,2,0,0"/>
+                                            <TextBlock Text="{Binding DataHora}" FontSize="12" Foreground="#6B7280" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </TabItem>
+            </TabControl>
+        </Border>
+    </Grid>
 </UserControl>
