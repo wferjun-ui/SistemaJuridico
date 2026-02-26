@@ -430,7 +430,7 @@ namespace SistemaJuridico.ViewModels
             MostrarSugestoesBusca = false;
             MostrarResultadosBuscaRapida = false;
 
-            if (Application.Current.MainWindow is MainShellWindow mainShell)
+            if (System.Windows.Application.Current.MainWindow is MainShellWindow mainShell)
             {
                 _ = mainShell.AbrirProcessoDetalhesAsync(processo.Id);
             }
