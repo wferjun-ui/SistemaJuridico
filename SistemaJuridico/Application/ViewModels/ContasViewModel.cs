@@ -191,9 +191,7 @@ namespace SistemaJuridico.ViewModels
             if (!ValidarConta(EdicaoConta))
                 return;
 
-            AplicarRegraTipoLancamento(EdicaoConta);
-            if (ExibirCampoTerapiaManual)
-                EdicaoConta.TerapiaMedicamentoNome = TerapiaManual.Trim();
+            PrepararContaParaPersistencia(EdicaoConta, definirComoLancado: false);
 
             if (!string.IsNullOrWhiteSpace(EdicaoConta.Id) && Contas.Any(x => x.Id == EdicaoConta.Id))
                 EdicaoConta.Id = Guid.NewGuid().ToString();
@@ -238,6 +236,7 @@ namespace SistemaJuridico.ViewModels
             foreach (var conta in ContasRascunho)
             {
                 conta.ProcessoId = _processoId;
+                conta.StatusConta = "lancado";
                 _service.Inserir(conta);
                 _historicoService.Registrar(_processoId, "Lançamento contábil incluído", MontarResumoConta(conta));
                 _auditService.Registrar(
@@ -296,9 +295,7 @@ namespace SistemaJuridico.ViewModels
             if (!ValidarConta(EdicaoConta))
                 return;
 
-            AplicarRegraTipoLancamento(EdicaoConta);
-            if (ExibirCampoTerapiaManual)
-                EdicaoConta.TerapiaMedicamentoNome = TerapiaManual.Trim();
+            PrepararContaParaPersistencia(EdicaoConta, definirComoLancado: false);
 
             _service.Atualizar(EdicaoConta);
             _historicoService.Registrar(_processoId, "Conta individual editada", MontarResumoConta(EdicaoConta));
@@ -457,17 +454,17 @@ namespace SistemaJuridico.ViewModels
                 return false;
             }
 
-            if (string.IsNullOrWhiteSpace(conta.Historico))
-            {
-                System.Windows.MessageBox.Show("Histórico obrigatório.");
-                return false;
-            }
-
             if (IsAlvara)
             {
                 if (string.IsNullOrWhiteSpace(conta.MovProcesso) || string.Equals(conta.MovProcesso, "Anexo", StringComparison.OrdinalIgnoreCase))
                 {
                     System.Windows.MessageBox.Show("Movimento processual digitado é obrigatório para Alvará.");
+                    return false;
+                }
+
+                if (!EhMovimentoValido(conta.MovProcesso))
+                {
+                    System.Windows.MessageBox.Show("Movimento processual deve conter apenas números e pontos.");
                     return false;
                 }
 
@@ -495,20 +492,35 @@ namespace SistemaJuridico.ViewModels
                     return false;
                 }
 
+                if (string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase) && !EhMovimentoValido(conta.MovProcesso))
+                {
+                    System.Windows.MessageBox.Show("Movimento processual deve conter apenas números e pontos.");
+                    return false;
+                }
+
                 if (conta.ValorConta <= 0)
                 {
                     System.Windows.MessageBox.Show("Valor da Conta deve ser maior que zero.");
                     return false;
                 }
 
-                if (ExibirCamposReferencia)
+                if (IsTratamento)
                 {
-                    if (string.IsNullOrWhiteSpace(conta.Quantidade))
+                    if (string.IsNullOrWhiteSpace(conta.TerapiaMedicamentoNome))
                     {
-                        System.Windows.MessageBox.Show("Quantidade é obrigatória para Tratamento e Despesa Geral.");
+                        System.Windows.MessageBox.Show("Informe a terapia/medicamento para o tipo Tratamento.");
                         return false;
                     }
 
+                    if (string.IsNullOrWhiteSpace(conta.Quantidade))
+                    {
+                        System.Windows.MessageBox.Show("Quantidade é obrigatória para Tratamento.");
+                        return false;
+                    }
+                }
+
+                if (ExibirCamposReferencia)
+                {
                     if (!string.IsNullOrWhiteSpace(conta.MesReferencia) && (!int.TryParse(conta.MesReferencia, out var mes) || mes < 1 || mes > 12))
                     {
                         System.Windows.MessageBox.Show("Mês de referência inválido. Informe valor entre 1 e 12.");
@@ -537,12 +549,11 @@ namespace SistemaJuridico.ViewModels
             if (string.Equals(conta.TipoLancamento, "Alvará", StringComparison.OrdinalIgnoreCase))
             {
                 conta.ValorConta = 0m;
-                if (string.Equals(conta.MovProcesso, "Anexo", StringComparison.OrdinalIgnoreCase))
-                    conta.MovProcesso = null;
                 conta.TerapiaMedicamentoNome = null;
                 conta.Quantidade = null;
                 conta.MesReferencia = null;
                 conta.AnoReferencia = null;
+                conta.Observacoes = null;
             }
             else if (string.Equals(conta.TipoLancamento, "Tratamento", StringComparison.OrdinalIgnoreCase))
             {
@@ -551,9 +562,54 @@ namespace SistemaJuridico.ViewModels
             else if (string.Equals(conta.TipoLancamento, "Despesa Geral", StringComparison.OrdinalIgnoreCase))
             {
                 conta.ValorAlvara = 0m;
-                if (!string.IsNullOrWhiteSpace(TerapiaManual))
-                    conta.TerapiaMedicamentoNome = TerapiaManual.Trim();
+                conta.Quantidade = null;
             }
+        }
+
+        private void PrepararContaParaPersistencia(Conta conta, bool definirComoLancado)
+        {
+            AplicarRegraTipoLancamento(conta);
+
+            if (ExibirCampoTerapiaManual)
+                conta.TerapiaMedicamentoNome = TerapiaManual.Trim();
+
+            conta.Historico = MontarHistoricoConta(conta);
+            conta.Responsavel = string.IsNullOrWhiteSpace(conta.Responsavel)
+                ? App.Session.UsuarioAtual?.Nome ?? "Sistema"
+                : conta.Responsavel.Trim();
+
+            conta.StatusConta = definirComoLancado ? "lancado" : "rascunho";
+        }
+
+        private static bool EhMovimentoValido(string? valor)
+        {
+            if (string.IsNullOrWhiteSpace(valor))
+                return false;
+
+            return valor.All(c => char.IsDigit(c) || c == '.');
+        }
+
+        private static string MontarHistoricoConta(Conta conta)
+        {
+            if (string.Equals(conta.TipoLancamento, "Alvará", StringComparison.OrdinalIgnoreCase))
+                return $"Recebimento de Alvará {(string.IsNullOrWhiteSpace(conta.NumNfAlvara) ? string.Empty : $"(NF/Alvará: {conta.NumNfAlvara})")}".Trim();
+
+            if (string.Equals(conta.TipoLancamento, "Tratamento", StringComparison.OrdinalIgnoreCase))
+            {
+                var historico = conta.TerapiaMedicamentoNome?.Trim() ?? string.Empty;
+                if (!string.IsNullOrWhiteSpace(conta.Quantidade))
+                    historico += $" - {conta.Quantidade} un.";
+                if (!string.IsNullOrWhiteSpace(conta.MesReferencia) && !string.IsNullOrWhiteSpace(conta.AnoReferencia))
+                    historico += $" - Ref: {conta.MesReferencia}/{conta.AnoReferencia}";
+                if (!string.IsNullOrWhiteSpace(conta.Observacoes))
+                    historico += $" ({conta.Observacoes.Trim()})";
+                return historico.Trim();
+            }
+
+            if (string.Equals(conta.TipoLancamento, "Despesa Geral", StringComparison.OrdinalIgnoreCase))
+                return $"Despesa Geral: {conta.TerapiaMedicamentoNome ?? string.Empty} {(string.IsNullOrWhiteSpace(conta.NumNfAlvara) ? string.Empty : $"(NF/Alvará: {conta.NumNfAlvara})")}".Trim();
+
+            return conta.Historico?.Trim() ?? string.Empty;
         }
 
         public void AtualizarValorAlvaraTexto(string texto)
@@ -630,10 +686,17 @@ namespace SistemaJuridico.ViewModels
             if (!File.Exists(caminho))
                 return;
 
-            var conteudo = File.ReadAllText(caminho);
-            var itens = JsonSerializer.Deserialize<List<Conta>>(conteudo) ?? new List<Conta>();
-            foreach (var item in itens)
-                ContasRascunho.Add(item);
+            try
+            {
+                var conteudo = File.ReadAllText(caminho);
+                var itens = JsonSerializer.Deserialize<List<Conta>>(conteudo) ?? new List<Conta>();
+                foreach (var item in itens)
+                    ContasRascunho.Add(item);
+            }
+            catch
+            {
+                File.Delete(caminho);
+            }
         }
 
         private void PersistirRascunhos()

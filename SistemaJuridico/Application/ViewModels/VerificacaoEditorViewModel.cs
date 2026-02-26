@@ -112,6 +112,30 @@ namespace SistemaJuridico.ViewModels
                 return;
             }
 
+            if (string.IsNullOrWhiteSpace(Responsavel))
+            {
+                System.Windows.MessageBox.Show("Informe o responsável da verificação.");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(Descricao))
+            {
+                System.Windows.MessageBox.Show("Descreva o que foi realizado na verificação.");
+                return;
+            }
+
+            if (DiligenciaRealizada && string.IsNullOrWhiteSpace(DescricaoDiligencia))
+            {
+                System.Windows.MessageBox.Show("Informe a descrição da diligência realizada.");
+                return;
+            }
+
+            if (PossuiPendencias && string.IsNullOrWhiteSpace(DescricaoPendencias))
+            {
+                System.Windows.MessageBox.Show("Informe as pendências encontradas.");
+                return;
+            }
+
             var itens = ItensSaude.Select(i => i.ToModel()).ToList();
             var itensSemPrescricao = itens
                 .Where(i => !i.IsDesnecessario)
