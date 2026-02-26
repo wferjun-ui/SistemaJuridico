@@ -205,14 +205,44 @@
                     </TabItem>
 
                     <TabItem Header="Histórico">
-                        <DataGrid Margin="6" ItemsSource="{Binding Historicos}" AutoGenerateColumns="False" IsReadOnly="True">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Data/Hora" Binding="{Binding DataHora}" Width="150"/>
-                                <DataGridTextColumn Header="Ação" Binding="{Binding Acao}" Width="220"/>
-                                <DataGridTextColumn Header="Usuário" Binding="{Binding Usuario}" Width="180"/>
-                                <DataGridTextColumn Header="Detalhes" Binding="{Binding Detalhes}" Width="*"/>
-                            </DataGrid.Columns>
-                        </DataGrid>
+                        <ScrollViewer Margin="6" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding Verificacoes}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Margin="0,0,0,8" Padding="10" BorderThickness="1" BorderBrush="#E5E7EB" Background="#F9FAFB" CornerRadius="6">
+                                            <StackPanel>
+                                                <TextBlock FontWeight="Bold" Foreground="#1F2937">
+                                                    <Run Text="Data: "/>
+                                                    <Run Text="{Binding DataHora}"/>
+                                                    <Run Text="  •  Status: "/>
+                                                    <Run Text="{Binding StatusProcesso}"/>
+                                                </TextBlock>
+                                                <TextBlock Margin="0,4,0,0">
+                                                    <Run Text="Responsável: " FontWeight="SemiBold"/>
+                                                    <Run Text="{Binding Responsavel}"/>
+                                                </TextBlock>
+                                                <TextBlock Margin="0,2,0,0" TextWrapping="Wrap">
+                                                    <Run Text="Diligência: " FontWeight="SemiBold"/>
+                                                    <Run Text="{Binding DiligenciaDescricao}"/>
+                                                </TextBlock>
+                                                <TextBlock Margin="0,2,0,0" TextWrapping="Wrap">
+                                                    <Run Text="Pendências: " FontWeight="SemiBold"/>
+                                                    <Run Text="{Binding PendenciaDescricao}"/>
+                                                </TextBlock>
+                                                <TextBlock Margin="0,2,0,0" TextWrapping="Wrap">
+                                                    <Run Text="Prazo da diligência: " FontWeight="SemiBold"/>
+                                                    <Run Text="{Binding PrazoDiligencia}"/>
+                                                </TextBlock>
+                                                <TextBlock Margin="0,6,0,0" TextWrapping="Wrap" Foreground="#374151">
+                                                    <Run Text="Alterações (como estava / o que mudou): " FontWeight="SemiBold"/>
+                                                    <Run Text="{Binding AlteracoesTexto}"/>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
                     </TabItem>
                 </TabControl>
             </Border>

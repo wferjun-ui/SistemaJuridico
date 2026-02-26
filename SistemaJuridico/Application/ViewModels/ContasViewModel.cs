@@ -57,6 +57,7 @@ namespace SistemaJuridico.ViewModels
         public bool ExibirFormularioContas => PodeCadastrar;
         public bool IsMovimentoOpcional => !IsAlvara;
         public bool ExibirCampoMovimentoDigitado => IsMovimentoOpcional && string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase);
+        public bool ExibirCamposReferencia => IsTratamento || IsDespesaGeral;
 
         public ContasViewModel() : this(string.Empty)
         {
@@ -90,6 +91,7 @@ namespace SistemaJuridico.ViewModels
             OnPropertyChanged(nameof(ExibirFormularioContas));
             OnPropertyChanged(nameof(IsMovimentoOpcional));
             OnPropertyChanged(nameof(ExibirCampoMovimentoDigitado));
+            OnPropertyChanged(nameof(ExibirCamposReferencia));
         }
 
 
@@ -121,6 +123,7 @@ namespace SistemaJuridico.ViewModels
             OnPropertyChanged(nameof(ExibirCampoTerapiaManual));
             OnPropertyChanged(nameof(IsMovimentoOpcional));
             OnPropertyChanged(nameof(ExibirCampoMovimentoDigitado));
+            OnPropertyChanged(nameof(ExibirCamposReferencia));
             OnPropertyChanged(nameof(ValorAlvaraTexto));
             OnPropertyChanged(nameof(ValorContaTexto));
         }
@@ -470,8 +473,15 @@ namespace SistemaJuridico.ViewModels
             }
             else
             {
-                if (string.IsNullOrWhiteSpace(conta.MovProcesso))
-                    conta.MovProcesso = "Anexo";
+                conta.MovProcesso = string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase)
+                    ? MovimentoContaDigitado?.Trim()
+                    : "Anexo";
+
+                if (string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(conta.MovProcesso))
+                {
+                    System.Windows.MessageBox.Show("Informe o número do movimento processual quando o modo for Digitar.");
+                    return false;
+                }
 
                 if (conta.ValorConta <= 0)
                 {
@@ -508,7 +518,8 @@ namespace SistemaJuridico.ViewModels
             else if (string.Equals(conta.TipoLancamento, "Despesa Geral", StringComparison.OrdinalIgnoreCase))
             {
                 conta.ValorAlvara = 0m;
-                conta.TerapiaMedicamentoNome = null;
+                if (!string.IsNullOrWhiteSpace(TerapiaManual))
+                    conta.TerapiaMedicamentoNome = TerapiaManual.Trim();
             }
         }
 
