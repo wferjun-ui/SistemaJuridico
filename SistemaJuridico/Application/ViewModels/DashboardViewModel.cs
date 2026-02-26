@@ -386,9 +386,9 @@ namespace SistemaJuridico.ViewModels
                 }
 
                 _logger.Info($"Abrindo processo {processoId} ({numeroProcesso}) a partir do dashboard.");
-                PainelDetalhesProcessoTexto = $"Processo selecionado: {numeroProcesso} - {paciente}.
-
-A janela de detalhes foi aberta para edição completa, e esta área permanece sincronizada com a seleção no dashboard.";
+                PainelDetalhesProcessoTexto =
+                    $"Processo selecionado: {numeroProcesso} - {paciente}.{Environment.NewLine}{Environment.NewLine}" +
+                    "A janela de detalhes foi aberta para edição completa, e esta área permanece sincronizada com a seleção no dashboard.";
 
                 var window = new ProcessoDetalhesWindow(processoId)
                 {

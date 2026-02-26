@@ -5,7 +5,7 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
-        <Style TargetType="Button">
+        <Style x:Key="PrimaryActionButtonStyle" TargetType="Button">
             <Setter Property="Padding" Value="10,6"/>
             <Setter Property="Margin" Value="3"/>
             <Setter Property="Background" Value="#4F46E5"/>
@@ -80,6 +80,9 @@
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <Button HorizontalContentAlignment="Left"
+                                            Background="White"
+                                            BorderBrush="#D1D5DB"
+                                            Foreground="#1F2937"
                                             Padding="10,8"
                                             Command="{Binding DataContext.AbrirProcessoBuscaCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}">
@@ -93,6 +96,7 @@
                         </ListBox>
 
                         <Button Content="+ Novo Processo"
+                                Style="{StaticResource PrimaryActionButtonStyle}"
                                 Margin="0,10,0,0"
                                 Height="34"
                                 HorizontalAlignment="Stretch"
