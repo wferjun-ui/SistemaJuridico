@@ -143,6 +143,34 @@ namespace SistemaJuridico.ViewModels
                 .Select(i => i.Nome)
                 .ToList();
 
+            var terapiasAtivasSemQuantidade = itens
+                .Where(i => string.Equals(i.Tipo, "Terapia", StringComparison.OrdinalIgnoreCase))
+                .Where(i => !i.IsDesnecessario)
+                .Where(i => string.IsNullOrWhiteSpace(i.Qtd))
+                .Select(i => i.Nome)
+                .ToList();
+
+            if (terapiasAtivasSemQuantidade.Count > 0)
+            {
+                System.Windows.MessageBox.Show(
+                    $"Informe a quantidade das terapias ativas: {string.Join(", ", terapiasAtivasSemQuantidade)}");
+                return;
+            }
+
+            var terapiasAtivasSemLocal = itens
+                .Where(i => string.Equals(i.Tipo, "Terapia", StringComparison.OrdinalIgnoreCase))
+                .Where(i => !i.IsDesnecessario)
+                .Where(i => string.IsNullOrWhiteSpace(i.Local))
+                .Select(i => i.Nome)
+                .ToList();
+
+            if (terapiasAtivasSemLocal.Count > 0)
+            {
+                System.Windows.MessageBox.Show(
+                    $"Informe o local das terapias ativas: {string.Join(", ", terapiasAtivasSemLocal)}");
+                return;
+            }
+
             if (itensSemPrescricao.Count > 0)
             {
                 System.Windows.MessageBox.Show(
@@ -193,6 +221,8 @@ namespace SistemaJuridico.ViewModels
                 Local = model.Local,
                 DataPrescricao = model.DataPrescricao,
                 IsDesnecessario = model.IsDesnecessario,
+                IsSus = model.IsSus,
+                IsParticular = model.IsParticular,
                 TemBloqueio = model.TemBloqueio
             };
         }
@@ -250,6 +280,20 @@ namespace SistemaJuridico.ViewModels
 
         public bool EhAtivo => !IsDesnecessario;
 
+        public string NecessidadeTexto => IsDesnecessario ? "Desnecessário" : "Necessário";
+
+        public bool IsSus
+        {
+            get => _model.IsSus;
+            set => SetProperty(_model.IsSus, value, _model, (m, v) => m.IsSus = v);
+        }
+
+        public bool IsParticular
+        {
+            get => _model.IsParticular;
+            set => SetProperty(_model.IsParticular, value, _model, (m, v) => m.IsParticular = v);
+        }
+
         public ItemSaude ToModel() => new()
         {
             Id = _model.Id,
@@ -259,9 +303,11 @@ namespace SistemaJuridico.ViewModels
             Qtd = _model.Qtd,
             Frequencia = _model.Frequencia,
             Local = _model.Local,
-            DataPrescricao = _model.DataPrescricao,
-            IsDesnecessario = _model.IsDesnecessario,
-            TemBloqueio = _model.TemBloqueio
+                DataPrescricao = _model.DataPrescricao,
+                IsDesnecessario = _model.IsDesnecessario,
+                IsSus = _model.IsSus,
+                IsParticular = _model.IsParticular,
+                TemBloqueio = _model.TemBloqueio
         };
     }
 }

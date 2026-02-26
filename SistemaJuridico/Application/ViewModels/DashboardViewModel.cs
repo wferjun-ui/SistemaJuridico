@@ -63,6 +63,8 @@ namespace SistemaJuridico.ViewModels
         [ObservableProperty]
         private ProcessoDetalhesViewModel? _processoDetalhesSelecionado;
 
+        public bool DetalhesProcessoVisivel => ProcessoDetalhesSelecionado != null;
+
         public DashboardViewModel()
         {
             var db = new DatabaseService();
@@ -402,6 +404,7 @@ namespace SistemaJuridico.ViewModels
                     "As abas de verificação, contas e histórico foram carregadas abaixo no próprio dashboard.";
 
                 ProcessoDetalhesSelecionado = new ProcessoDetalhesViewModel(processoId, _service);
+                OnPropertyChanged(nameof(DetalhesProcessoVisivel));
             }
             catch (Exception ex)
             {
@@ -421,6 +424,7 @@ namespace SistemaJuridico.ViewModels
 
             ProcessoDetalhesSelecionado.LiberarLock();
             ProcessoDetalhesSelecionado = null;
+            OnPropertyChanged(nameof(DetalhesProcessoVisivel));
         }
     }
 

@@ -141,6 +141,11 @@
                                                 Width="80"
                                                 Binding="{Binding Qtd, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
+                            <DataGridTextColumn Header="Necessidade"
+                                                Width="120"
+                                                IsReadOnly="True"
+                                                Binding="{Binding NecessidadeTexto}" />
+
                             <DataGridTextColumn Header="Frequência"
                                                 Width="130"
                                                 Binding="{Binding Frequencia, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
@@ -177,6 +182,14 @@
                             <DataGridCheckBoxColumn Header="Tratamento desnecessário"
                                                     Width="170"
                                                     Binding="{Binding IsDesnecessario, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                            <DataGridCheckBoxColumn Header="SUS"
+                                                    Width="70"
+                                                    Binding="{Binding IsSus, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                            <DataGridCheckBoxColumn Header="Particular"
+                                                    Width="95"
+                                                    Binding="{Binding IsParticular, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </GroupBox>
