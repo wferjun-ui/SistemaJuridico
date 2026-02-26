@@ -68,12 +68,9 @@ namespace SistemaJuridico.ViewModels
         partial void OnTextoBuscaChanged(string value)
         {
             AplicarSugestoesBuscaRapida();
-
-            if (!BuscaRapidaAtivada)
-                return;
-
+            BuscaRapidaAtivada = !string.IsNullOrWhiteSpace(value) && value.Trim().Length >= 3;
             AplicarBuscaProcessos();
-            MostrarResultadosBusca = !string.IsNullOrWhiteSpace(TextoBusca) && ProcessosBusca.Count > 0;
+            MostrarResultadosBusca = BuscaRapidaAtivada && ProcessosBusca.Count > 0;
         }
 
         [RelayCommand]
@@ -132,9 +129,9 @@ namespace SistemaJuridico.ViewModels
         [RelayCommand]
         private void BuscarProcessos()
         {
-            BuscaRapidaAtivada = true;
+            BuscaRapidaAtivada = !string.IsNullOrWhiteSpace(TextoBusca) && TextoBusca.Trim().Length >= 3;
             AplicarBuscaProcessos();
-            MostrarResultadosBusca = !string.IsNullOrWhiteSpace(TextoBusca) && ProcessosBusca.Count > 0;
+            MostrarResultadosBusca = BuscaRapidaAtivada && ProcessosBusca.Count > 0;
         }
 
         [RelayCommand]
@@ -296,6 +293,14 @@ namespace SistemaJuridico.ViewModels
 
         private void AplicarBuscaProcessos()
         {
+            ProcessosBusca.Clear();
+
+            if (!BuscaRapidaAtivada)
+            {
+                TotalBusca = 0;
+                return;
+            }
+
             IEnumerable<ProcessoBuscaDashboardVM> consulta = _todosBusca;
 
             if (!string.IsNullOrWhiteSpace(TextoBusca))
@@ -312,7 +317,6 @@ namespace SistemaJuridico.ViewModels
 
             var ordenados = consulta.OrderBy(x => x.Numero).Take(200).ToList();
 
-            ProcessosBusca.Clear();
             foreach (var item in ordenados)
                 ProcessosBusca.Add(item);
 

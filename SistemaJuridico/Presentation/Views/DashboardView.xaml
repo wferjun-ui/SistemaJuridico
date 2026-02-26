@@ -25,21 +25,14 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <Border Grid.Row="0" Padding="14" Margin="0,0,0,14" CornerRadius="10" Background="#FFFFFF" BorderThickness="1" BorderBrush="#E5E7EB">
-                <StackPanel>
-                    <TextBlock Text="Controle de Processos" FontSize="30" FontWeight="SemiBold" Foreground="#1F2937"/>
-                    <TextBlock Text="Painel de prazos, pesquisa e atividade recente." Margin="0,4,0,0" Foreground="#6B7280"/>
+            <TextBlock Grid.Row="0"
+                       Text="Sincronizando..."
+                       Visibility="{Binding CarregandoEmSegundoPlano, Converter={StaticResource BoolToVis}}"
+                       Margin="0,0,0,10"
+                       Foreground="#6B7280"
+                       FontWeight="SemiBold"/>
 
-                    <TextBlock Text="Sincronizando..." Visibility="{Binding CarregandoEmSegundoPlano, Converter={StaticResource BoolToVis}}" Margin="0,8,0,0" Foreground="#B45309" FontWeight="SemiBold"/>
-
-                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                        <Button Content="Atualizar" Width="110" Margin="0,0,8,0" Command="{Binding CarregarCommand}"/>
-                        <Button Content="Exportar PDF" Width="130" Command="{Binding ExportarResumoPdfCommand}"/>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-
-            <Grid Grid.Row="1" Margin="0,0,0,18">
+            <Grid Grid.Row="1" Margin="0,0,0,14">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
@@ -62,98 +55,88 @@
                 </Border>
             </Grid>
 
-            <Border Grid.Row="2" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,14" Background="#FFF8FAFC">
-                <StackPanel>
-                    <DockPanel Margin="0,0,0,8" LastChildFill="True">
-                        <TextBlock DockPanel.Dock="Left" Text="Pesquisar e selecionar processo" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                        <WrapPanel DockPanel.Dock="Right" HorizontalAlignment="Right">
-                            <Button Content="Novo Processo" Command="{Binding NovoProcessoCommand}"/>
-                            <Button Content="Buscar" Width="100" Command="{Binding BuscarProcessosCommand}"/>
-                            <Button Content="Limpar" Width="100" Background="#64748B" BorderBrush="#64748B" Command="{Binding LimparBuscaCommand}"/>
-                        </WrapPanel>
-                        <StackPanel>
-                            <TextBlock Text="Clique em Buscar para habilitar a pesquisa por número de processo."
-                                       Foreground="#6B7280">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Visible"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding BuscaRapidaAtivada}" Value="True">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                            <ComboBox MinWidth="280"
-                                      Margin="0,4,0,0"
-                                      ItemsSource="{Binding SugestoesBuscaRapida}"
-                                      Text="{Binding TextoBusca, UpdateSourceTrigger=PropertyChanged}"
-                                      IsEditable="True"
-                                      IsTextSearchEnabled="False"
-                                      StaysOpenOnEdit="True"
-                                      Visibility="{Binding BuscaRapidaAtivada, Converter={StaticResource BoolToVis}}"/>
-                        </StackPanel>
-                    </DockPanel>
+            <Grid Grid.Row="2" Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
-                    <StackPanel Visibility="{Binding MostrarResultadosBusca, Converter={StaticResource BoolToVis}}">
-                        <TextBlock Text="{Binding TotalBusca, StringFormat=Resultados: {0}}" Margin="0,0,0,6" FontStyle="Italic" Opacity="0.85"/>
+                <Border Grid.Column="0" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="10" Background="White" Padding="12">
+                    <StackPanel>
+                        <TextBlock Text="🔎 Pesquisar e Selecionar Processo" FontWeight="SemiBold" Foreground="#374151"/>
+                        <TextBox Margin="0,8,0,0"
+                                 Text="{Binding TextoBusca, UpdateSourceTrigger=PropertyChanged}"
+                                 MinHeight="34"
+                                 ToolTip="Digite 3+ letras para pesquisar processos"/>
+                        <TextBlock Margin="0,6,0,0" Foreground="#6B7280" FontSize="12" Text="Digite 3+ letras para pesquisar por número, paciente, genitor, juiz, tipo ou status."/>
 
-                        <DataGrid ItemsSource="{Binding ProcessosBusca}"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              SelectedItem="{Binding ProcessoBuscaSelecionado}"
-                              MinHeight="180">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Número" Binding="{Binding Numero}" Width="150"/>
-                            <DataGridTextColumn Header="Paciente" Binding="{Binding Paciente}" Width="2*"/>
-                            <DataGridTextColumn Header="Genitor" Binding="{Binding Genitor}" Width="*"/>
-                            <DataGridTextColumn Header="Juiz" Binding="{Binding Juiz}" Width="*"/>
-                            <DataGridTextColumn Header="Tipo" Binding="{Binding TipoProcesso}" Width="*"/>
-                            <DataGridTextColumn Header="Status" Binding="{Binding StatusCalculado}" Width="*"/>
-                            <DataGridTemplateColumn Header="Ação" Width="110">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Button Content="Abrir" Command="{Binding DataContext.AbrirProcessoBuscaCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
+                        <ListBox Margin="0,8,0,0"
+                                 MaxHeight="220"
+                                 BorderBrush="#D1D5DB"
+                                 BorderThickness="1"
+                                 Visibility="{Binding MostrarResultadosBusca, Converter={StaticResource BoolToVis}}"
+                                 ItemsSource="{Binding ProcessosBusca}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Button HorizontalContentAlignment="Left"
+                                            Padding="10,8"
+                                            Command="{Binding DataContext.AbrirProcessoBuscaCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Paciente}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding Numero}" FontSize="12" Opacity="0.85"/>
+                                        </StackPanel>
+                                    </Button>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <Button Content="+ Novo Processo"
+                                Margin="0,10,0,0"
+                                Height="34"
+                                HorizontalAlignment="Stretch"
+                                Command="{Binding NovoProcessoCommand}"/>
                     </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Margin="12,0,0,0" Padding="12" CornerRadius="10" BorderThickness="1" BorderBrush="#BFDBFE" Background="#EFF6FF">
+                    <StackPanel>
+                        <TextBlock Text="👥 Usuários Ativos Recentemente" FontWeight="SemiBold" Foreground="#1D4ED8"/>
+                        <ListBox ItemsSource="{Binding UsuariosAtivosRecentemente}" Margin="0,8,0,0" MinHeight="92" MaxHeight="210" BorderThickness="0" Background="Transparent">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,0,0,8">
+                                        <TextBlock Text="{Binding NomeUsuario}" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding UltimaAtividadeRelativaTexto}" FontSize="12" Foreground="#6B7280"/>
+                                        <TextBlock Text="{Binding UltimoProcessoTexto}" FontSize="12" Foreground="#1F2937" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <Border Grid.Row="3" Padding="14" CornerRadius="10" BorderThickness="1" BorderBrush="#E3E8EF" Background="#F9FBFD" Margin="0,0,0,14">
+                <StackPanel>
+                    <TextBlock Text="Status de alterações não salvas" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding ResumoRascunhosTexto}" Margin="0,5,0,0"/>
+                    <TextBlock Text="{Binding UsuarioLogadoTexto}" Margin="0,3,0,0" Opacity="0.72"/>
                 </StackPanel>
             </Border>
 
-            <GroupBox Grid.Row="3" Header="Processos atrasados" Margin="0,0,0,14">
-                <DataGrid ItemsSource="{Binding ProcessosAtrasados}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" MinHeight="190" SelectionMode="Single">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Processo" Binding="{Binding NumeroProcesso}" Width="130"/>
-                        <DataGridTextColumn Header="Paciente" Binding="{Binding Paciente}" Width="180"/>
-                        <DataGridTextColumn Header="Juiz" Binding="{Binding Juiz}" Width="180"/>
-                        <DataGridTextColumn Header="Status" Binding="{Binding StatusCalculado}" Width="150"/>
-                        <DataGridTextColumn Header="Prazo" Binding="{Binding PrazoTexto}" Width="110"/>
-                        <DataGridTextColumn Header="Salvamento" Binding="{Binding StatusSalvamentoTexto}" Width="170"/>
-                        <DataGridTemplateColumn Header="Ação" Width="110">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Button Content="Abrir" Command="{Binding DataContext.AbrirProcessoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
-            </GroupBox>
+            <Grid Grid.Row="4">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-            <StackPanel Grid.Row="4">
-                <GroupBox Header="Processos a atrasar (próximos 7 dias)" Margin="0,0,0,14">
-                    <DataGrid ItemsSource="{Binding ProcessosAAtrasar}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" MinHeight="190" SelectionMode="Single">
+                <GroupBox Header="Processos atrasados" Margin="0,0,0,14">
+                    <DataGrid ItemsSource="{Binding ProcessosAtrasados}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" MinHeight="170">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Processo" Binding="{Binding NumeroProcesso}" Width="130"/>
-                            <DataGridTextColumn Header="Paciente" Binding="{Binding Paciente}" Width="180"/>
-                            <DataGridTextColumn Header="Juiz" Binding="{Binding Juiz}" Width="180"/>
-                            <DataGridTextColumn Header="Status" Binding="{Binding StatusCalculado}" Width="150"/>
+                            <DataGridTextColumn Header="Processo" Binding="{Binding NumeroProcesso}" Width="140"/>
+                            <DataGridTextColumn Header="Paciente" Binding="{Binding Paciente}" Width="*"/>
                             <DataGridTextColumn Header="Prazo" Binding="{Binding PrazoTexto}" Width="110"/>
-                            <DataGridTextColumn Header="Salvamento" Binding="{Binding StatusSalvamentoTexto}" Width="170"/>
                             <DataGridTemplateColumn Header="Ação" Width="110">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -165,25 +148,23 @@
                     </DataGrid>
                 </GroupBox>
 
-                <Border Padding="14" CornerRadius="10" BorderThickness="1" BorderBrush="#E3E8EF" Background="#F9FBFD" Margin="0,0,0,14">
-                    <StackPanel>
-                        <TextBlock Text="Status de alterações não salvas" FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding ResumoRascunhosTexto}" Margin="0,5,0,0"/>
-                        <TextBlock Text="{Binding UsuarioLogadoTexto}" Margin="0,3,0,0" Opacity="0.72"/>
-                    </StackPanel>
-                </Border>
-
-                <GroupBox Header="Usuários ativos recentemente" Margin="0,0,0,14">
-                    <DataGrid ItemsSource="{Binding UsuariosAtivosRecentemente}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" MinHeight="120">
+                <GroupBox Grid.Row="1" Header="Processos a atrasar (próximos 7 dias)">
+                    <DataGrid ItemsSource="{Binding ProcessosAAtrasar}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" MinHeight="170">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Usuário" Binding="{Binding NomeUsuario}" Width="170"/>
-                            <DataGridTextColumn Header="E-mail" Binding="{Binding EmailUsuario}" Width="220"/>
-                            <DataGridTextColumn Header="Última atividade" Binding="{Binding UltimaAtividadeRelativaTexto}" Width="150"/>
-                            <DataGridTextColumn Header="Último processo" Binding="{Binding UltimoProcessoTexto}" Width="*"/>
+                            <DataGridTextColumn Header="Processo" Binding="{Binding NumeroProcesso}" Width="140"/>
+                            <DataGridTextColumn Header="Paciente" Binding="{Binding Paciente}" Width="*"/>
+                            <DataGridTextColumn Header="Prazo" Binding="{Binding PrazoTexto}" Width="110"/>
+                            <DataGridTemplateColumn Header="Ação" Width="110">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="Abrir" Command="{Binding DataContext.AbrirProcessoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
                 </GroupBox>
-            </StackPanel>
+            </Grid>
         </Grid>
     </ScrollViewer>
 </UserControl>
