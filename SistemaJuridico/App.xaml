@@ -6,17 +6,17 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Blue" SecondaryColor="Teal"/>
+                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Indigo" SecondaryColor="Blue"/>
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
             <SolidColorBrush x:Key="PrimarySurfaceBrush" Color="#FFFFFF"/>
             <SolidColorBrush x:Key="PrimaryBorderBrush" Color="#E2E8F0"/>
-            <SolidColorBrush x:Key="PrimaryButtonBrush" Color="#2563EB"/>
-            <SolidColorBrush x:Key="PrimaryButtonHoverBrush" Color="#1D4ED8"/>
+            <SolidColorBrush x:Key="PrimaryButtonBrush" Color="#4F46E5"/>
+            <SolidColorBrush x:Key="PrimaryButtonHoverBrush" Color="#4338CA"/>
 
             <Style TargetType="Window">
-                <Setter Property="FontFamily" Value="Segoe UI"/>
+                <Setter Property="FontFamily" Value="Inter, Segoe UI"/>
                 <Setter Property="FontSize" Value="14"/>
                 <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
                 <Setter Property="TextOptions.TextRenderingMode" Value="Auto"/>

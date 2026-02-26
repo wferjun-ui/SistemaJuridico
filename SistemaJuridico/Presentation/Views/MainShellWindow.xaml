@@ -7,6 +7,15 @@
         WindowState="Maximized"
         Background="#F3F4F6">
 
+    <Window.Resources>
+        <Style x:Key="SecondaryHeaderButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="#E5E7EB"/>
+            <Setter Property="BorderBrush" Value="#E5E7EB"/>
+            <Setter Property="Foreground" Value="#374151"/>
+            <Setter Property="Padding" Value="14,6"/>
+        </Style>
+    </Window.Resources>
+
     <Grid Margin="14">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -24,7 +33,7 @@
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="⚖ Controle de Processos"
                                Foreground="#1F2937"
-                               FontSize="34"
+                               FontSize="32"
                                FontWeight="SemiBold"
                                Margin="0,0,16,0"/>
 
@@ -32,9 +41,9 @@
                 </StackPanel>
 
                 <WrapPanel DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center" ItemHeight="36">
-                    <Button Content="Relatórios / Busca" Padding="14,6" Margin="0,0,8,0" Command="{Binding OpenRelatoriosCommand}"/>
-                    <Button Content="Configurações do App" Padding="14,6" Margin="0,0,8,0" Command="{Binding OpenAdminCommand}"/>
-                    <Button Content="Debug" Padding="14,6" Margin="0,0,8,0" MinWidth="120" Height="36" Command="{Binding OpenDebugConsoleCommand}"/>
+                    <Button Content="Relatórios / Busca" Style="{StaticResource SecondaryHeaderButtonStyle}" Margin="0,0,8,0" Command="{Binding OpenRelatoriosCommand}"/>
+                    <Button Content="Configurações do App" Style="{StaticResource SecondaryHeaderButtonStyle}" Margin="0,0,8,0" Command="{Binding OpenAdminCommand}"/>
+                    <Button Content="Debug" Style="{StaticResource SecondaryHeaderButtonStyle}" Margin="0,0,8,0" MinWidth="120" Height="36" Command="{Binding OpenDebugConsoleCommand}"/>
                 </WrapPanel>
             </DockPanel>
         </Border>
