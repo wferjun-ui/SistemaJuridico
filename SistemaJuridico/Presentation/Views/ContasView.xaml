@@ -136,16 +136,22 @@
             </Grid>
         </Border>
 
-        <WrapPanel Grid.Row="1" HorizontalAlignment="Right" Margin="0,0,0,8" ItemHeight="38"
-                   Visibility="{Binding ExibirFormularioContas, Converter={StaticResource BoolToVis}}">
+        <ScrollViewer Grid.Row="1"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Disabled"
+                      Margin="0,0,0,8"
+                      Visibility="{Binding ExibirFormularioContas, Converter={StaticResource BoolToVis}}">
+            <WrapPanel HorizontalAlignment="Left" ItemHeight="38">
             <Button Content="Adicionar ao rascunho" Command="{Binding AdicionarRascunhoCommand}" IsEnabled="{Binding PodeCadastrar}" Margin="4" MinWidth="165" Padding="12,7"/>
             <Button Content="Confirmar rascunhos" Command="{Binding ConfirmarRascunhosCommand}" IsEnabled="{Binding PodeCadastrar}" Margin="4" MinWidth="160" Padding="12,7"/>
             <Button Content="Limpar rascunhos" Command="{Binding LimparRascunhosCommand}" IsEnabled="{Binding PodeCadastrar}" Margin="4" MinWidth="145" Padding="12,7"/>
             <Button Content="Salvar edição" Command="{Binding SalvarEdicaoContaCommand}" IsEnabled="{Binding PodeEditar}" Margin="4" MinWidth="130" Padding="12,7"/>
             <Button Content="Editar selecionada" Command="{Binding EditarContaCommand}" IsEnabled="{Binding PodeEditar}" Margin="4" MinWidth="145" Padding="12,7"/>
             <Button Content="Excluir selecionada" Command="{Binding ExcluirContaCommand}" IsEnabled="{Binding PodeExcluir}" Margin="4" MinWidth="150" Padding="12,7"/>
-            <Button Content="Exportar PDF" Command="{Binding ExportarPrestacaoContasPdfCommand}" Margin="4" MinWidth="120" Padding="12,7"/>
-        </WrapPanel>
+            <Button Content="Lançar selecionada" Command="{Binding FecharContaCommand}" IsEnabled="{Binding PodeEditar}" Margin="4" MinWidth="150" Padding="12,7"/>
+                <Button Content="Exportar PDF" Command="{Binding ExportarPrestacaoContasPdfCommand}" Margin="4" MinWidth="120" Padding="12,7"/>
+            </WrapPanel>
+        </ScrollViewer>
 
         <GroupBox Header="Rascunhos de contas" Grid.Row="2" Margin="0,0,0,8"
                   Visibility="{Binding ExibirFormularioContas, Converter={StaticResource BoolToVis}}">
