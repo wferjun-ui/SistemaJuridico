@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QuestPDF.Fluent;
+using SistemaJuridico.Infrastructure;
 using SistemaJuridico.Services;
 using SistemaJuridico.Views;
 using System.Windows;
@@ -14,6 +15,7 @@ namespace SistemaJuridico.ViewModels
         private readonly ProcessService _service;
         private readonly ProcessoCacheService _cacheService;
         private readonly ActiveSessionService _activeSessionService;
+        private readonly LoggerService _logger = new();
 
         private readonly List<ProcessoBuscaDashboardVM> _todosBusca = new();
 
@@ -367,23 +369,38 @@ namespace SistemaJuridico.ViewModels
 
         private void AbrirProcessoDetalhe(string processoId, string numeroProcesso, string paciente)
         {
-            var usuario = App.Session.UsuarioAtual;
-            if (usuario != null)
+            try
             {
-                _activeSessionService.RecordUserActivity(
-                    usuario.Email,
-                    usuario.Nome,
-                    processoId,
-                    numeroProcesso,
-                    paciente);
-            }
+                var usuario = App.Session.UsuarioAtual;
+                if (usuario != null)
+                {
+                    _activeSessionService.RecordUserActivity(
+                        usuario.Email,
+                        usuario.Nome,
+                        processoId,
+                        numeroProcesso,
+                        paciente);
+                }
 
-            if (System.Windows.Application.Current.MainWindow is MainShellWindow mainShell)
+                _logger.Info($"Abrindo processo {processoId} ({numeroProcesso}) a partir do dashboard.");
+
+                var window = new ProcessoDetalhesWindow(processoId)
+                {
+                    Owner = System.Windows.Application.Current.MainWindow
+                };
+
+                window.ShowDialog();
+                Carregar();
+            }
+            catch (Exception ex)
             {
-                _ = mainShell.AbrirProcessoDetalhesAsync(processoId);
+                _logger.Error($"Falha ao abrir detalhes do processo {processoId} pelo dashboard", ex);
+                System.Windows.MessageBox.Show(
+                    $"Não foi possível abrir os detalhes do processo.\n{ex.Message}",
+                    "Erro",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
-
-            Carregar();
         }
     }
 
