@@ -158,8 +158,8 @@
                                                         <DockPanel LastChildFill="False">
                                                             <TextBox x:Name="QtdTotalTextBox" Width="44" Height="22" HorizontalContentAlignment="Center" Padding="2,0" Text="{Binding Qtd, UpdateSourceTrigger=PropertyChanged}"/>
                                                             <StackPanel Margin="0,0,0,0">
-                                                                <Button Content="▲" Width="16" Height="11" Padding="0" Click="IncrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdTotalTextBox}"/>
-                                                                <Button Content="▼" Width="16" Height="11" Padding="0" Click="DecrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdTotalTextBox}"/>
+                                                                <Button Content="▲" Width="12" Height="9" Padding="0" FontSize="8" Click="IncrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdTotalTextBox}"/>
+                                                                <Button Content="▼" Width="12" Height="9" Padding="0" FontSize="8" Click="DecrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdTotalTextBox}"/>
                                                             </StackPanel>
                                                         </DockPanel>
                                                     </StackPanel>
@@ -169,8 +169,8 @@
                                                         <DockPanel LastChildFill="False">
                                                             <TextBox x:Name="QtdSusTextBox" Width="44" Height="22" HorizontalContentAlignment="Center" Padding="2,0" Text="{Binding QtdSus, UpdateSourceTrigger=PropertyChanged}"/>
                                                             <StackPanel Margin="0,0,0,0">
-                                                                <Button Content="▲" Width="16" Height="11" Padding="0" Click="IncrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdSusTextBox}"/>
-                                                                <Button Content="▼" Width="16" Height="11" Padding="0" Click="DecrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdSusTextBox}"/>
+                                                                <Button Content="▲" Width="12" Height="9" Padding="0" FontSize="8" Click="IncrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdSusTextBox}"/>
+                                                                <Button Content="▼" Width="12" Height="9" Padding="0" FontSize="8" Click="DecrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdSusTextBox}"/>
                                                             </StackPanel>
                                                         </DockPanel>
                                                     </StackPanel>
@@ -180,8 +180,8 @@
                                                         <DockPanel LastChildFill="False">
                                                             <TextBox x:Name="QtdParticularTextBox" Width="44" Height="22" HorizontalContentAlignment="Center" Padding="2,0" Text="{Binding QtdParticular, UpdateSourceTrigger=PropertyChanged}"/>
                                                             <StackPanel Margin="0,0,0,0">
-                                                                <Button Content="▲" Width="16" Height="11" Padding="0" Click="IncrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdParticularTextBox}"/>
-                                                                <Button Content="▼" Width="16" Height="11" Padding="0" Click="DecrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdParticularTextBox}"/>
+                                                                <Button Content="▲" Width="12" Height="9" Padding="0" FontSize="8" Click="IncrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdParticularTextBox}"/>
+                                                                <Button Content="▼" Width="12" Height="9" Padding="0" FontSize="8" Click="DecrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdParticularTextBox}"/>
                                                             </StackPanel>
                                                         </DockPanel>
                                                     </StackPanel>
