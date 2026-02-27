@@ -41,9 +41,9 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
+                <!-- ===== ROW 0: Tipo de Registro | Data | Responsável (não Alvará) ===== -->
                 <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,6">
                     <TextBlock Text="Tipo de Registro *" FontWeight="SemiBold"/>
                     <ComboBox SelectedValuePath="Content"
@@ -58,7 +58,7 @@
                     <TextBlock Text="{Binding RotuloDataLancamento}" FontWeight="SemiBold"/>
                     <DatePicker SelectedDateFormat="Short"
                                 Text="{Binding EdicaoConta.DataMovimentacao, UpdateSourceTrigger=PropertyChanged}"
-                                PreviewMouseLeftButtonDown="DatePicker_PreviewMouseLeftButtonDown"/>
+                                Loaded="DatePicker_Loaded"/>
                 </StackPanel>
 
                 <StackPanel Grid.Row="0" Grid.Column="2" Margin="8,0,0,6" Visibility="{Binding ExibirCampoResponsavel, Converter={StaticResource BoolToVis}}">
@@ -66,13 +66,23 @@
                     <TextBox Text="{Binding EdicaoConta.Responsavel, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
 
-                <!-- Alvará: campo de texto direto para movimento (sempre visível e obrigatório) -->
+                <!-- ===== ROW 1 (Alvará): Mov. processo | Valor Alvará | Nº Alvará ===== -->
                 <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,8,6" Visibility="{Binding IsAlvara, Converter={StaticResource BoolToVis}}">
                     <TextBlock Text="Mov. processo *" FontWeight="SemiBold"/>
                     <TextBox Text="{Binding EdicaoConta.MovProcesso, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
 
-                <!-- Tratamento/Despesa Geral: ComboBox Anexo/Digitar -->
+                <StackPanel Grid.Row="1" Grid.Column="1" Margin="8,0,8,6" Visibility="{Binding IsAlvara, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="Valor do Alvará *" FontWeight="SemiBold" Foreground="#15803D"/>
+                    <TextBox Text="{Binding ValorAlvaraTexto, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="ValorAlvara_TextChanged"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Grid.Column="2" Margin="8,0,0,6" Visibility="{Binding IsAlvara, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="Nº Alvará *" FontWeight="SemiBold"/>
+                    <TextBox Text="{Binding EdicaoConta.NumNfAlvara, UpdateSourceTrigger=PropertyChanged}"/>
+                </StackPanel>
+
+                <!-- ===== ROW 1 (Tratamento/Despesa Geral): Mov. NF (Anexo/Digitar) | Mov digitado | Nº NF ===== -->
                 <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,8,6" Visibility="{Binding IsMovProcessoComboVisivel, Converter={StaticResource BoolToVis}}">
                     <TextBlock Text="Mov. processo *" FontWeight="SemiBold"/>
                     <ComboBox SelectedValue="{Binding ModoMovimentoConta, UpdateSourceTrigger=PropertyChanged}" SelectedValuePath="Content">
@@ -82,49 +92,59 @@
                 </StackPanel>
 
                 <StackPanel Grid.Row="1" Grid.Column="1" Margin="8,0,8,6" Visibility="{Binding ExibirCampoMovimentoDigitado, Converter={StaticResource BoolToVis}}">
-                    <TextBlock Text="Nº movimento digitado" FontWeight="SemiBold"/>
+                    <TextBlock Text="Nº movimento digitado *" FontWeight="SemiBold"/>
                     <TextBox Text="{Binding MovimentoContaDigitado, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
 
-                <!-- Nº NF/Alvará sempre visível -->
-                <StackPanel Grid.Row="1" Grid.Column="2" Margin="8,0,0,6">
+                <StackPanel Grid.Row="1" Grid.Column="2" Margin="8,0,0,6" Visibility="{Binding IsMovProcessoComboVisivel, Converter={StaticResource BoolToVis}}">
                     <TextBlock Text="{Binding RotuloNumeroDocumento}" FontWeight="SemiBold"/>
                     <TextBox Text="{Binding EdicaoConta.NumNfAlvara, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
 
-                <!-- Row 2: Valores Alvará e Conta SEMPRE visíveis lado a lado -->
-                <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,8,6">
-                    <TextBlock Text="Valor do Alvará (Crédito)" FontWeight="SemiBold" Foreground="#15803D"/>
-                    <TextBox Text="{Binding ValorAlvaraTexto, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsAlvara}" TextChanged="ValorAlvara_TextChanged"/>
-                </StackPanel>
-
-                <StackPanel Grid.Row="2" Grid.Column="1" Margin="8,0,8,6">
-                    <TextBlock Text="Valor da Conta (Débito)" FontWeight="SemiBold" Foreground="#B91C1C"/>
-                    <TextBox Text="{Binding ValorContaTexto, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsValorContaHabilitado}" TextChanged="ValorConta_TextChanged"/>
-                </StackPanel>
-
-                <!-- Row 2 Col 2: Terapia/Medicamento (somente Tratamento) -->
-                <StackPanel Grid.Row="2" Grid.Column="2" Margin="8,0,0,6" Visibility="{Binding ExibirCampoTerapia, Converter={StaticResource BoolToVis}}">
+                <!-- ===== ROW 2 (Tratamento): Terapia dropdown | Valor NF | Terapia manual (se OUTRO) ===== -->
+                <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,8,6" Visibility="{Binding ExibirCampoTerapia, Converter={StaticResource BoolToVis}}">
                     <TextBlock Text="Terapia / Medicamento *" FontWeight="SemiBold"/>
-                    <ComboBox ItemsSource="{Binding TerapiasMedicamentosDisponiveis}" SelectedItem="{Binding EdicaoConta.TerapiaMedicamentoNome, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsTratamento}"/>
+                    <ComboBox ItemsSource="{Binding TerapiasMedicamentosDisponiveis}" SelectedItem="{Binding EdicaoConta.TerapiaMedicamentoNome, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
 
-                <!-- Row 3: Terapia manual (quando OUTRO selecionado) -->
-                <StackPanel Grid.Row="3" Grid.Column="0" Margin="0,0,8,6" Visibility="{Binding ExibirCampoTerapiaManual, Converter={StaticResource BoolToVis}}">
+                <!-- ===== ROW 2 (Despesa Geral): Nome da despesa por extenso ===== -->
+                <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,8,6" Visibility="{Binding IsDespesaGeral, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="Tipo de Despesa (por extenso) *" FontWeight="SemiBold"/>
+                    <TextBox Text="{Binding NomeDespesaGeral, UpdateSourceTrigger=PropertyChanged}"/>
+                </StackPanel>
+
+                <!-- Valor da NF/Conta (Tratamento e Despesa Geral) -->
+                <StackPanel Grid.Row="2" Grid.Column="1" Margin="8,0,8,6" Visibility="{Binding IsMovProcessoComboVisivel, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="Valor da NF *" FontWeight="SemiBold" Foreground="#B91C1C"/>
+                    <TextBox Text="{Binding ValorContaTexto, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="ValorConta_TextChanged"/>
+                </StackPanel>
+
+                <!-- Terapia manual (quando OUTRO selecionado - Tratamento) -->
+                <StackPanel Grid.Row="2" Grid.Column="2" Margin="8,0,0,6" Visibility="{Binding ExibirCampoTerapiaManual, Converter={StaticResource BoolToVis}}">
                     <TextBlock Text="Outro (informar) *" FontWeight="SemiBold"/>
                     <TextBox Text="{Binding TerapiaManual, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
 
-                <!-- Row 4: Campos de tratamento (Quantidade, Mês/Ano referência) - somente Tratamento -->
-                <Grid Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,6" Visibility="{Binding IsTratamento, Converter={StaticResource BoolToVis}}">
+                <!-- ===== ROW 3 (Tratamento + Despesa Geral): Quantidade (com ▲▼) | Mês Ref | Ano Ref ===== -->
+                <Grid Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,6" Visibility="{Binding IsMovProcessoComboVisivel, Converter={StaticResource BoolToVis}}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                        <TextBlock Text="Quantidade (Sessões/Unidades)" FontWeight="SemiBold"/>
-                        <TextBox Text="{Binding EdicaoConta.Quantidade, UpdateSourceTrigger=PropertyChanged}" MaxLength="12"/>
+                        <TextBlock Text="Quantidade" FontWeight="SemiBold"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="20"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="QtdContaTextBox" Grid.Column="0" Text="{Binding EdicaoConta.Quantidade, UpdateSourceTrigger=PropertyChanged}" MaxLength="12" VerticalContentAlignment="Center"/>
+                            <StackPanel Grid.Column="1" Margin="2,0,0,0">
+                                <Button Content="▲" Width="18" Height="12" Padding="0" FontSize="8" Click="IncrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdContaTextBox}"/>
+                                <Button Content="▼" Width="18" Height="12" Padding="0" FontSize="8" Click="DecrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdContaTextBox}"/>
+                            </StackPanel>
+                        </Grid>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Margin="8,0,8,0">
                         <TextBlock Text="Mês Referência" FontWeight="SemiBold"/>
@@ -136,19 +156,12 @@
                     </StackPanel>
                 </Grid>
 
-                <!-- Row 5: Observações (Tratamento) -->
-                <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,6" Visibility="{Binding IsTratamento, Converter={StaticResource BoolToVis}}">
-                    <TextBlock Text="Observações do Lançamento" FontWeight="SemiBold"/>
+                <!-- ===== ROW 4 (Tratamento + Despesa Geral): Observações ===== -->
+                <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,6" Visibility="{Binding IsMovProcessoComboVisivel, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="Observações" FontWeight="SemiBold"/>
                     <TextBox Text="{Binding EdicaoConta.Observacoes, UpdateSourceTrigger=PropertyChanged}" Height="56" AcceptsReturn="True" TextWrapping="Wrap"/>
                 </StackPanel>
 
-                <!-- Row 5 (alt): Campos de Despesa Geral: Nome da Despesa -->
-                <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,6" Visibility="{Binding IsDespesaGeral, Converter={StaticResource BoolToVis}}">
-                    <TextBlock Text="Nome da Despesa Geral *" FontWeight="SemiBold"/>
-                    <TextBox Text="{Binding NomeDespesaGeral, UpdateSourceTrigger=PropertyChanged}"/>
-                </StackPanel>
-
-                
             </Grid>
         </Border>
 

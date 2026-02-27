@@ -59,8 +59,8 @@ namespace SistemaJuridico.ViewModels
         public bool IsMovProcessoComboVisivel => IsTratamento || IsDespesaGeral;
         public bool ExibirCampoResponsavel => !IsAlvara;
         public bool ExibirCampoTerapia => IsTratamento;
-        public string RotuloDataLancamento => IsTratamento ? "Data da NF *" : "Data da movimentação *";
-        public string RotuloNumeroDocumento => IsTratamento ? "Nº da NF *" : "Nº Alvará *";
+        public string RotuloDataLancamento => IsAlvara ? "Data do Alvará *" : "Data da NF *";
+        public string RotuloNumeroDocumento => IsAlvara ? "Nº Alvará *" : "Nº da NF *";
         public bool ExibirCampoTerapiaManual => IsTratamento && string.Equals(EdicaoConta.TerapiaMedicamentoNome, "OUTRO", StringComparison.OrdinalIgnoreCase);
         public bool ExibirFormularioContas => PodeCadastrar;
         /// <summary>Exibe campo de texto para digitar número do movimento quando modo = Digitar (Tratamento ou Despesa Geral).</summary>
@@ -242,6 +242,9 @@ namespace SistemaJuridico.ViewModels
                 ModoMovimentoConta = isAnexo ? "Anexo" : "Digitar";
                 MovimentoContaDigitado = isAnexo ? string.Empty : mov;
             }
+
+            if (IsDespesaGeral)
+                NomeDespesaGeral = EdicaoConta.TerapiaMedicamentoNome ?? string.Empty;
         }
 
         [RelayCommand]
@@ -369,6 +372,9 @@ namespace SistemaJuridico.ViewModels
                 ModoMovimentoConta = isAnexo ? "Anexo" : "Digitar";
                 MovimentoContaDigitado = isAnexo ? string.Empty : mov;
             }
+
+            if (IsDespesaGeral)
+                NomeDespesaGeral = EdicaoConta.TerapiaMedicamentoNome ?? string.Empty;
         }
 
         [RelayCommand]
@@ -644,7 +650,6 @@ namespace SistemaJuridico.ViewModels
             else if (string.Equals(conta.TipoLancamento, "Despesa Geral", StringComparison.OrdinalIgnoreCase))
             {
                 conta.ValorAlvara = 0m;
-                conta.Quantidade = null;
             }
         }
 
