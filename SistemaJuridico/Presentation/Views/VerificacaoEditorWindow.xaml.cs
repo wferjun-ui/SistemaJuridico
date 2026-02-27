@@ -39,7 +39,7 @@ namespace SistemaJuridico.Views
             var textBox = dp.Template.FindName("PART_TextBox", dp) as DatePickerTextBox;
             if (textBox != null)
             {
-                textBox.HorizontalAlignment = HorizontalAlignment.Stretch;
+                textBox.HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch;
                 textBox.PreviewMouseLeftButtonDown += (s, args) =>
                 {
                     if (!dp.IsDropDownOpen)
