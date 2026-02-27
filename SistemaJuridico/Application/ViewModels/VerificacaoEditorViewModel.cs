@@ -190,6 +190,8 @@ namespace SistemaJuridico.ViewModels
                 prazoDiligencia: PrazoDiligencia,
                 proximoPrazoPadrao: ProximoPrazoPadrao,
                 dataNotificacao: DataNotificacao,
+                diligenciaStatus: PossuiPendencias ? "Pendente" : (DiligenciaRealizada ? "Concluída" : "Não realizada"),
+                descricaoPersistente: Descricao,
                 itensSnapshot: itens
             );
 

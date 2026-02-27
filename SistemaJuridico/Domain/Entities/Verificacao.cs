@@ -16,6 +16,9 @@ namespace SistemaJuridico.Models
         public string? AlteracoesTexto { get; set; }
         public string? DiligenciaDescricao { get; set; }
         public string? ItensSnapshotJson { get; set; }
+        public string? DiligenciaStatus { get; set; }
+        public string? ProximaVerificacao { get; set; }
+        public string? DescricaoPersistente { get; set; }
 
         public string Status { get => StatusProcesso; set => StatusProcesso = value; }
         public string? Descricao { get => PendenciaDescricao; set => PendenciaDescricao = value; }
