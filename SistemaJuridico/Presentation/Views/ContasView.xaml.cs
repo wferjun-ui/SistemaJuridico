@@ -5,6 +5,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using ScrollBar = System.Windows.Controls.Primitives.ScrollBar;
 using UserControl = System.Windows.Controls.UserControl;
+using Button = System.Windows.Controls.Button;
 using TextBox = System.Windows.Controls.TextBox;
 
 namespace SistemaJuridico.Views
