@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Windows.Data;
 using System.Windows;
 using Button = System.Windows.Controls.Button;
+using ScrollViewer = System.Windows.Controls.ScrollViewer;
 using TextBox = System.Windows.Controls.TextBox;
 using UserControl = System.Windows.Controls.UserControl;
 
@@ -32,6 +33,15 @@ namespace SistemaJuridico.Views
             var novoValor = Math.Max(0, valorAtual + delta);
             textBox.Text = novoValor.ToString();
             BindingOperations.GetBindingExpression(textBox, TextBox.TextProperty)?.UpdateSource();
+        }
+
+        private void VerificacaoScrollViewer_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
+        {
+            if (sender is not ScrollViewer scrollViewer)
+                return;
+
+            scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset - e.Delta);
+            e.Handled = true;
         }
     }
 
