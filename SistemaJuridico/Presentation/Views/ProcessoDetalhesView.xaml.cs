@@ -1,8 +1,9 @@
 using System;
 using System.Globalization;
-using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows;
+using Button = System.Windows.Controls.Button;
+using TextBox = System.Windows.Controls.TextBox;
 using UserControl = System.Windows.Controls.UserControl;
 
 namespace SistemaJuridico.Views
