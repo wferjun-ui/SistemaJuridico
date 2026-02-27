@@ -397,7 +397,7 @@ namespace SistemaJuridico.ViewModels
             _appState.AtualizarVerificacoes(verificacoes);
 
             var ultima = verificacoes.FirstOrDefault();
-            _ultimaVerificacaoData = ultima?.DataHora ?? "Sem verificação";
+            _ultimaVerificacaoData = FormatarDataHoraVerificacao(ultima?.DataHora);
             _ultimaVerificacaoResponsavel = string.IsNullOrWhiteSpace(ultima?.Responsavel) ? "N/D" : ultima.Responsavel;
             _ultimaVerificacaoDate = ParseData(ultima?.DataHora);
             ProximaVerificacao = ultima?.ProximaVerificacao ?? ultima?.ProximoPrazo ?? string.Empty;
@@ -425,6 +425,12 @@ namespace SistemaJuridico.ViewModels
                 return exato;
 
             return null;
+        }
+
+        private static string FormatarDataHoraVerificacao(string? valor)
+        {
+            var data = ParseData(valor);
+            return data?.ToString("dd/MM/yyyy HH:mm") ?? "Sem verificação";
         }
 
         private void CarregarDiligencias()
@@ -484,7 +490,7 @@ namespace SistemaJuridico.ViewModels
                 Verificacoes.Add(verificacao);
 
             var ultima = verificacoes.FirstOrDefault();
-            _ultimaVerificacaoData = ultima?.DataHora ?? "Sem verificação";
+            _ultimaVerificacaoData = FormatarDataHoraVerificacao(ultima?.DataHora);
             _ultimaVerificacaoResponsavel = string.IsNullOrWhiteSpace(ultima?.Responsavel) ? "N/D" : ultima.Responsavel;
             _ultimaVerificacaoDate = ParseData(ultima?.DataHora);
             ProximaVerificacao = ultima?.ProximaVerificacao ?? ultima?.ProximoPrazo ?? string.Empty;

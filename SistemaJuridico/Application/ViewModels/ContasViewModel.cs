@@ -52,13 +52,19 @@ namespace SistemaJuridico.ViewModels
         public bool IsTratamento => string.Equals(EdicaoConta.TipoLancamento, "Tratamento", StringComparison.OrdinalIgnoreCase);
         public bool IsDespesaGeral => string.Equals(EdicaoConta.TipoLancamento, "Despesa Geral", StringComparison.OrdinalIgnoreCase);
         public bool IsValorContaHabilitado => !IsAlvara;
-        public bool IsCampoMovimentoVisivel => IsAlvara;
-        public bool IsCampoNfAlvaraVisivel => IsAlvara;
+        public bool IsCampoMovimentoVisivel => IsAlvara || IsTratamento;
+        public bool IsCampoNfAlvaraVisivel => IsAlvara || IsTratamento;
+        public bool ExibirCampoHistorico => !IsAlvara;
+        public bool ExibirCampoResponsavel => !IsAlvara;
+        public bool ExibirCampoValorConta => !IsAlvara;
+        public bool ExibirCampoTerapia => IsTratamento;
+        public string RotuloDataLancamento => IsTratamento ? "Data da NF *" : "Data da movimentação *";
+        public string RotuloNumeroDocumento => IsTratamento ? "Nº da NF *" : "Nº Alvará *";
         public bool ExibirCampoTerapiaManual => IsTratamento && string.Equals(EdicaoConta.TerapiaMedicamentoNome, "OUTRO", StringComparison.OrdinalIgnoreCase);
         public bool ExibirFormularioContas => PodeCadastrar;
-        public bool IsMovimentoOpcional => !IsAlvara;
+        public bool IsMovimentoOpcional => IsDespesaGeral;
         public bool ExibirCampoMovimentoDigitado => IsMovimentoOpcional && string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase);
-        public bool ExibirCamposReferencia => IsTratamento || IsDespesaGeral;
+        public bool ExibirCamposReferencia => IsDespesaGeral;
 
         public ContasViewModel() : this(string.Empty)
         {
@@ -89,6 +95,12 @@ namespace SistemaJuridico.ViewModels
             OnPropertyChanged(nameof(IsValorContaHabilitado));
             OnPropertyChanged(nameof(IsCampoMovimentoVisivel));
             OnPropertyChanged(nameof(IsCampoNfAlvaraVisivel));
+            OnPropertyChanged(nameof(ExibirCampoHistorico));
+            OnPropertyChanged(nameof(ExibirCampoResponsavel));
+            OnPropertyChanged(nameof(ExibirCampoValorConta));
+            OnPropertyChanged(nameof(ExibirCampoTerapia));
+            OnPropertyChanged(nameof(RotuloDataLancamento));
+            OnPropertyChanged(nameof(RotuloNumeroDocumento));
             OnPropertyChanged(nameof(ExibirCampoTerapiaManual));
             OnPropertyChanged(nameof(ExibirFormularioContas));
             OnPropertyChanged(nameof(IsMovimentoOpcional));
@@ -122,6 +134,12 @@ namespace SistemaJuridico.ViewModels
             OnPropertyChanged(nameof(IsValorContaHabilitado));
             OnPropertyChanged(nameof(IsCampoMovimentoVisivel));
             OnPropertyChanged(nameof(IsCampoNfAlvaraVisivel));
+            OnPropertyChanged(nameof(ExibirCampoHistorico));
+            OnPropertyChanged(nameof(ExibirCampoResponsavel));
+            OnPropertyChanged(nameof(ExibirCampoValorConta));
+            OnPropertyChanged(nameof(ExibirCampoTerapia));
+            OnPropertyChanged(nameof(RotuloDataLancamento));
+            OnPropertyChanged(nameof(RotuloNumeroDocumento));
             OnPropertyChanged(nameof(ExibirCampoTerapiaManual));
             OnPropertyChanged(nameof(IsMovimentoOpcional));
             OnPropertyChanged(nameof(ExibirCampoMovimentoDigitado));
@@ -564,19 +582,27 @@ namespace SistemaJuridico.ViewModels
             }
             else
             {
-                conta.MovProcesso = string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase)
-                    ? MovimentoContaDigitado?.Trim()
-                    : "Anexo";
-
-                if (string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(conta.MovProcesso))
+                if (IsDespesaGeral)
                 {
-                    System.Windows.MessageBox.Show("Informe o número do movimento processual quando o modo for Digitar.");
-                    return false;
+                    conta.MovProcesso = string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase)
+                        ? MovimentoContaDigitado?.Trim()
+                        : "Anexo";
+
+                    if (string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(conta.MovProcesso))
+                    {
+                        System.Windows.MessageBox.Show("Informe o número do movimento processual quando o modo for Digitar.");
+                        return false;
+                    }
+
+                    if (string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase) && !EhMovimentoValido(conta.MovProcesso))
+                    {
+                        System.Windows.MessageBox.Show("Movimento processual deve conter apenas números e pontos.");
+                        return false;
+                    }
                 }
-
-                if (string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase) && !EhMovimentoValido(conta.MovProcesso))
+                else if (string.IsNullOrWhiteSpace(conta.MovProcesso) || !EhMovimentoValido(conta.MovProcesso))
                 {
-                    System.Windows.MessageBox.Show("Movimento processual deve conter apenas números e pontos.");
+                    System.Windows.MessageBox.Show("Informe um movimento processual válido (somente números e pontos).");
                     return false;
                 }
 
@@ -594,24 +620,9 @@ namespace SistemaJuridico.ViewModels
                         return false;
                     }
 
-                    if (string.IsNullOrWhiteSpace(conta.Quantidade))
+                    if (string.IsNullOrWhiteSpace(conta.NumNfAlvara))
                     {
-                        System.Windows.MessageBox.Show("Quantidade é obrigatória para Tratamento.");
-                        return false;
-                    }
-                }
-
-                if (ExibirCamposReferencia)
-                {
-                    if (!string.IsNullOrWhiteSpace(conta.MesReferencia) && (!int.TryParse(conta.MesReferencia, out var mes) || mes < 1 || mes > 12))
-                    {
-                        System.Windows.MessageBox.Show("Mês de referência inválido. Informe valor entre 1 e 12.");
-                        return false;
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(conta.AnoReferencia) && (!int.TryParse(conta.AnoReferencia, out var ano) || ano < 1900 || ano > 3000))
-                    {
-                        System.Windows.MessageBox.Show("Ano de referência inválido.");
+                        System.Windows.MessageBox.Show("Número da NF é obrigatório para Tratamento.");
                         return false;
                     }
                 }
@@ -635,7 +646,6 @@ namespace SistemaJuridico.ViewModels
                 conta.Quantidade = null;
                 conta.MesReferencia = null;
                 conta.AnoReferencia = null;
-                conta.Observacoes = null;
             }
             else if (string.Equals(conta.TipoLancamento, "Tratamento", StringComparison.OrdinalIgnoreCase))
             {

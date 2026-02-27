@@ -127,7 +127,7 @@
             <Border Grid.Column="2" Style="{StaticResource CardStyle}">
                 <TabControl BorderThickness="0" Background="Transparent" ItemContainerStyle="{StaticResource TabItemStyle}">
                     <TabItem Header="Verificação Geral">
-                        <ScrollViewer Margin="4" VerticalScrollBarVisibility="Auto">
+                        <ScrollViewer Margin="4" VerticalScrollBarVisibility="Auto" PreviewMouseWheel="VerificacaoScrollViewer_PreviewMouseWheel">
                             <StackPanel>
                                 <Grid Margin="0,0,0,8">
                                     <Grid.ColumnDefinitions>

@@ -2,6 +2,8 @@ using SistemaJuridico.Services;
 using SistemaJuridico.ViewModels;
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace SistemaJuridico.Views
 {
@@ -37,6 +39,15 @@ namespace SistemaJuridico.Views
         private void Fechar_Click(object sender, RoutedEventArgs e)
         {
             Close();
+        }
+
+        private void VerificacaoScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (sender is not ScrollViewer scrollViewer)
+                return;
+
+            scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset - e.Delta);
+            e.Handled = true;
         }
     }
 }

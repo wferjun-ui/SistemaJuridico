@@ -1,6 +1,7 @@
 using SistemaJuridico.ViewModels;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using UserControl = System.Windows.Controls.UserControl;
 using TextBox = System.Windows.Controls.TextBox;
 
@@ -48,6 +49,42 @@ namespace SistemaJuridico.Views
                 return;
 
             vm.AtualizarValorContaTexto(box.Text);
+        }
+
+        private void DataGrid_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            var source = e.OriginalSource as DependencyObject ?? sender as DependencyObject;
+            if (source == null)
+                return;
+
+            var verticalScrollBar = FindVisualParent<ScrollBar>(source);
+            if (verticalScrollBar is { IsMouseOver: true })
+                return;
+
+            var scrollViewer = FindVisualParent<ScrollViewer>(source);
+            if (scrollViewer == null)
+                return;
+
+            e.Handled = true;
+            var forwarded = new MouseWheelEventArgs(e.MouseDevice, e.Timestamp, e.Delta)
+            {
+                RoutedEvent = UIElement.MouseWheelEvent,
+                Source = sender
+            };
+            scrollViewer.RaiseEvent(forwarded);
+        }
+
+        private static T? FindVisualParent<T>(DependencyObject? child) where T : DependencyObject
+        {
+            while (child != null)
+            {
+                if (child is T typed)
+                    return typed;
+
+                child = System.Windows.Media.VisualTreeHelper.GetParent(child);
+            }
+
+            return null;
         }
     }
 }
