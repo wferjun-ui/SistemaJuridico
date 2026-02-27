@@ -140,9 +140,12 @@ CREATE TABLE IF NOT EXISTS verificacoes(
     pendencias_descricao TEXT,
     diligencia_realizada INTEGER,
     diligencia_descricao TEXT,
+    diligencia_status TEXT,
     prazo_diligencia TEXT,
     proximo_prazo_padrao TEXT,
+    proxima_verificacao TEXT,
     data_notificacao TEXT,
+    descricao_persistente TEXT,
     alteracoes_texto TEXT,
     itens_snapshot_json TEXT
 );
@@ -217,6 +220,10 @@ CREATE TABLE IF NOT EXISTS schema_version(
             AdicionarColunaSeNaoExistir(conn, "contas", "quantidade", "TEXT");
             AdicionarColunaSeNaoExistir(conn, "contas", "mes_referencia", "TEXT");
             AdicionarColunaSeNaoExistir(conn, "contas", "ano_referencia", "TEXT");
+
+            AdicionarColunaSeNaoExistir(conn, "verificacoes", "diligencia_status", "TEXT");
+            AdicionarColunaSeNaoExistir(conn, "verificacoes", "proxima_verificacao", "TEXT");
+            AdicionarColunaSeNaoExistir(conn, "verificacoes", "descricao_persistente", "TEXT");
         }
 
         private void AdicionarColunaSeNaoExistir(

@@ -74,6 +74,8 @@ namespace SistemaJuridico.Services
             string prazoDiligencia,
             string proximoPrazoPadrao,
             string dataNotificacao,
+            string diligenciaStatus,
+            string descricaoPersistente,
             List<ItemSaude> itensSnapshot)
         {
             if (string.IsNullOrWhiteSpace(processoId))
@@ -98,7 +100,8 @@ namespace SistemaJuridico.Services
 
             var itensAnteriores = _itemSaudeService.ListarPorProcesso(processoId);
             var resumoAlteracoesItens = ItemSaudeChangesSummaryService.GerarResumo(itensAnteriores, itensSnapshot);
-            var alteracoesDetalhadas = MontarResumoAlteracoes(descricao, resumoAlteracoesItens);
+            var ultimaVerificacao = _verificacaoService.ListarPorProcesso(processoId).OrderByDescending(v => ParseData(v.DataHora) ?? DateTime.MinValue).FirstOrDefault();
+            var alteracoesDetalhadas = MontarResumoAlteracoes(ultimaVerificacao, statusProcesso, responsavel, descricao, diligenciaStatus, descricaoDiligencia, descricaoPendencias, prazoNormalizado, proximoPrazoNormalizado, descricaoPersistente, resumoAlteracoesItens);
 
             var verificacao = new Verificacao
             {
@@ -110,9 +113,12 @@ namespace SistemaJuridico.Services
                 DiligenciaRealizada = diligenciaRealizada,
                 DiligenciaPendente = possuiPendencias,
                 PendenciaDescricao = string.IsNullOrWhiteSpace(descricaoPendencias) ? null : descricaoPendencias.Trim(),
+                DiligenciaStatus = string.IsNullOrWhiteSpace(diligenciaStatus) ? null : diligenciaStatus.Trim(),
                 PrazoDiligencia = prazoNormalizado,
                 ProximoPrazo = proximoPrazoNormalizado,
+                ProximaVerificacao = proximoPrazoNormalizado,
                 DataNotificacao = notificacaoNormalizada,
+                DescricaoPersistente = string.IsNullOrWhiteSpace(descricaoPersistente) ? null : descricaoPersistente.Trim(),
                 DiligenciaDescricao = string.IsNullOrWhiteSpace(descricaoDiligencia) ? descricao?.Trim() : descricaoDiligencia.Trim(),
                 AlteracoesTexto = alteracoesDetalhadas,
                 ItensSnapshotJson = JsonConvert.SerializeObject(itensSnapshot)
@@ -163,18 +169,60 @@ namespace SistemaJuridico.Services
         }
 
 
-        private static string MontarResumoAlteracoes(string? descricaoLivre, string resumoItens)
+        private static string MontarResumoAlteracoes(
+            Verificacao? anterior,
+            string statusProcesso,
+            string responsavel,
+            string? descricaoLivre,
+            string? diligenciaStatus,
+            string? descricaoDiligencia,
+            string? descricaoPendencias,
+            string? prazoDiligencia,
+            string? proximaVerificacao,
+            string? descricaoPersistente,
+            string resumoItens)
         {
-            var descricao = (descricaoLivre ?? string.Empty).Trim();
-            var itens = (resumoItens ?? string.Empty).Trim();
+            var atual = new List<string>
+            {
+                $"Status: {statusProcesso}",
+                $"Responsável: {responsavel}",
+                $"Diligência: {diligenciaStatus}",
+                $"Descrição diligência: {(descricaoDiligencia ?? string.Empty).Trim()}",
+                $"Pendências: {(descricaoPendencias ?? string.Empty).Trim()}",
+                $"Prazo diligência: {prazoDiligencia}",
+                $"Próxima verificação: {proximaVerificacao}",
+                $"Descrição da verificação: {(descricaoLivre ?? string.Empty).Trim()}",
+                $"Descrição persistente: {(descricaoPersistente ?? string.Empty).Trim()}"
+            };
 
-            if (string.IsNullOrWhiteSpace(descricao))
-                return string.IsNullOrWhiteSpace(itens) ? "Sem observações." : itens;
+            var mudancas = new List<string>();
+            if (anterior != null)
+            {
+                Comparar(mudancas, "Status", anterior.StatusProcesso, statusProcesso);
+                Comparar(mudancas, "Responsável", anterior.Responsavel, responsavel);
+                Comparar(mudancas, "Diligência", anterior.DiligenciaStatus, diligenciaStatus);
+                Comparar(mudancas, "Descrição diligência", anterior.DiligenciaDescricao, descricaoDiligencia);
+                Comparar(mudancas, "Pendências", anterior.PendenciaDescricao, descricaoPendencias);
+                Comparar(mudancas, "Prazo diligência", anterior.PrazoDiligencia, prazoDiligencia);
+                Comparar(mudancas, "Próxima verificação", anterior.ProximaVerificacao ?? anterior.ProximoPrazo, proximaVerificacao);
+                Comparar(mudancas, "Descrição persistente", anterior.DescricaoPersistente, descricaoPersistente);
+            }
 
-            if (string.IsNullOrWhiteSpace(itens))
-                return descricao;
+            if (!string.IsNullOrWhiteSpace(resumoItens))
+                atual.Add($"Tratamentos: {resumoItens}");
 
-            return $"{descricao} | {itens}";
+            if (mudancas.Count == 0)
+                mudancas.Add("Sem alterações em relação à verificação anterior.");
+
+            return $"{string.Join(" | ", atual)} || Alterado: {string.Join("; ", mudancas)}";
+        }
+
+        private static void Comparar(List<string> alteracoes, string campo, string? de, string? para)
+        {
+            var anterior = (de ?? string.Empty).Trim();
+            var atual = (para ?? string.Empty).Trim();
+            if (!string.Equals(anterior, atual, StringComparison.OrdinalIgnoreCase))
+                alteracoes.Add($"{campo}: '{anterior}' -> '{atual}'");
         }
 
         private static DateTime CalcularProximaSegundaAposDuasSemanas(DateTime dataVerificacao)

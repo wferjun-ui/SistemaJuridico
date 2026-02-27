@@ -6,8 +6,6 @@ using SistemaJuridico.Services;
 using SistemaJuridico.Views;
 using System.Collections.ObjectModel;
 using System.Globalization;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -36,6 +34,9 @@ namespace SistemaJuridico.ViewModels
         private string _descricaoDiligencia = "";
         private string _descricaoPendencias = "";
         private string _prazoDiligencia = "";
+        private string _proximaVerificacao = "";
+        private string _diligenciaStatus = "Não realizada";
+        private string _descricaoPersistente = "";
         private string _responsavelVerificacao = "";
         private bool _diligenciaRealizada;
         private bool _possuiPendencias;
@@ -56,9 +57,9 @@ namespace SistemaJuridico.ViewModels
 
         public IReadOnlyList<string> DiligenciaOpcoes { get; } = new[]
         {
-            "Concluída",
+            "Não realizada",
             "Pendente",
-            "Infrutífera"
+            "Concluída"
         };
 
         public bool IsStatusFinalizado => new[] { "Arquivado", "Desistência da Parte", "Cumprimento Extinto" }
@@ -145,6 +146,24 @@ namespace SistemaJuridico.ViewModels
             set => SetProperty(ref _prazoDiligencia, value);
         }
 
+        public string ProximaVerificacao
+        {
+            get => _proximaVerificacao;
+            set => SetProperty(ref _proximaVerificacao, FormatarDataDigitada(value));
+        }
+
+        public string DiligenciaStatus
+        {
+            get => _diligenciaStatus;
+            set => SetProperty(ref _diligenciaStatus, value);
+        }
+
+        public string DescricaoPersistente
+        {
+            get => _descricaoPersistente;
+            set => SetProperty(ref _descricaoPersistente, value);
+        }
+
         public string ResponsavelVerificacao
         {
             get => _responsavelVerificacao;
@@ -204,15 +223,7 @@ namespace SistemaJuridico.ViewModels
 
         public string UltimaVerificacaoResponsavel => _ultimaVerificacaoResponsavel;
 
-        public string HashProcesso
-        {
-            get
-            {
-                var dados = $"{Processo.Id}|{Processo.Numero}|{Processo.Paciente}|{Processo.Juiz}|{Processo.StatusFase}";
-                var hash = SHA256.HashData(Encoding.UTF8.GetBytes(dados));
-                return Convert.ToHexString(hash)[..16];
-            }
-        }
+        public string HashProcesso => Processo.Id;
 
         public string DataPrescricao => _ultimaVerificacaoDate?.AddDays(90).ToString("dd/MM/yyyy") ?? "Sem base";
 
@@ -232,6 +243,30 @@ namespace SistemaJuridico.ViewModels
                     return $"Atualizar em {dias} dia(s)";
 
                 return "Em dia";
+            }
+        }
+
+        public string StatusAtualResumo
+        {
+            get
+            {
+                var ultima = Verificacoes.FirstOrDefault();
+                if (ultima == null)
+                    return "Sem verificação";
+
+                var dataBase = ParseData(ultima.ProximaVerificacao) ?? ParseData(ultima.ProximoPrazo);
+                var pendencia = ultima.DiligenciaPendente ? "com pendência" : "sem pendência";
+
+                if (dataBase is null)
+                    return $"Sem prazo ({pendencia})";
+
+                var dias = (dataBase.Value.Date - DateTime.Today).Days;
+                if (dias < 0)
+                    return $"Atrasado ({pendencia})";
+                if (dias <= 7)
+                    return $"Para atrasar ({pendencia})";
+
+                return $"Em dia ({pendencia})";
             }
         }
 
@@ -365,11 +400,15 @@ namespace SistemaJuridico.ViewModels
             _ultimaVerificacaoData = ultima?.DataHora ?? "Sem verificação";
             _ultimaVerificacaoResponsavel = string.IsNullOrWhiteSpace(ultima?.Responsavel) ? "N/D" : ultima.Responsavel;
             _ultimaVerificacaoDate = ParseData(ultima?.DataHora);
+            ProximaVerificacao = ultima?.ProximaVerificacao ?? ultima?.ProximoPrazo ?? string.Empty;
+            DiligenciaStatus = ultima?.DiligenciaStatus ?? (ultima?.DiligenciaPendente == true ? "Pendente" : ultima?.DiligenciaRealizada == true ? "Concluída" : "Não realizada");
+            DescricaoPersistente = ultima?.DescricaoPersistente ?? string.Empty;
 
             OnPropertyChanged(nameof(UltimaVerificacaoData));
             OnPropertyChanged(nameof(UltimaVerificacaoResponsavel));
             OnPropertyChanged(nameof(DataPrescricao));
             OnPropertyChanged(nameof(PrescricaoStatus));
+            OnPropertyChanged(nameof(StatusAtualResumo));
             OnPropertyChanged(nameof(PodeDesfazerUltimaVerificacao));
         }
 
@@ -448,10 +487,14 @@ namespace SistemaJuridico.ViewModels
             _ultimaVerificacaoData = ultima?.DataHora ?? "Sem verificação";
             _ultimaVerificacaoResponsavel = string.IsNullOrWhiteSpace(ultima?.Responsavel) ? "N/D" : ultima.Responsavel;
             _ultimaVerificacaoDate = ParseData(ultima?.DataHora);
+            ProximaVerificacao = ultima?.ProximaVerificacao ?? ultima?.ProximoPrazo ?? string.Empty;
+            DiligenciaStatus = ultima?.DiligenciaStatus ?? (ultima?.DiligenciaPendente == true ? "Pendente" : ultima?.DiligenciaRealizada == true ? "Concluída" : "Não realizada");
+            DescricaoPersistente = ultima?.DescricaoPersistente ?? string.Empty;
             OnPropertyChanged(nameof(UltimaVerificacaoData));
             OnPropertyChanged(nameof(UltimaVerificacaoResponsavel));
             OnPropertyChanged(nameof(DataPrescricao));
             OnPropertyChanged(nameof(PrescricaoStatus));
+            OnPropertyChanged(nameof(StatusAtualResumo));
 
             Diligencias.Clear();
             foreach (var diligencia in processo.Diligencias)
@@ -512,19 +555,22 @@ namespace SistemaJuridico.ViewModels
                 statusProcesso: StatusVerificacao,
                 responsavel: string.IsNullOrWhiteSpace(ResponsavelVerificacao) ? (App.Session.UsuarioAtual?.Nome ?? "Sistema") : ResponsavelVerificacao,
                 descricao: DescricaoVerificacao,
-                diligenciaRealizada: DiligenciaRealizada,
+                diligenciaRealizada: DiligenciaStatus == "Concluída",
                 descricaoDiligencia: DescricaoDiligencia,
-                possuiPendencias: PossuiPendencias,
+                possuiPendencias: DiligenciaStatus == "Pendente" || PossuiPendencias,
                 descricaoPendencias: DescricaoPendencias,
                 prazoDiligencia: PrazoDiligencia,
-                proximoPrazoPadrao: string.Empty,
+                proximoPrazoPadrao: ProximaVerificacao,
                 dataNotificacao: string.Empty,
+                diligenciaStatus: DiligenciaStatus,
+                descricaoPersistente: DescricaoPersistente,
                 itensSnapshot: ItensSaude.ToList());
 
             System.Windows.MessageBox.Show("Verificação registrada.");
 
             DescricaoVerificacao = string.Empty;
             DiligenciaRealizada = false;
+            DiligenciaStatus = "Não realizada";
             DescricaoDiligencia = string.Empty;
             PossuiPendencias = false;
             DescricaoPendencias = string.Empty;
@@ -537,6 +583,7 @@ namespace SistemaJuridico.ViewModels
             OnPropertyChanged(nameof(UltimaVerificacaoResponsavel));
             OnPropertyChanged(nameof(DataPrescricao));
             OnPropertyChanged(nameof(PrescricaoStatus));
+            OnPropertyChanged(nameof(StatusAtualResumo));
         }
 
 
@@ -565,6 +612,7 @@ namespace SistemaJuridico.ViewModels
                 OnPropertyChanged(nameof(UltimaVerificacaoResponsavel));
                 OnPropertyChanged(nameof(DataPrescricao));
                 OnPropertyChanged(nameof(PrescricaoStatus));
+            OnPropertyChanged(nameof(StatusAtualResumo));
                 System.Windows.MessageBox.Show("Última verificação desfeita com sucesso.");
             }
             catch (Exception ex)
@@ -702,6 +750,22 @@ namespace SistemaJuridico.ViewModels
             {
                 System.Windows.MessageBox.Show("Erro ao gerar relatório: " + ex.Message);
             }
+        }
+
+        private static string FormatarDataDigitada(string? valor)
+        {
+            if (string.IsNullOrWhiteSpace(valor))
+                return string.Empty;
+
+            if (DateTime.TryParse(valor, out var data))
+                return data.ToString("dd/MM/yyyy");
+
+            var digits = new string(valor.Where(char.IsDigit).Take(8).ToArray());
+            if (digits.Length <= 2)
+                return digits;
+            if (digits.Length <= 4)
+                return $"{digits[..2]}/{digits[2..]}";
+            return $"{digits[..2]}/{digits[2..4]}/{digits[4..]}";
         }
 
         private ProcessoFacadeService CriarFacade()
