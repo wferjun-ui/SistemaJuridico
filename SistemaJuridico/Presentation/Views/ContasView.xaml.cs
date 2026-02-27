@@ -2,6 +2,7 @@ using SistemaJuridico.ViewModels;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using ScrollBar = System.Windows.Controls.Primitives.ScrollBar;
 using UserControl = System.Windows.Controls.UserControl;
 using TextBox = System.Windows.Controls.TextBox;
 
