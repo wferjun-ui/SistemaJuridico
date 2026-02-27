@@ -45,6 +45,9 @@ namespace SistemaJuridico.ViewModels
         [ObservableProperty]
         private string _movimentoContaDigitado = string.Empty;
 
+        [ObservableProperty]
+        private string _nomeDespesaGeral = string.Empty;
+
         public bool PodeCadastrar => _appState.PodeCadastrarContas;
         public bool PodeEditar => _appState.PodeEditarContas;
         public bool PodeExcluir => _appState.PodeExcluirContas;
@@ -52,19 +55,16 @@ namespace SistemaJuridico.ViewModels
         public bool IsTratamento => string.Equals(EdicaoConta.TipoLancamento, "Tratamento", StringComparison.OrdinalIgnoreCase);
         public bool IsDespesaGeral => string.Equals(EdicaoConta.TipoLancamento, "Despesa Geral", StringComparison.OrdinalIgnoreCase);
         public bool IsValorContaHabilitado => !IsAlvara;
-        public bool IsCampoMovimentoVisivel => IsAlvara || IsTratamento;
-        public bool IsCampoNfAlvaraVisivel => IsAlvara || IsTratamento;
-        public bool ExibirCampoHistorico => !IsAlvara;
+        /// <summary>Exibe ComboBox Anexo/Digitar para Tratamento e Despesa Geral (legacy: movChoice visível quando não é Alvará).</summary>
+        public bool IsMovProcessoComboVisivel => IsTratamento || IsDespesaGeral;
         public bool ExibirCampoResponsavel => !IsAlvara;
-        public bool ExibirCampoValorConta => !IsAlvara;
         public bool ExibirCampoTerapia => IsTratamento;
         public string RotuloDataLancamento => IsTratamento ? "Data da NF *" : "Data da movimentação *";
         public string RotuloNumeroDocumento => IsTratamento ? "Nº da NF *" : "Nº Alvará *";
         public bool ExibirCampoTerapiaManual => IsTratamento && string.Equals(EdicaoConta.TerapiaMedicamentoNome, "OUTRO", StringComparison.OrdinalIgnoreCase);
         public bool ExibirFormularioContas => PodeCadastrar;
-        public bool IsMovimentoOpcional => IsDespesaGeral;
-        public bool ExibirCampoMovimentoDigitado => IsMovimentoOpcional && string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase);
-        public bool ExibirCamposReferencia => IsDespesaGeral;
+        /// <summary>Exibe campo de texto para digitar número do movimento quando modo = Digitar (Tratamento ou Despesa Geral).</summary>
+        public bool ExibirCampoMovimentoDigitado => IsMovProcessoComboVisivel && string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase);
 
         public ContasViewModel() : this(string.Empty)
         {
@@ -93,25 +93,20 @@ namespace SistemaJuridico.ViewModels
             OnPropertyChanged(nameof(IsTratamento));
             OnPropertyChanged(nameof(IsDespesaGeral));
             OnPropertyChanged(nameof(IsValorContaHabilitado));
-            OnPropertyChanged(nameof(IsCampoMovimentoVisivel));
-            OnPropertyChanged(nameof(IsCampoNfAlvaraVisivel));
-            OnPropertyChanged(nameof(ExibirCampoHistorico));
+            OnPropertyChanged(nameof(IsMovProcessoComboVisivel));
             OnPropertyChanged(nameof(ExibirCampoResponsavel));
-            OnPropertyChanged(nameof(ExibirCampoValorConta));
             OnPropertyChanged(nameof(ExibirCampoTerapia));
             OnPropertyChanged(nameof(RotuloDataLancamento));
             OnPropertyChanged(nameof(RotuloNumeroDocumento));
             OnPropertyChanged(nameof(ExibirCampoTerapiaManual));
             OnPropertyChanged(nameof(ExibirFormularioContas));
-            OnPropertyChanged(nameof(IsMovimentoOpcional));
             OnPropertyChanged(nameof(ExibirCampoMovimentoDigitado));
-            OnPropertyChanged(nameof(ExibirCamposReferencia));
         }
 
 
         partial void OnModoMovimentoContaChanged(string value)
         {
-            if (IsMovimentoOpcional)
+            if (IsMovProcessoComboVisivel)
                 EdicaoConta.MovProcesso = string.Equals(value, "Digitar", StringComparison.OrdinalIgnoreCase)
                     ? MovimentoContaDigitado
                     : "Anexo";
@@ -121,7 +116,7 @@ namespace SistemaJuridico.ViewModels
 
         partial void OnMovimentoContaDigitadoChanged(string value)
         {
-            if (IsMovimentoOpcional && string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase))
+            if (IsMovProcessoComboVisivel && string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase))
                 EdicaoConta.MovProcesso = value;
         }
         partial void OnTipoLancamentoSelecionadoChanged(string value)
@@ -132,18 +127,13 @@ namespace SistemaJuridico.ViewModels
             OnPropertyChanged(nameof(IsTratamento));
             OnPropertyChanged(nameof(IsDespesaGeral));
             OnPropertyChanged(nameof(IsValorContaHabilitado));
-            OnPropertyChanged(nameof(IsCampoMovimentoVisivel));
-            OnPropertyChanged(nameof(IsCampoNfAlvaraVisivel));
-            OnPropertyChanged(nameof(ExibirCampoHistorico));
+            OnPropertyChanged(nameof(IsMovProcessoComboVisivel));
             OnPropertyChanged(nameof(ExibirCampoResponsavel));
-            OnPropertyChanged(nameof(ExibirCampoValorConta));
             OnPropertyChanged(nameof(ExibirCampoTerapia));
             OnPropertyChanged(nameof(RotuloDataLancamento));
             OnPropertyChanged(nameof(RotuloNumeroDocumento));
             OnPropertyChanged(nameof(ExibirCampoTerapiaManual));
-            OnPropertyChanged(nameof(IsMovimentoOpcional));
             OnPropertyChanged(nameof(ExibirCampoMovimentoDigitado));
-            OnPropertyChanged(nameof(ExibirCamposReferencia));
             OnPropertyChanged(nameof(ValorAlvaraTexto));
             OnPropertyChanged(nameof(ValorContaTexto));
         }
@@ -195,6 +185,7 @@ namespace SistemaJuridico.ViewModels
             ModoMovimentoConta = "Anexo";
             MovimentoContaDigitado = string.Empty;
             TerapiaManual = string.Empty;
+            NomeDespesaGeral = string.Empty;
         }
 
         [RelayCommand]
@@ -244,7 +235,7 @@ namespace SistemaJuridico.ViewModels
             EdicaoConta = CloneConta(conta);
             TipoLancamentoSelecionado = EdicaoConta.TipoLancamento;
 
-            if (IsMovimentoOpcional)
+            if (IsMovProcessoComboVisivel)
             {
                 var mov = EdicaoConta.MovProcesso ?? string.Empty;
                 var isAnexo = string.Equals(mov, "Anexo", StringComparison.OrdinalIgnoreCase);
@@ -371,7 +362,7 @@ namespace SistemaJuridico.ViewModels
 
             EdicaoConta = CloneConta(ContaSelecionada);
             TipoLancamentoSelecionado = EdicaoConta.TipoLancamento;
-            if (IsMovimentoOpcional)
+            if (IsMovProcessoComboVisivel)
             {
                 var mov = EdicaoConta.MovProcesso ?? string.Empty;
                 var isAnexo = string.Equals(mov, "Anexo", StringComparison.OrdinalIgnoreCase);
@@ -582,27 +573,20 @@ namespace SistemaJuridico.ViewModels
             }
             else
             {
-                if (IsDespesaGeral)
+                // Tratamento e Despesa Geral usam ComboBox Anexo/Digitar (legacy behavior)
+                conta.MovProcesso = string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase)
+                    ? MovimentoContaDigitado?.Trim()
+                    : "Anexo";
+
+                if (string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(conta.MovProcesso))
                 {
-                    conta.MovProcesso = string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase)
-                        ? MovimentoContaDigitado?.Trim()
-                        : "Anexo";
-
-                    if (string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(conta.MovProcesso))
-                    {
-                        System.Windows.MessageBox.Show("Informe o número do movimento processual quando o modo for Digitar.");
-                        return false;
-                    }
-
-                    if (string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase) && !EhMovimentoValido(conta.MovProcesso))
-                    {
-                        System.Windows.MessageBox.Show("Movimento processual deve conter apenas números e pontos.");
-                        return false;
-                    }
+                    System.Windows.MessageBox.Show("Informe o número do movimento processual quando o modo for Digitar.");
+                    return false;
                 }
-                else if (string.IsNullOrWhiteSpace(conta.MovProcesso) || !EhMovimentoValido(conta.MovProcesso))
+
+                if (string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase) && !EhMovimentoValido(conta.MovProcesso))
                 {
-                    System.Windows.MessageBox.Show("Informe um movimento processual válido (somente números e pontos).");
+                    System.Windows.MessageBox.Show("Movimento processual deve conter apenas números e pontos.");
                     return false;
                 }
 
@@ -625,6 +609,12 @@ namespace SistemaJuridico.ViewModels
                         System.Windows.MessageBox.Show("Número da NF é obrigatório para Tratamento.");
                         return false;
                     }
+                }
+
+                if (IsDespesaGeral && string.IsNullOrWhiteSpace(NomeDespesaGeral))
+                {
+                    System.Windows.MessageBox.Show("Informe o nome da despesa geral.");
+                    return false;
                 }
             }
 
@@ -664,6 +654,10 @@ namespace SistemaJuridico.ViewModels
 
             if (ExibirCampoTerapiaManual)
                 conta.TerapiaMedicamentoNome = TerapiaManual.Trim();
+
+            // Para Despesa Geral, armazena o nome da despesa no campo TerapiaMedicamentoNome (usado pelo histórico)
+            if (IsDespesaGeral && !string.IsNullOrWhiteSpace(NomeDespesaGeral))
+                conta.TerapiaMedicamentoNome = NomeDespesaGeral.Trim();
 
             conta.Historico = MontarHistoricoConta(conta);
             conta.Responsavel = string.IsNullOrWhiteSpace(conta.Responsavel)

@@ -52,6 +52,15 @@ namespace SistemaJuridico.Views
             vm.AtualizarValorContaTexto(box.Text);
         }
 
+        private void DatePicker_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is DatePicker dp && !dp.IsDropDownOpen)
+            {
+                dp.IsDropDownOpen = true;
+                e.Handled = true;
+            }
+        }
+
         private void DataGrid_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
             var source = e.OriginalSource as DependencyObject ?? sender as DependencyObject;
