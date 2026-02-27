@@ -59,10 +59,16 @@ namespace SistemaJuridico.Views
             if (sender is not DatePicker dp) return;
             dp.ApplyTemplate();
 
-            // Encontra o DatePickerTextBox interno e faz o clique nele abrir o calendário
+            // Hide the calendar button so the field looks like a plain text input
+            var button = dp.Template.FindName("PART_Button", dp) as Button;
+            if (button != null)
+                button.Visibility = Visibility.Collapsed;
+
+            // Make the text box fill the available space and open calendar on click
             var textBox = dp.Template.FindName("PART_TextBox", dp) as DatePickerTextBox;
             if (textBox != null)
             {
+                textBox.HorizontalAlignment = HorizontalAlignment.Stretch;
                 textBox.PreviewMouseLeftButtonDown += (s, args) =>
                 {
                     if (!dp.IsDropDownOpen)
