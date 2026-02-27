@@ -156,6 +156,8 @@ CREATE TABLE IF NOT EXISTS itens_saude(
     tipo TEXT,
     nome TEXT,
     qtd TEXT,
+    qtd_sus TEXT,
+    qtd_particular TEXT,
     frequencia TEXT,
     local TEXT,
     data_prescricao TEXT,
@@ -224,6 +226,8 @@ CREATE TABLE IF NOT EXISTS schema_version(
             AdicionarColunaSeNaoExistir(conn, "verificacoes", "diligencia_status", "TEXT");
             AdicionarColunaSeNaoExistir(conn, "verificacoes", "proxima_verificacao", "TEXT");
             AdicionarColunaSeNaoExistir(conn, "verificacoes", "descricao_persistente", "TEXT");
+            AdicionarColunaSeNaoExistir(conn, "itens_saude", "qtd_sus", "TEXT");
+            AdicionarColunaSeNaoExistir(conn, "itens_saude", "qtd_particular", "TEXT");
         }
 
         private void AdicionarColunaSeNaoExistir(

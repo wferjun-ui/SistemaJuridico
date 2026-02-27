@@ -28,6 +28,10 @@ namespace SistemaJuridico.Models
 
         public bool IsParticular { get; set; }
 
+        public string QtdSus { get; set; } = "";
+
+        public string QtdParticular { get; set; } = "";
+
         public bool TemBloqueio { get; set; }
     }
 }
