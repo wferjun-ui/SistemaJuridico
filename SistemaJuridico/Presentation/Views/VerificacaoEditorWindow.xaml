@@ -10,6 +10,17 @@
         WindowStartupLocation="CenterOwner"
         WindowState="Maximized">
 
+    <Window.Resources>
+        <Style TargetType="Calendar">
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <ScaleTransform ScaleX="0.85" ScaleY="0.85"/>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="RenderTransformOrigin" Value="0,0"/>
+        </Style>
+    </Window.Resources>
+
     <DockPanel Margin="10">
 
         <!-- Ações -->
@@ -78,7 +89,7 @@
                                  Text="{Binding DescricaoDiligencia, UpdateSourceTrigger=PropertyChanged}"/>
 
                         <TextBlock Text="Prazo da diligência" Margin="0,0,0,4"/>
-                        <DatePicker SelectedDateFormat="Short" Text="{Binding PrazoDiligencia, UpdateSourceTrigger=PropertyChanged}"/>
+                        <DatePicker SelectedDateFormat="Short" Text="{Binding PrazoDiligencia, UpdateSourceTrigger=PropertyChanged}" Loaded="DatePicker_Loaded"/>
                     </StackPanel>
                 </GroupBox>
 
@@ -108,12 +119,12 @@
 
                         <StackPanel Grid.Column="0" Margin="0,0,10,0">
                             <TextBlock Text="Próximo prazo padrão" Margin="0,0,0,4"/>
-                            <DatePicker SelectedDateFormat="Short" Text="{Binding ProximoPrazoPadrao, UpdateSourceTrigger=PropertyChanged}"/>
+                            <DatePicker SelectedDateFormat="Short" Text="{Binding ProximoPrazoPadrao, UpdateSourceTrigger=PropertyChanged}" Loaded="DatePicker_Loaded"/>
                         </StackPanel>
 
                         <StackPanel Grid.Column="1">
                             <TextBlock Text="Data de notificação" Margin="0,0,0,4"/>
-                            <DatePicker SelectedDateFormat="Short" Text="{Binding DataNotificacao, UpdateSourceTrigger=PropertyChanged}"/>
+                            <DatePicker SelectedDateFormat="Short" Text="{Binding DataNotificacao, UpdateSourceTrigger=PropertyChanged}" Loaded="DatePicker_Loaded"/>
                         </StackPanel>
                     </Grid>
                 </GroupBox>
