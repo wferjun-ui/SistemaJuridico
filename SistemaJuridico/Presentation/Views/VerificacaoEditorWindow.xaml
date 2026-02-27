@@ -78,7 +78,7 @@
                                  Text="{Binding DescricaoDiligencia, UpdateSourceTrigger=PropertyChanged}"/>
 
                         <TextBlock Text="Prazo da diligência" Margin="0,0,0,4"/>
-                        <TextBox Text="{Binding PrazoDiligencia, UpdateSourceTrigger=PropertyChanged}"/>
+                        <DatePicker SelectedDateFormat="Short" Text="{Binding PrazoDiligencia, UpdateSourceTrigger=PropertyChanged}"/>
                     </StackPanel>
                 </GroupBox>
 
@@ -108,12 +108,12 @@
 
                         <StackPanel Grid.Column="0" Margin="0,0,10,0">
                             <TextBlock Text="Próximo prazo padrão" Margin="0,0,0,4"/>
-                            <TextBox Text="{Binding ProximoPrazoPadrao, UpdateSourceTrigger=PropertyChanged}"/>
+                            <DatePicker SelectedDateFormat="Short" Text="{Binding ProximoPrazoPadrao, UpdateSourceTrigger=PropertyChanged}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Column="1">
                             <TextBlock Text="Data de notificação" Margin="0,0,0,4"/>
-                            <TextBox Text="{Binding DataNotificacao, UpdateSourceTrigger=PropertyChanged}"/>
+                            <DatePicker SelectedDateFormat="Short" Text="{Binding DataNotificacao, UpdateSourceTrigger=PropertyChanged}"/>
                         </StackPanel>
                     </Grid>
                 </GroupBox>

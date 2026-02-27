@@ -127,11 +127,11 @@
                             <WrapPanel Margin="0,0,0,12">
                                 <StackPanel Margin="0,0,12,0">
                                     <TextBlock Text="Prazo da diligência" FontWeight="SemiBold"/>
-                                    <TextBox Width="130" Text="{Binding PrazoDiligencia, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
+                                    <DatePicker Width="150" SelectedDateFormat="Short" Text="{Binding PrazoDiligencia, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
                                 </StackPanel>
                                 <StackPanel>
                                     <TextBlock Text="Próxima verificação" FontWeight="SemiBold"/>
-                                    <TextBox Width="130" Text="{Binding ProximaVerificacao, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
+                                    <DatePicker Width="150" SelectedDateFormat="Short" Text="{Binding ProximaVerificacao, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
                                 </StackPanel>
                             </WrapPanel>
 
@@ -204,7 +204,7 @@
 
                                                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                                                     <TextBlock Text="Data última prescrição:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                                    <TextBox Width="140" Text="{Binding DataPrescricao, UpdateSourceTrigger=PropertyChanged}"/>
+                                                    <DatePicker Width="160" SelectedDateFormat="Short" Text="{Binding DataPrescricao, UpdateSourceTrigger=PropertyChanged}"/>
                                                 </StackPanel>
                                             </StackPanel>
                                         </Border>
@@ -240,7 +240,7 @@
                                             <TextBlock Text="{Binding DescricaoPersistente, StringFormat=Descrição persistente: {0}}" TextWrapping="Wrap"/>
                                             <TextBlock Text="{Binding PrazoDiligencia, StringFormat=Prazo diligência: {0}}"/>
                                             <TextBlock Text="{Binding ProximaVerificacao, StringFormat=Próxima verificação: {0}}"/>
-                                            <TextBlock Text="{Binding AlteracoesTexto, StringFormat=Alterações: {0}}" TextWrapping="Wrap" Margin="0,5,0,0" Foreground="#374151"/>
+                                            <TextBlock Text="{Binding DataHora, StringFormat=Alterações em: {0:dd/MM/yyyy HH:mm}}" Margin="0,5,0,0" Foreground="#374151"/>
                                         </StackPanel>
                                     </Border>
                                 </DataTemplate>
