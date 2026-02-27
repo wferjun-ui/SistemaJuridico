@@ -101,6 +101,8 @@ CREATE TABLE IF NOT EXISTS itens_saude (
     tipo TEXT,
     nome TEXT,
     qtd TEXT,
+    qtd_sus TEXT,
+    qtd_particular TEXT,
     frequencia TEXT,
     local TEXT,
     data_prescricao TEXT,
