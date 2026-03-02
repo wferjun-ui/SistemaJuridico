@@ -159,7 +159,10 @@
                                                         <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
 
-                                                    <TextBlock Grid.Column="0" Text="{Binding Nome}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                    <StackPanel Grid.Column="0" Margin="0,0,10,0" VerticalAlignment="Top">
+                                                        <TextBlock Text="Tratamento" FontSize="11"/>
+                                                        <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" Margin="0,4,0,0"/>
+                                                    </StackPanel>
 
                                                     <StackPanel Grid.Column="1" Margin="0,0,8,0">
                                                         <TextBlock Text="Qtd. total" FontSize="11"/>
@@ -207,7 +210,10 @@
                                                         </TextBlock>
                                                     </StackPanel>
 
-                                                    <CheckBox Grid.Column="5" VerticalAlignment="Bottom" Margin="0,0,0,2" Content="Desnecessário" IsChecked="{Binding IsDesnecessario}"/>
+                                                    <StackPanel Grid.Column="5" VerticalAlignment="Top">
+                                                        <TextBlock Text="Status" FontSize="11"/>
+                                                        <CheckBox Margin="0,4,0,0" Content="Desnecessário" IsChecked="{Binding IsDesnecessario}"/>
+                                                    </StackPanel>
                                                 </Grid>
 
                                                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">

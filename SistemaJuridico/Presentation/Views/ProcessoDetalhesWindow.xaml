@@ -196,11 +196,11 @@
                                                             </TextBlock>
 
                                                             <UniformGrid Columns="2" Margin="0,6,0,0">
-                                                                <StackPanel Margin="0,0,8,0">
+                                                                <StackPanel Margin="0,0,8,0" VerticalAlignment="Top">
                                                                     <TextBlock Text="Quantidade prescrita" FontSize="12"/>
                                                                     <TextBox MinHeight="32" Text="{Binding Qtd, UpdateSourceTrigger=PropertyChanged}"/>
                                                                 </StackPanel>
-                                                                <StackPanel Margin="8,0,0,0">
+                                                                <StackPanel Margin="8,0,0,0" VerticalAlignment="Top">
                                                                     <TextBlock Text="Local de tratamento" FontSize="12"/>
                                                                     <TextBox MinHeight="32" Text="{Binding Local, UpdateSourceTrigger=PropertyChanged}"/>
                                                                 </StackPanel>
