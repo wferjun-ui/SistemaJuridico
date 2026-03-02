@@ -64,8 +64,8 @@ namespace SistemaJuridico.ViewModels
         public string RotuloNumeroDocumento => IsAlvara ? "Nº Alvará *" : "Nº da NF *";
         public bool ExibirCampoTerapiaManual => IsTratamento && string.Equals(EdicaoConta.TerapiaMedicamentoNome, "OUTRO", StringComparison.OrdinalIgnoreCase);
         public bool ExibirFormularioContas => PodeCadastrar;
-        /// <summary>Exibe campo de texto para digitar número do movimento quando modo = Digitar (Tratamento ou Despesa Geral).</summary>
-        public bool ExibirCampoMovimentoDigitado => IsMovProcessoComboVisivel && string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase);
+        /// <summary>Exibe campo de texto para digitar número do movimento quando modo = Digitar (somente Tratamento).</summary>
+        public bool ExibirCampoMovimentoDigitado => ExibirCamposReferenciaTratamento && string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase);
 
         public ContasViewModel() : this(string.Empty)
         {
@@ -108,17 +108,19 @@ namespace SistemaJuridico.ViewModels
 
         partial void OnModoMovimentoContaChanged(string value)
         {
-            if (IsMovProcessoComboVisivel)
+            if (ExibirCamposReferenciaTratamento)
                 EdicaoConta.MovProcesso = string.Equals(value, "Digitar", StringComparison.OrdinalIgnoreCase)
                     ? MovimentoContaDigitado
                     : "Anexo";
+            else
+                EdicaoConta.MovProcesso = "Anexo";
 
             OnPropertyChanged(nameof(ExibirCampoMovimentoDigitado));
         }
 
         partial void OnMovimentoContaDigitadoChanged(string value)
         {
-            if (IsMovProcessoComboVisivel && string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase))
+            if (ExibirCamposReferenciaTratamento && string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase))
                 EdicaoConta.MovProcesso = value;
         }
         partial void OnTipoLancamentoSelecionadoChanged(string value)
@@ -238,12 +240,17 @@ namespace SistemaJuridico.ViewModels
             EdicaoConta = CloneConta(conta);
             TipoLancamentoSelecionado = EdicaoConta.TipoLancamento;
 
-            if (IsMovProcessoComboVisivel)
+            if (ExibirCamposReferenciaTratamento)
             {
                 var mov = EdicaoConta.MovProcesso ?? string.Empty;
                 var isAnexo = string.Equals(mov, "Anexo", StringComparison.OrdinalIgnoreCase);
                 ModoMovimentoConta = isAnexo ? "Anexo" : "Digitar";
                 MovimentoContaDigitado = isAnexo ? string.Empty : mov;
+            }
+            else
+            {
+                ModoMovimentoConta = "Anexo";
+                MovimentoContaDigitado = string.Empty;
             }
 
             if (IsDespesaGeral)
@@ -368,12 +375,17 @@ namespace SistemaJuridico.ViewModels
 
             EdicaoConta = CloneConta(ContaSelecionada);
             TipoLancamentoSelecionado = EdicaoConta.TipoLancamento;
-            if (IsMovProcessoComboVisivel)
+            if (ExibirCamposReferenciaTratamento)
             {
                 var mov = EdicaoConta.MovProcesso ?? string.Empty;
                 var isAnexo = string.Equals(mov, "Anexo", StringComparison.OrdinalIgnoreCase);
                 ModoMovimentoConta = isAnexo ? "Anexo" : "Digitar";
                 MovimentoContaDigitado = isAnexo ? string.Empty : mov;
+            }
+            else
+            {
+                ModoMovimentoConta = "Anexo";
+                MovimentoContaDigitado = string.Empty;
             }
 
             if (IsDespesaGeral)
@@ -582,21 +594,27 @@ namespace SistemaJuridico.ViewModels
             }
             else
             {
-                // Tratamento e Despesa Geral usam ComboBox Anexo/Digitar (legacy behavior)
-                conta.MovProcesso = string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase)
-                    ? MovimentoContaDigitado?.Trim()
-                    : "Anexo";
-
-                if (string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(conta.MovProcesso))
+                if (IsTratamento)
                 {
-                    System.Windows.MessageBox.Show("Informe o número do movimento processual quando o modo for Digitar.");
-                    return false;
+                    conta.MovProcesso = string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase)
+                        ? MovimentoContaDigitado?.Trim()
+                        : "Anexo";
+
+                    if (string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(conta.MovProcesso))
+                    {
+                        System.Windows.MessageBox.Show("Informe o número do movimento processual quando o modo for Digitar.");
+                        return false;
+                    }
+
+                    if (string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase) && !EhMovimentoValido(conta.MovProcesso))
+                    {
+                        System.Windows.MessageBox.Show("Movimento processual deve conter apenas números e pontos.");
+                        return false;
+                    }
                 }
-
-                if (string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase) && !EhMovimentoValido(conta.MovProcesso))
+                else
                 {
-                    System.Windows.MessageBox.Show("Movimento processual deve conter apenas números e pontos.");
-                    return false;
+                    conta.MovProcesso = "Anexo";
                 }
 
                 if (conta.ValorConta <= 0)
