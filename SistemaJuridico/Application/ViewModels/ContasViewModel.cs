@@ -688,11 +688,16 @@ namespace SistemaJuridico.ViewModels
         {
             AplicarRegraTipoLancamento(conta);
 
-            if (ExibirCampoTerapiaManual)
+            var contaEhTratamento = string.Equals(conta.TipoLancamento, "Tratamento", StringComparison.OrdinalIgnoreCase);
+            var contaEhDespesaGeral = string.Equals(conta.TipoLancamento, "Despesa Geral", StringComparison.OrdinalIgnoreCase);
+            var terapiaOutroSelecionada = contaEhTratamento
+                && string.Equals(conta.TerapiaMedicamentoNome, "OUTRO", StringComparison.OrdinalIgnoreCase);
+
+            if (terapiaOutroSelecionada)
                 conta.TerapiaMedicamentoNome = TerapiaManual.Trim();
 
             // Para Despesa Geral, armazena o nome da despesa no campo TerapiaMedicamentoNome (usado pelo histórico)
-            if (IsDespesaGeral && !string.IsNullOrWhiteSpace(NomeDespesaGeral))
+            if (contaEhDespesaGeral && !string.IsNullOrWhiteSpace(NomeDespesaGeral))
                 conta.TerapiaMedicamentoNome = NomeDespesaGeral.Trim();
 
             conta.Historico = MontarHistoricoConta(conta);
