@@ -25,6 +25,7 @@ namespace SistemaJuridico.ViewModels
         public ObservableCollection<Conta> Contas => _appState.ContasProcesso;
         public ObservableCollection<Conta> ContasRascunho => _appState.ContasRascunho;
         public ObservableCollection<string> TerapiasMedicamentosDisponiveis { get; } = new();
+        public ObservableCollection<string> TratamentosDisponiveis { get; } = new();
         public ObservableCollection<ContaHistoricoLinha> HistoricoContas { get; } = new();
 
         [ObservableProperty]
@@ -62,6 +63,7 @@ namespace SistemaJuridico.ViewModels
         public bool ExibirCamposReferenciaTratamento => IsTratamento;
         public string RotuloDataLancamento => IsAlvara ? "Data do Alvará *" : "Data da NF *";
         public string RotuloNumeroDocumento => IsAlvara ? "Nº Alvará *" : "Nº da NF *";
+        public string RotuloValorConta => IsTratamento ? "Valor do tratamento *" : "Valor da NF *";
         public bool ExibirCampoTerapiaManual => IsTratamento && string.Equals(EdicaoConta.TerapiaMedicamentoNome, "OUTRO", StringComparison.OrdinalIgnoreCase);
         public bool ExibirFormularioContas => PodeCadastrar;
         /// <summary>Exibe campo de texto para digitar número do movimento quando modo = Digitar (somente Tratamento).</summary>
@@ -100,6 +102,7 @@ namespace SistemaJuridico.ViewModels
             OnPropertyChanged(nameof(ExibirCamposReferenciaTratamento));
             OnPropertyChanged(nameof(RotuloDataLancamento));
             OnPropertyChanged(nameof(RotuloNumeroDocumento));
+            OnPropertyChanged(nameof(RotuloValorConta));
             OnPropertyChanged(nameof(ExibirCampoTerapiaManual));
             OnPropertyChanged(nameof(ExibirFormularioContas));
             OnPropertyChanged(nameof(ExibirCampoMovimentoDigitado));
@@ -137,6 +140,7 @@ namespace SistemaJuridico.ViewModels
             OnPropertyChanged(nameof(ExibirCamposReferenciaTratamento));
             OnPropertyChanged(nameof(RotuloDataLancamento));
             OnPropertyChanged(nameof(RotuloNumeroDocumento));
+            OnPropertyChanged(nameof(RotuloValorConta));
             OnPropertyChanged(nameof(ExibirCampoTerapiaManual));
             OnPropertyChanged(nameof(ExibirCampoMovimentoDigitado));
             OnPropertyChanged(nameof(ValorAlvaraTexto));
@@ -168,6 +172,14 @@ namespace SistemaJuridico.ViewModels
             foreach (var item in _appState.EstadoAtual.TerapiasEMedicamentos)
                 TerapiasMedicamentosDisponiveis.Add(item);
             TerapiasMedicamentosDisponiveis.Add("OUTRO");
+
+            TratamentosDisponiveis.Clear();
+            var tratamentos = _appState.EstadoAtual.Terapias.Count > 0
+                ? _appState.EstadoAtual.Terapias
+                : _appState.EstadoAtual.TerapiasEMedicamentos;
+            foreach (var item in tratamentos)
+                TratamentosDisponiveis.Add(item);
+            TratamentosDisponiveis.Add("OUTRO");
 
             decimal saldo = 0m;
             foreach (var conta in contasOrdenadas)
@@ -639,6 +651,18 @@ namespace SistemaJuridico.ViewModels
                     if (string.IsNullOrWhiteSpace(conta.NumNfAlvara))
                     {
                         System.Windows.MessageBox.Show("Número da NF é obrigatório para Tratamento.");
+                        return false;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(conta.Quantidade) || !int.TryParse(conta.Quantidade, out var quantidade) || quantidade <= 0)
+                    {
+                        System.Windows.MessageBox.Show("Informe uma quantidade válida para o tratamento.");
+                        return false;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(conta.MesReferencia) || !int.TryParse(conta.MesReferencia, out var mes) || mes < 1 || mes > 12)
+                    {
+                        System.Windows.MessageBox.Show("Informe o mês de referência do tratamento (1 a 12).");
                         return false;
                     }
                 }
