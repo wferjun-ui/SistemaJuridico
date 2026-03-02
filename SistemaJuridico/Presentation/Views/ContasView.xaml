@@ -112,7 +112,7 @@
                 <!-- ===== ROW 2 (Tratamento): Terapia dropdown | Valor NF | Terapia manual (se OUTRO) ===== -->
                 <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,8,6" Visibility="{Binding ExibirCampoTerapia, Converter={StaticResource BoolToVis}}">
                     <TextBlock Text="Tratamento *" FontWeight="SemiBold"/>
-                    <ComboBox ItemsSource="{Binding TratamentosDisponiveis}" SelectedItem="{Binding EdicaoConta.TerapiaMedicamentoNome, UpdateSourceTrigger=PropertyChanged}"/>
+                    <ComboBox MinHeight="32" ItemsSource="{Binding TratamentosDisponiveis}" SelectedItem="{Binding EdicaoConta.TerapiaMedicamentoNome, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
 
                 <!-- ===== ROW 2 (Despesa Geral): Nome da despesa por extenso ===== -->
@@ -124,13 +124,13 @@
                 <!-- Valor da NF/Conta (Tratamento e Despesa Geral) -->
                 <StackPanel Grid.Row="2" Grid.Column="1" Margin="8,0,8,6" Visibility="{Binding IsMovProcessoComboVisivel, Converter={StaticResource BoolToVis}}">
                     <TextBlock Text="{Binding RotuloValorConta}" FontWeight="SemiBold" Foreground="#B91C1C"/>
-                    <TextBox Text="{Binding ValorContaTexto, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="ValorConta_TextChanged"/>
+                    <TextBox MinHeight="32" Text="{Binding ValorContaTexto, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="ValorConta_TextChanged"/>
                 </StackPanel>
 
                 <!-- Terapia manual (quando OUTRO selecionado - Tratamento) -->
                 <StackPanel Grid.Row="2" Grid.Column="2" Margin="8,0,0,6" Visibility="{Binding ExibirCampoTerapiaManual, Converter={StaticResource BoolToVis}}">
                     <TextBlock Text="Outro (informar) *" FontWeight="SemiBold"/>
-                    <TextBox Text="{Binding TerapiaManual, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBox MinHeight="32" Text="{Binding TerapiaManual, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
 
                 <!-- ===== ROW 3 (Tratamento): Quantidade (com ▲▼) | Mês Ref | Ano Ref ===== -->
@@ -140,7 +140,7 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                    <StackPanel Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Top">
                         <TextBlock Text="Quantidade paga *" FontWeight="SemiBold"/>
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -154,11 +154,11 @@
                             </StackPanel>
                         </Grid>
                     </StackPanel>
-                    <StackPanel Grid.Column="1" Margin="8,0,8,0">
+                    <StackPanel Grid.Column="1" Margin="8,0,8,0" VerticalAlignment="Top">
                         <TextBlock Text="Mês de referência *" FontWeight="SemiBold"/>
                         <TextBox Text="{Binding EdicaoConta.MesReferencia, UpdateSourceTrigger=PropertyChanged}" MaxLength="2"/>
                     </StackPanel>
-                    <StackPanel Grid.Column="2" Margin="8,0,0,0">
+                    <StackPanel Grid.Column="2" Margin="8,0,0,0" VerticalAlignment="Top">
                         <TextBlock Text="Ano Referência" FontWeight="SemiBold"/>
                         <TextBox Text="{Binding EdicaoConta.AnoReferencia, UpdateSourceTrigger=PropertyChanged}" MaxLength="4"/>
                     </StackPanel>
