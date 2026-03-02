@@ -3,229 +3,89 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:SistemaJuridico.ViewModels"
+        xmlns:steps="clr-namespace:SistemaJuridico.Views.VerificacaoSteps"
         mc:Ignorable="d"
         Title="Registrar Verificação"
-        Height="600"
-        Width="800"
+        Height="700"
+        Width="1000"
         WindowStartupLocation="CenterOwner"
         WindowState="Maximized">
 
     <Window.Resources>
-        <Style TargetType="Calendar">
-            <Setter Property="RenderTransform">
-                <Setter.Value>
-                    <ScaleTransform ScaleX="0.85" ScaleY="0.85"/>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="RenderTransformOrigin" Value="0,0"/>
-        </Style>
-        <Style x:Key="GridCellCenterTextStyle" TargetType="TextBlock">
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
-        <Style x:Key="GridCellCenterEditorStyle" TargetType="TextBox">
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="Padding" Value="4,2"/>
-        </Style>
-        <Style x:Key="GridCellCenterCheckStyle" TargetType="CheckBox">
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
+        <DataTemplate DataType="{x:Type vm:VerificacaoDadosGeraisStepViewModel}">
+            <steps:VerificacaoDadosGeraisStepView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:VerificacaoAnaliseTecnicaStepViewModel}">
+            <steps:VerificacaoAnaliseTecnicaStepView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:VerificacaoFinanceiraStepViewModel}">
+            <steps:VerificacaoFinanceiraStepView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:VerificacaoAprovacaoFinalStepViewModel}">
+            <steps:VerificacaoAprovacaoFinalStepView/>
+        </DataTemplate>
     </Window.Resources>
 
     <DockPanel Margin="10">
-
-        <!-- Ações -->
-        <StackPanel DockPanel.Dock="Bottom"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Right"
-                    Margin="0,10,0,0">
-
-            <Button Content="Salvar"
-                    Padding="16,6"
-                    FontWeight="Bold"
-                    Margin="0,0,8,0"
-                    Command="{Binding SalvarCommand}" />
-
-            <Button Content="Cancelar"
-                    Padding="12,6"
-                    Click="Cancelar_Click"/>
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="Voltar" Padding="12,6" Margin="0,0,8,0" Command="{Binding VoltarCommand}"/>
+            <Button Content="Avançar" Padding="12,6" Margin="0,0,8,0" Command="{Binding AvancarCommand}"/>
+            <Button Content="Aprovar" Padding="12,6" Margin="0,0,8,0" FontWeight="Bold" Command="{Binding AprovarCommand}"/>
+            <Button Content="Rejeitar" Padding="12,6" Margin="0,0,8,0" Command="{Binding RejeitarCommand}"/>
+            <Button Content="Cancelar" Padding="12,6" Click="Cancelar_Click"/>
         </StackPanel>
 
-        <!-- Conteúdo -->
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <StackPanel>
+                <Border Background="#F5F8FC" BorderBrush="#D3DCEA" BorderThickness="1" Padding="12" CornerRadius="8" Margin="0,0,0,12">
+                    <ItemsControl ItemsSource="{Binding Steps}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0">
+                                    <StackPanel>
+                                        <Border Width="32" Height="32" CornerRadius="16" BorderThickness="2" BorderBrush="{Binding CorEtapa}" Background="White" HorizontalAlignment="Center">
+                                            <TextBlock Text="{Binding Simbolo}" Foreground="{Binding CorEtapa}" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold"/>
+                                        </Border>
+                                        <TextBlock Text="{Binding Nome}" Margin="0,6,0,0" HorizontalAlignment="Center" FontWeight="SemiBold" Foreground="{Binding CorEtapa}"/>
+                                    </StackPanel>
+                                    <TextBlock Text="➜" Margin="12,0,0,0" VerticalAlignment="Center" FontSize="18" Foreground="{Binding CorEtapa}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Indice}" Value="3">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
 
-                <!-- Status / Responsável -->
-                <GroupBox Header="Status do Processo" Margin="0,0,0,10">
-                    <Grid Margin="8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
+                <ContentControl Content="{Binding CurrentStepViewModel}" Margin="0,0,0,12"/>
 
-                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                            <TextBlock Text="Status" Margin="0,0,0,4"/>
-                            <TextBox Text="{Binding StatusProcesso, UpdateSourceTrigger=PropertyChanged}"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="1">
-                            <TextBlock Text="Responsável" Margin="0,0,0,4"/>
-                            <TextBox Text="{Binding Responsavel, UpdateSourceTrigger=PropertyChanged}"/>
-                        </StackPanel>
-                    </Grid>
-                </GroupBox>
-
-                <!-- Descrição -->
-                <GroupBox Header="Descrição da Verificação" Margin="0,0,0,10">
-                    <TextBox Margin="8"
-                             AcceptsReturn="True"
-                             Height="80"
-                             TextWrapping="Wrap"
-                             Text="{Binding Descricao, UpdateSourceTrigger=PropertyChanged}"/>
-                </GroupBox>
-
-                <!-- Diligência -->
-                <GroupBox Header="Diligência" Margin="0,0,0,10">
-                    <StackPanel Margin="8">
-
-                        <CheckBox Content="Diligência realizada"
-                                  Margin="0,0,0,6"
-                                  IsChecked="{Binding DiligenciaRealizada}" />
-
-                        <TextBlock Text="Descrição da diligência" Margin="0,0,0,4"/>
-                        <TextBox AcceptsReturn="True"
-                                 Height="70"
-                                 Margin="0,0,0,6"
-                                 TextWrapping="Wrap"
-                                 Text="{Binding DescricaoDiligencia, UpdateSourceTrigger=PropertyChanged}"/>
-
-                        <TextBlock Text="Prazo da diligência" Margin="0,0,0,4"/>
-                        <DatePicker SelectedDateFormat="Short" Text="{Binding PrazoDiligencia, UpdateSourceTrigger=PropertyChanged}" Loaded="DatePicker_Loaded"/>
-                    </StackPanel>
-                </GroupBox>
-
-                <!-- Pendências -->
-                <GroupBox Header="Pendências" Margin="0,0,0,10">
-                    <StackPanel Margin="8">
-
-                        <CheckBox Content="Possui pendências"
-                                  Margin="0,0,0,6"
-                                  IsChecked="{Binding PossuiPendencias}" />
-
-                        <TextBlock Text="Descrição das pendências" Margin="0,0,0,4"/>
-                        <TextBox AcceptsReturn="True"
-                                 Height="70"
-                                 TextWrapping="Wrap"
-                                 Text="{Binding DescricaoPendencias, UpdateSourceTrigger=PropertyChanged}"/>
-                    </StackPanel>
-                </GroupBox>
-
-                <!-- Prazos -->
-                <GroupBox Header="Prazos e Notificações">
-                    <Grid Margin="8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                            <TextBlock Text="Próximo prazo padrão" Margin="0,0,0,4"/>
-                            <DatePicker SelectedDateFormat="Short" Text="{Binding ProximoPrazoPadrao, UpdateSourceTrigger=PropertyChanged}" Loaded="DatePicker_Loaded"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="1">
-                            <TextBlock Text="Data de notificação" Margin="0,0,0,4"/>
-                            <DatePicker SelectedDateFormat="Short" Text="{Binding DataNotificacao, UpdateSourceTrigger=PropertyChanged}" Loaded="DatePicker_Loaded"/>
-                        </StackPanel>
-                    </Grid>
-                </GroupBox>
-
-                <GroupBox Header="Verificação de terapias e demais itens" Margin="0,10,0,0">
-                    <DataGrid Margin="8"
-                              ItemsSource="{Binding ItensSaude}"
-                              AutoGenerateColumns="False"
-                              CanUserAddRows="False"
-                              IsReadOnly="False"
-                              GridLinesVisibility="Horizontal"
-                              HeadersVisibility="Column"
-                              RowHeaderWidth="0">
-
+                <GroupBox Header="Histórico da Verificação">
+                    <DataGrid Margin="8" ItemsSource="{Binding Historico}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Tipo"
-                                                Width="120"
-                                                Binding="{Binding Tipo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-
-                            <DataGridTextColumn Header="Nome"
-                                                Width="*"
-                                                Binding="{Binding Nome, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-
-                            <DataGridTextColumn Header="Qtd"
-                                                Width="95"
-                                                Binding="{Binding Qtd, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                ElementStyle="{StaticResource GridCellCenterTextStyle}"
-                                                EditingElementStyle="{StaticResource GridCellCenterEditorStyle}" />
-
-                            <DataGridTextColumn Header="Necessidade"
-                                                Width="120"
-                                                IsReadOnly="True"
-                                                Binding="{Binding NecessidadeTexto}" />
-
-                            <DataGridTextColumn Header="Frequência"
-                                                Width="120"
-                                                Binding="{Binding Frequencia, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-
-                            <DataGridTextColumn Header="Local"
-                                                Width="150"
-                                                Binding="{Binding Local, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-
-                            <DataGridTextColumn Header="Data Prescrição"
-                                                Width="130"
-                                                Binding="{Binding DataPrescricao, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Opacity" Value="1"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsDesnecessario}" Value="True">
-                                                <Setter Property="Opacity" Value="0.5"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
-                                <DataGridTextColumn.EditingElementStyle>
-                                    <Style TargetType="TextBox">
-                                        <Setter Property="IsEnabled" Value="True"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsDesnecessario}" Value="True">
-                                                <Setter Property="IsEnabled" Value="False"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </DataGridTextColumn.EditingElementStyle>
-                            </DataGridTextColumn>
-
-                            <DataGridCheckBoxColumn Header="Tratamento desnecessário"
-                                                    Width="170"
-                                                    Binding="{Binding IsDesnecessario, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                    ElementStyle="{StaticResource GridCellCenterCheckStyle}"
-                                                    EditingElementStyle="{StaticResource GridCellCenterCheckStyle}" />
-
-                            <DataGridCheckBoxColumn Header="SUS"
-                                                    Width="70"
-                                                    Binding="{Binding IsSus, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                    ElementStyle="{StaticResource GridCellCenterCheckStyle}"
-                                                    EditingElementStyle="{StaticResource GridCellCenterCheckStyle}" />
-
-                            <DataGridCheckBoxColumn Header="Particular"
-                                                    Width="95"
-                                                    Binding="{Binding IsParticular, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                    ElementStyle="{StaticResource GridCellCenterCheckStyle}"
-                                                    EditingElementStyle="{StaticResource GridCellCenterCheckStyle}" />
+                            <DataGridTextColumn Header="Data" Width="170" Binding="{Binding Data, StringFormat=dd/MM/yyyy HH:mm:ss}"/>
+                            <DataGridTextColumn Header="Usuário" Width="180" Binding="{Binding Usuario}"/>
+                            <DataGridTextColumn Header="Etapa" Width="180" Binding="{Binding Etapa}"/>
+                            <DataGridTextColumn Header="Ação" Width="180" Binding="{Binding Acao}"/>
+                            <DataGridTextColumn Header="Observação" Width="*" Binding="{Binding Observacao}"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </GroupBox>
-
             </StackPanel>
         </ScrollViewer>
-
     </DockPanel>
 </Window>
