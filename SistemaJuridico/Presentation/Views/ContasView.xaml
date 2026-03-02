@@ -90,7 +90,7 @@
                     <TextBox Text="{Binding EdicaoConta.NumNfAlvara, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
 
-                <!-- ===== ROW 1 (Tratamento/Despesa Geral): Mov. NF (Anexo/Digitar) | Mov digitado | Nº NF ===== -->
+                <!-- ===== ROW 1 (Tratamento): Mov. NF (Anexo/Digitar) | Mov digitado | Nº NF ===== -->
                 <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,8,6" Visibility="{Binding ExibirCamposReferenciaTratamento, Converter={StaticResource BoolToVis}}">
                     <TextBlock Text="Mov. processo *" FontWeight="SemiBold"/>
                     <ComboBox SelectedValue="{Binding ModoMovimentoConta, UpdateSourceTrigger=PropertyChanged}" SelectedValuePath="Content">

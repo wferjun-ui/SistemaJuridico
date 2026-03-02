@@ -55,7 +55,7 @@ namespace SistemaJuridico.ViewModels
         public bool IsTratamento => string.Equals(EdicaoConta.TipoLancamento, "Tratamento", StringComparison.OrdinalIgnoreCase);
         public bool IsDespesaGeral => string.Equals(EdicaoConta.TipoLancamento, "Despesa Geral", StringComparison.OrdinalIgnoreCase);
         public bool IsValorContaHabilitado => !IsAlvara;
-        /// <summary>Exibe ComboBox Anexo/Digitar para Tratamento e Despesa Geral (legacy: movChoice visível quando não é Alvará).</summary>
+        /// <summary>Indica os campos complementares exibidos para tipos não Alvará.</summary>
         public bool IsMovProcessoComboVisivel => IsTratamento || IsDespesaGeral;
         public bool ExibirCampoResponsavel => !IsAlvara;
         public bool ExibirCampoTerapia => IsTratamento;
@@ -575,7 +575,7 @@ namespace SistemaJuridico.ViewModels
             {
                 if (string.IsNullOrWhiteSpace(conta.MovProcesso) || string.Equals(conta.MovProcesso, "Anexo", StringComparison.OrdinalIgnoreCase))
                 {
-                    System.Windows.MessageBox.Show("Movimento processual digitado é obrigatório para Alvará.");
+                    System.Windows.MessageBox.Show("Movimento processual é obrigatório para Alvará.");
                     return false;
                 }
 
