@@ -566,7 +566,12 @@ namespace SistemaJuridico.ViewModels
                 return false;
             }
 
-            if (IsAlvara)
+            var tipoLancamento = conta.TipoLancamento ?? string.Empty;
+            var contaEhAlvara = string.Equals(tipoLancamento, "Alvará", StringComparison.OrdinalIgnoreCase);
+            var contaEhTratamento = string.Equals(tipoLancamento, "Tratamento", StringComparison.OrdinalIgnoreCase);
+            var contaEhDespesaGeral = string.Equals(tipoLancamento, "Despesa Geral", StringComparison.OrdinalIgnoreCase);
+
+            if (contaEhAlvara)
             {
                 if (string.IsNullOrWhiteSpace(conta.MovProcesso) || string.Equals(conta.MovProcesso, "Anexo", StringComparison.OrdinalIgnoreCase))
                 {
@@ -594,7 +599,7 @@ namespace SistemaJuridico.ViewModels
             }
             else
             {
-                if (IsTratamento)
+                if (contaEhTratamento)
                 {
                     conta.MovProcesso = string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase)
                         ? MovimentoContaDigitado?.Trim()
@@ -623,7 +628,7 @@ namespace SistemaJuridico.ViewModels
                     return false;
                 }
 
-                if (IsTratamento)
+                if (contaEhTratamento)
                 {
                     if (string.IsNullOrWhiteSpace(conta.TerapiaMedicamentoNome))
                     {
@@ -638,14 +643,16 @@ namespace SistemaJuridico.ViewModels
                     }
                 }
 
-                if (IsDespesaGeral && string.IsNullOrWhiteSpace(NomeDespesaGeral))
+                if (contaEhDespesaGeral && string.IsNullOrWhiteSpace(NomeDespesaGeral))
                 {
                     System.Windows.MessageBox.Show("Informe o nome da despesa geral.");
                     return false;
                 }
             }
 
-            if (ExibirCampoTerapiaManual && string.IsNullOrWhiteSpace(TerapiaManual))
+            var exigeTerapiaManual = contaEhTratamento
+                && string.Equals(conta.TerapiaMedicamentoNome, "OUTRO", StringComparison.OrdinalIgnoreCase);
+            if (exigeTerapiaManual && string.IsNullOrWhiteSpace(TerapiaManual))
             {
                 System.Windows.MessageBox.Show("Informe a terapia/medicamento manual.");
                 return false;
