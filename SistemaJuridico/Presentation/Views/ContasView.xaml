@@ -1,292 +1,123 @@
 <UserControl x:Class="SistemaJuridico.Views.ContasView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="clr-namespace:SistemaJuridico.ViewModels"
-             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks">
-
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-        <Style x:Key="EntradaCellStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#15803D"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-        </Style>
-        <Style x:Key="SaidaCellStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#B91C1C"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-        </Style>
-        <Style x:Key="QuantidadeSpinnerButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="12"/>
-            <Setter Property="Height" Value="11"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="FontSize" Value="7"/>
-            <Setter Property="HorizontalContentAlignment" Value="Center"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-        </Style>
     </UserControl.Resources>
 
-    <Grid Margin="10">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="12">
+            <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12">
+                <StackPanel>
+                    <TextBlock Text="Prestação de Contas" FontSize="18" FontWeight="SemiBold"/>
 
-        <Border Grid.Row="0" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,8"
-                Visibility="{Binding ExibirFormularioContas, Converter={StaticResource BoolToVis}}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1.3*"/>
-                    <ColumnDefinition Width="1.1*"/>
-                    <ColumnDefinition Width="1.1*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <!-- ===== ROW 0: Tipo de Registro | Data | Responsável (não Alvará) ===== -->
-                <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,6">
-                    <TextBlock Text="Tipo de Registro *" FontWeight="SemiBold"/>
-                    <ComboBox SelectedValuePath="Content"
-                              SelectedValue="{Binding TipoLancamentoSelecionado, UpdateSourceTrigger=PropertyChanged}">
-                        <ComboBoxItem Content="Alvará"/>
-                        <ComboBoxItem Content="Tratamento"/>
-                        <ComboBoxItem Content="Despesa Geral"/>
-                    </ComboBox>
-                </StackPanel>
-
-                <StackPanel Grid.Row="0" Grid.Column="1" Margin="8,0,8,6">
-                    <TextBlock Text="{Binding RotuloDataLancamento}" FontWeight="SemiBold"/>
-                    <DatePicker SelectedDateFormat="Short"
-                                Text="{Binding EdicaoConta.DataMovimentacao, UpdateSourceTrigger=PropertyChanged}"
-                                Loaded="DatePicker_Loaded"/>
-                </StackPanel>
-
-                <StackPanel Grid.Row="0" Grid.Column="2" Margin="8,0,0,6" Visibility="{Binding ExibirCampoResponsavel, Converter={StaticResource BoolToVis}}">
-                    <TextBlock Text="Responsável" FontWeight="SemiBold"/>
-                    <TextBox Text="{Binding EdicaoConta.Responsavel, UpdateSourceTrigger=PropertyChanged}"/>
-                </StackPanel>
-
-                <!-- ===== ROW 1 (Alvará): Mov. processo | Valor Alvará | Nº Alvará ===== -->
-                <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,8,6" Visibility="{Binding IsAlvara, Converter={StaticResource BoolToVis}}">
-                    <TextBlock Text="Mov. processo *" FontWeight="SemiBold"/>
-                    <TextBox Text="{Binding EdicaoConta.MovProcesso, UpdateSourceTrigger=PropertyChanged}"/>
-                </StackPanel>
-
-                <StackPanel Grid.Row="1" Grid.Column="1" Margin="8,0,8,6" Visibility="{Binding IsAlvara, Converter={StaticResource BoolToVis}}">
-                    <TextBlock Text="Valor do Alvará *" FontWeight="SemiBold" Foreground="#15803D"/>
-                    <TextBox Text="{Binding ValorAlvaraTexto, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="ValorAlvara_TextChanged"/>
-                </StackPanel>
-
-                <StackPanel Grid.Row="1" Grid.Column="2" Margin="8,0,0,6" Visibility="{Binding IsAlvara, Converter={StaticResource BoolToVis}}">
-                    <TextBlock Text="Nº Alvará *" FontWeight="SemiBold"/>
-                    <TextBox Text="{Binding EdicaoConta.NumNfAlvara, UpdateSourceTrigger=PropertyChanged}"/>
-                </StackPanel>
-
-                <!-- ===== ROW 1 (Tratamento): Mov. NF (Anexo/Digitar) | Mov digitado | Nº NF ===== -->
-                <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,8,6" Visibility="{Binding ExibirCamposReferenciaTratamento, Converter={StaticResource BoolToVis}}">
-                    <TextBlock Text="Mov. processo *" FontWeight="SemiBold"/>
-                    <ComboBox SelectedValue="{Binding ModoMovimentoConta, UpdateSourceTrigger=PropertyChanged}" SelectedValuePath="Content">
-                        <ComboBoxItem Content="Anexo"/>
-                        <ComboBoxItem Content="Digitar"/>
-                    </ComboBox>
-                </StackPanel>
-
-                <StackPanel Grid.Row="1" Grid.Column="1" Margin="8,0,8,6" Visibility="{Binding ExibirCampoMovimentoDigitado, Converter={StaticResource BoolToVis}}">
-                    <TextBlock Text="Nº movimento digitado *" FontWeight="SemiBold"/>
-                    <TextBox Text="{Binding MovimentoContaDigitado, UpdateSourceTrigger=PropertyChanged}"/>
-                </StackPanel>
-
-                <StackPanel Grid.Row="1" Grid.Column="2" Margin="8,0,0,6" Visibility="{Binding IsMovProcessoComboVisivel, Converter={StaticResource BoolToVis}}">
-                    <TextBlock Text="{Binding RotuloNumeroDocumento}" FontWeight="SemiBold"/>
-                    <TextBox Text="{Binding EdicaoConta.NumNfAlvara, UpdateSourceTrigger=PropertyChanged}"/>
-                </StackPanel>
-
-                <!-- ===== ROW 2 (Tratamento): Terapia dropdown | Valor NF | Terapia manual (se OUTRO) ===== -->
-                <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,8,6" Visibility="{Binding ExibirCampoTerapia, Converter={StaticResource BoolToVis}}">
-                    <TextBlock Text="Tratamento *" FontWeight="SemiBold"/>
-                    <ComboBox MinHeight="32" ItemsSource="{Binding TratamentosDisponiveis}" SelectedItem="{Binding EdicaoConta.TerapiaMedicamentoNome, UpdateSourceTrigger=PropertyChanged}"/>
-                </StackPanel>
-
-                <!-- ===== ROW 2 (Despesa Geral): Nome da despesa por extenso ===== -->
-                <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,8,6" Visibility="{Binding IsDespesaGeral, Converter={StaticResource BoolToVis}}">
-                    <TextBlock Text="Tipo de Despesa (por extenso) *" FontWeight="SemiBold"/>
-                    <TextBox Text="{Binding NomeDespesaGeral, UpdateSourceTrigger=PropertyChanged}"/>
-                </StackPanel>
-
-                <!-- Valor da NF/Conta (Tratamento e Despesa Geral) -->
-                <StackPanel Grid.Row="2" Grid.Column="1" Margin="8,0,8,6" Visibility="{Binding IsMovProcessoComboVisivel, Converter={StaticResource BoolToVis}}">
-                    <TextBlock Text="{Binding RotuloValorConta}" FontWeight="SemiBold" Foreground="#B91C1C"/>
-                    <TextBox MinHeight="32" Text="{Binding ValorContaTexto, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="ValorConta_TextChanged"/>
-                </StackPanel>
-
-                <!-- Terapia manual (quando OUTRO selecionado - Tratamento) -->
-                <StackPanel Grid.Row="2" Grid.Column="2" Margin="8,0,0,6" Visibility="{Binding ExibirCampoTerapiaManual, Converter={StaticResource BoolToVis}}">
-                    <TextBlock Text="Outro (informar) *" FontWeight="SemiBold"/>
-                    <TextBox MinHeight="32" Text="{Binding TerapiaManual, UpdateSourceTrigger=PropertyChanged}"/>
-                </StackPanel>
-
-                <!-- ===== ROW 3 (Tratamento): Quantidade (com ▲▼) | Mês Ref | Ano Ref ===== -->
-                <Grid Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,6" Visibility="{Binding ExibirCamposReferenciaTratamento, Converter={StaticResource BoolToVis}}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Top">
-                        <TextBlock Text="Quantidade paga *" FontWeight="SemiBold"/>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="18"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBox x:Name="QtdContaTextBox" Grid.Column="0" Text="{Binding EdicaoConta.Quantidade, UpdateSourceTrigger=PropertyChanged}" MaxLength="12" VerticalContentAlignment="Center"/>
-                            <StackPanel Grid.Column="1" Margin="2,0,0,0" VerticalAlignment="Center">
-                                <Button Content="▲" Style="{StaticResource QuantidadeSpinnerButtonStyle}" Click="IncrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdContaTextBox}"/>
-                                <Button Content="▼" Style="{StaticResource QuantidadeSpinnerButtonStyle}" Click="DecrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdContaTextBox}"/>
-                            </StackPanel>
-                        </Grid>
+                    <StackPanel Margin="0,10,0,0">
+                        <TextBlock Text="Tipo de Prestação de Contas" FontWeight="SemiBold"/>
+                        <ComboBox x:Name="TipoPrestacaoComboBox"
+                                  ItemsSource="{Binding TiposPrestacaoDisponiveis}"
+                                  SelectedItem="{Binding TipoSelecionado, UpdateSourceTrigger=PropertyChanged}"/>
                     </StackPanel>
-                    <StackPanel Grid.Column="1" Margin="8,0,8,0" VerticalAlignment="Top">
-                        <TextBlock Text="Mês de referência *" FontWeight="SemiBold"/>
-                        <TextBox Text="{Binding EdicaoConta.MesReferencia, UpdateSourceTrigger=PropertyChanged}" MaxLength="2"/>
-                    </StackPanel>
-                    <StackPanel Grid.Column="2" Margin="8,0,0,0" VerticalAlignment="Top">
-                        <TextBlock Text="Ano Referência" FontWeight="SemiBold"/>
-                        <TextBox Text="{Binding EdicaoConta.AnoReferencia, UpdateSourceTrigger=PropertyChanged}" MaxLength="4"/>
-                    </StackPanel>
-                </Grid>
 
-                <!-- ===== ROW 4 (Tratamento + Despesa Geral): Observações ===== -->
-                <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,6" Visibility="{Binding IsMovProcessoComboVisivel, Converter={StaticResource BoolToVis}}">
-                    <TextBlock Text="Observações" FontWeight="SemiBold"/>
-                    <TextBox Text="{Binding EdicaoConta.Observacoes, UpdateSourceTrigger=PropertyChanged}" Height="56" AcceptsReturn="True" TextWrapping="Wrap"/>
-                </StackPanel>
+                    <Border Margin="0,12,0,0" Visibility="{Binding ExibirCampos, Converter={StaticResource BoolToVis}}">
+                        <StackPanel>
+                            <WrapPanel>
+                                <StackPanel Width="240" Margin="0,0,8,8"><TextBlock Text="Número do Processo *"/><TextBox Text="{Binding NumeroProcesso}"/></StackPanel>
+                                <StackPanel Width="240" Margin="0,0,8,8"><TextBlock Text="Data da Prestação *"/><TextBox Text="{Binding DataPrestacao}"/></StackPanel>
+                                <StackPanel Width="240" Margin="0,0,8,8"><TextBlock Text="Valor Total *"/><TextBox Text="{Binding ValorTotal}"/></StackPanel>
+                                <StackPanel Width="240" Margin="0,0,8,8"><TextBlock Text="Responsável *"/><TextBox Text="{Binding Responsavel}"/></StackPanel>
+                            </WrapPanel>
+                            <StackPanel Margin="0,0,0,8"><TextBlock Text="Observações"/><TextBox Text="{Binding Observacoes}"/></StackPanel>
 
-                <!-- ===== ROW 4 (Alvará): Observações ===== -->
-                <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,6"
-                            Visibility="{Binding IsAlvara, Converter={StaticResource BoolToVis}}">
-                    <TextBlock Text="Observações" FontWeight="SemiBold"/>
-                    <TextBox Text="{Binding EdicaoConta.Observacoes, UpdateSourceTrigger=PropertyChanged}"
-                             Height="56" AcceptsReturn="True" TextWrapping="Wrap"/>
-                </StackPanel>
-
-            </Grid>
-        </Border>
-
-        <ScrollViewer Grid.Row="1"
-                      HorizontalScrollBarVisibility="Auto"
-                      VerticalScrollBarVisibility="Disabled"
-                      Margin="0,0,0,8"
-                      Visibility="{Binding ExibirFormularioContas, Converter={StaticResource BoolToVis}}">
-            <WrapPanel HorizontalAlignment="Left" ItemHeight="38">
-            <Button Content="Adicionar ao rascunho" Command="{Binding AdicionarRascunhoCommand}" IsEnabled="{Binding PodeCadastrar}" Margin="4" MinWidth="165" Padding="12,7"/>
-            <Button Content="Confirmar rascunhos" Command="{Binding ConfirmarRascunhosCommand}" IsEnabled="{Binding PodeCadastrar}" Margin="4" MinWidth="160" Padding="12,7"/>
-            <Button Content="Limpar rascunhos" Command="{Binding LimparRascunhosCommand}" IsEnabled="{Binding PodeCadastrar}" Margin="4" MinWidth="145" Padding="12,7"/>
-            <Button Content="Salvar edição" Command="{Binding SalvarEdicaoContaCommand}" IsEnabled="{Binding PodeEditar}" Margin="4" MinWidth="130" Padding="12,7"/>
-            <Button Content="Editar selecionada" Command="{Binding EditarContaCommand}" IsEnabled="{Binding PodeEditar}" Margin="4" MinWidth="145" Padding="12,7"/>
-            <Button Content="Excluir selecionada" Command="{Binding ExcluirContaCommand}" IsEnabled="{Binding PodeExcluir}" Margin="4" MinWidth="150" Padding="12,7"/>
-            <Button Content="Lançar selecionada" Command="{Binding FecharContaCommand}" IsEnabled="{Binding PodeEditar}" Margin="4" MinWidth="150" Padding="12,7"/>
-                <Button Content="Exportar PDF" Command="{Binding ExportarPrestacaoContasPdfCommand}" Margin="4" MinWidth="120" Padding="12,7"/>
-            </WrapPanel>
-        </ScrollViewer>
-
-        <GroupBox Header="Rascunhos de contas" Grid.Row="2" Margin="0,0,0,8"
-                  Visibility="{Binding ExibirFormularioContas, Converter={StaticResource BoolToVis}}">
-            <DataGrid ItemsSource="{Binding ContasRascunho}" AutoGenerateColumns="False" IsReadOnly="True" PreviewMouseWheel="DataGrid_PreviewMouseWheel">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Data" Binding="{Binding DataMovimentacao}" Width="SizeToHeader"/>
-                    <DataGridTextColumn Header="Tipo" Binding="{Binding TipoLancamento}" Width="SizeToHeader"/>
-                    <DataGridTextColumn Header="Mov. Proc." Binding="{Binding MovProcesso}" Width="SizeToHeader"/>
-                    <DataGridTextColumn Header="Histórico" Binding="{Binding Historico}" Width="*"/>
-                    <DataGridTextColumn Header="Entrada" Binding="{Binding ValorAlvara, StringFormat=R$ {0:N2}}" Width="SizeToHeader"/>
-                    <DataGridTextColumn Header="Saída" Binding="{Binding ValorConta, StringFormat=R$ {0:N2}}" Width="SizeToHeader"/>
-                    <DataGridTemplateColumn Header="Ações" Width="SizeToCells">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
+                            <Border Visibility="{Binding IsDiaria, Converter={StaticResource BoolToVis}}">
                                 <WrapPanel>
-                                    <Button ToolTip="Editar rascunho"
-                                            Command="{Binding DataContext.EditarRascunhoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}"
-                                            Padding="8,6"
-                                            MinWidth="36">
-                                        <materialDesign:PackIcon Kind="Pencil" Width="16" Height="16"/>
-                                    </Button>
-                                    <Button ToolTip="Confirmar este rascunho"
-                                            Command="{Binding DataContext.ConfirmarRascunhoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}"
-                                            Padding="8,6"
-                                            MinWidth="36">
-                                        <materialDesign:PackIcon Kind="CheckBold" Width="16" Height="16"/>
-                                    </Button>
-                                    <Button ToolTip="Remover rascunho"
-                                            Command="{Binding DataContext.RemoverRascunhoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}"
-                                            Padding="8,6"
-                                            MinWidth="36">
-                                        <materialDesign:PackIcon Kind="Delete" Width="16" Height="16"/>
-                                    </Button>
+                                    <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Data Início *"/><TextBox Text="{Binding DataInicio}"/></StackPanel>
+                                    <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Data Fim *"/><TextBox Text="{Binding DataFim}"/></StackPanel>
+                                    <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Destino *"/><TextBox Text="{Binding Destino}"/></StackPanel>
+                                    <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Justificativa *"/><TextBox Text="{Binding Justificativa}"/></StackPanel>
+                                    <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Valor por Dia"/><TextBox Text="{Binding ValorPorDia, StringFormat=N2}" IsReadOnly="True"/></StackPanel>
                                 </WrapPanel>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                </DataGrid.Columns>
-            </DataGrid>
-        </GroupBox>
+                            </Border>
 
-        <GroupBox Header="Prestação de contas (saldo progressivo)" Grid.Row="3">
-            <DataGrid ItemsSource="{Binding HistoricoContas}" SelectedItem="{Binding ContaSelecionada}" AutoGenerateColumns="False" IsReadOnly="True" PreviewMouseWheel="DataGrid_PreviewMouseWheel">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Data" Binding="{Binding Conta.DataMovimentacao}" Width="SizeToHeader"/>
-                    <DataGridTextColumn Header="Tipo" Binding="{Binding Conta.TipoLancamento}" Width="SizeToHeader"/>
-                    <DataGridTextColumn Header="Mov. Processo" Binding="{Binding Conta.MovProcesso}" Width="SizeToHeader"/>
-                    <DataGridTextColumn Header="Nº Alvará / NF" Binding="{Binding Conta.NumNfAlvara}" Width="SizeToHeader"/>
-                    <DataGridTextColumn Header="Histórico/Detalhes" Binding="{Binding Conta.Historico}" Width="*"/>
-                    <DataGridTextColumn Header="Crédito" Binding="{Binding Conta.ValorAlvara, StringFormat=R$ {0:N2}}" Width="SizeToHeader" ElementStyle="{StaticResource EntradaCellStyle}"/>
-                    <DataGridTextColumn Header="Débito" Binding="{Binding Conta.ValorConta, StringFormat=R$ {0:N2}}" Width="SizeToHeader" ElementStyle="{StaticResource SaidaCellStyle}"/>
-                    <DataGridTextColumn Header="Observações" Binding="{Binding Conta.Observacoes}" Width="220"/>
-                    <DataGridTextColumn Header="Saldo parcial" Binding="{Binding SaldoParcial, StringFormat=R$ {0:N2}}" Width="SizeToHeader"/>
-                    <DataGridTemplateColumn Header="Ações" Width="SizeToCells">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
+                            <Border Visibility="{Binding IsReembolso, Converter={StaticResource BoolToVis}}">
                                 <WrapPanel>
-                                    <Button ToolTip="Editar conta"
-                                            Command="{Binding DataContext.EditarContaHistoricoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}"
-                                            IsEnabled="{Binding Conta.PodeEditar}"
-                                            Padding="8,6"
-                                            MinWidth="36">
-                                        <materialDesign:PackIcon Kind="Pencil" Width="16" Height="16"/>
-                                    </Button>
-                                    <Button ToolTip="Excluir conta"
-                                            Command="{Binding DataContext.ExcluirContaHistoricoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}"
-                                            IsEnabled="{Binding Conta.PodeEditar}"
-                                            Padding="8,6"
-                                            MinWidth="36">
-                                        <materialDesign:PackIcon Kind="Delete" Width="16" Height="16"/>
-                                    </Button>
-                                    <Button ToolTip="Lançar conta"
-                                            Command="{Binding DataContext.LancarContaHistoricoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}"
-                                            IsEnabled="{Binding Conta.PodeEditar}"
-                                            Padding="8,6"
-                                            MinWidth="36">
-                                        <iconPacks:PackIconFontAwesome Kind="MoneyCheckDollarSolid" Width="16" Height="16"/>
-                                    </Button>
+                                    <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Nº Documento Fiscal *"/><TextBox Text="{Binding NumeroDocumentoFiscal}"/></StackPanel>
+                                    <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Data Documento *"/><TextBox Text="{Binding DataDocumento}"/></StackPanel>
+                                    <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="CNPJ Fornecedor *"/><TextBox Text="{Binding CnpjFornecedor}"/></StackPanel>
+                                    <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Descrição Serviço *"/><TextBox Text="{Binding DescricaoServico}"/></StackPanel>
+                                    <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Valor Documento *"/><TextBox Text="{Binding ValorDocumento}"/></StackPanel>
                                 </WrapPanel>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                </DataGrid.Columns>
-            </DataGrid>
-        </GroupBox>
-    </Grid>
+                            </Border>
+
+                            <Border Visibility="{Binding IsConvenio, Converter={StaticResource BoolToVis}}">
+                                <WrapPanel>
+                                    <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Número do Convênio *"/><TextBox Text="{Binding NumeroConvenio}"/></StackPanel>
+                                    <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Órgão Repassador *"/><TextBox Text="{Binding OrgaoRepassador}"/></StackPanel>
+                                    <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Período de Execução *"/><TextBox Text="{Binding PeriodoExecucao}"/></StackPanel>
+                                </WrapPanel>
+                                <TextBlock Text="Relatório detalhado *"/>
+                                <TextBox Text="{Binding RelatorioDetalhado}" AcceptsReturn="True" Height="70"/>
+                            </Border>
+
+                            <Border Visibility="{Binding IsOutro, Converter={StaticResource BoolToVis}}">
+                                <StackPanel><TextBlock Text="Descrição detalhada *"/><TextBox Text="{Binding DetalhesOutroTipo}"/></StackPanel>
+                            </Border>
+
+                            <TextBlock Text="Anexos" Margin="0,8,0,0" FontWeight="SemiBold"/>
+                            <WrapPanel>
+                                <TextBox Width="400" Text="{Binding NovoAnexo}"/>
+                                <Button Content="Adicionar Anexo" Command="{Binding AdicionarAnexoCommand}" Margin="8,0,0,0"/>
+                            </WrapPanel>
+                            <ItemsControl ItemsSource="{Binding Anexos}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <WrapPanel Margin="0,4,0,0">
+                                            <TextBlock Text="{Binding}" Width="380"/>
+                                            <Button Content="Remover"
+                                                    Command="{Binding DataContext.RemoverAnexoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"/>
+                                        </WrapPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <WrapPanel Margin="0,10,0,0">
+                        <Button Content="Salvar Rascunho" Command="{Binding SalvarRascunhoCommand}" Margin="0,0,8,0"/>
+                        <Button Content="Finalizar Prestação" Command="{Binding FinalizarPrestacaoCommand}" Margin="0,0,8,0"/>
+                        <Button Content="Gerar PDF" Command="{Binding GerarPdfCommand}" IsEnabled="{Binding GerarPdfHabilitado}"/>
+                        <Border Background="{Binding StatusCor}" CornerRadius="4" Padding="8,2" Margin="12,0,0,0">
+                            <TextBlock Foreground="White" Text="{Binding StatusDescricao}"/>
+                        </Border>
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+
+            <GroupBox Header="Histórico da Conta" Margin="0,12,0,0">
+                <DataGrid x:Name="HistoricoDataGrid" ItemsSource="{Binding Historico}" AutoGenerateColumns="False" IsReadOnly="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Data" Binding="{Binding DataFormatada}" Width="160"/>
+                        <DataGridTextColumn Header="Usuário" Binding="{Binding Usuario}" Width="180"/>
+                        <DataGridTextColumn Header="Ação" Binding="{Binding Acao}" Width="190"/>
+                        <DataGridTextColumn Header="Descrição detalhada" Binding="{Binding Observacao}" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </GroupBox>
+
+            <GroupBox Header="Prestações já realizadas" Margin="0,12,0,0">
+                <StackPanel>
+                    <DataGrid ItemsSource="{Binding PrestacoesRealizadas}" SelectedItem="{Binding PrestacaoSelecionada}" AutoGenerateColumns="False">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Data" Binding="{Binding DataMovimentacao}" Width="140"/>
+                            <DataGridTextColumn Header="Tipo" Binding="{Binding TipoLancamento}" Width="140"/>
+                            <DataGridTextColumn Header="Valor Total" Binding="{Binding ValorConta, StringFormat=R$ {0:N2}}" Width="130"/>
+                            <DataGridTextColumn Header="Status" Binding="{Binding StatusConta}" Width="130"/>
+                            <DataGridTextColumn Header="Última Modificação" Binding="{Binding UltimaModificacao}" Width="170"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <Button Content="Carregar prestação selecionada" Command="{Binding CarregarPrestacaoSelecionadaCommand}" Margin="0,8,0,0" HorizontalAlignment="Left"/>
+                </StackPanel>
+            </GroupBox>
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>

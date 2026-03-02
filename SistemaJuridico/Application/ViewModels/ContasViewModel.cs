@@ -1,891 +1,466 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Dapper;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 using SistemaJuridico.Models;
 using SistemaJuridico.Services;
 using System.Collections.ObjectModel;
 using System.Globalization;
-using System.Windows;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
 using System.IO;
 using System.Text.Json;
+using System.Windows;
 
 namespace SistemaJuridico.ViewModels
 {
+    public enum TipoPrestacao { Diaria, Adiantamento, Reembolso, Convenio, Outro }
+    public enum PrestacaoStatus { Rascunho, Finalizada, Reaberta, Rejeitada }
+
+    public class HistoricoPrestacao
+    {
+        public DateTime Data { get; set; }
+        public string Usuario { get; set; } = string.Empty;
+        public string Acao { get; set; } = string.Empty;
+        public string Observacao { get; set; } = string.Empty;
+        public string DataFormatada => Data.ToString("dd/MM/yyyy HH:mm");
+    }
+
     public partial class ContasViewModel : ObservableObject
     {
-        private readonly ContaService _service;
-        private readonly VerificacaoService _verificacaoService;
-        private readonly AuditService _auditService;
-        private readonly HistoricoService _historicoService;
         private readonly string _processoId;
-        private readonly AppStateViewModel _appState;
+        private readonly ContaService _contaService;
+        private readonly DatabaseService _databaseService;
 
-        public ObservableCollection<Conta> Contas => _appState.ContasProcesso;
-        public ObservableCollection<Conta> ContasRascunho => _appState.ContasRascunho;
-        public ObservableCollection<string> TerapiasMedicamentosDisponiveis { get; } = new();
-        public ObservableCollection<string> TratamentosDisponiveis { get; } = new();
-        public ObservableCollection<ContaHistoricoLinha> HistoricoContas { get; } = new();
+        [ObservableProperty] private TipoPrestacao? _tipoSelecionado;
+        [ObservableProperty] private decimal _valorTotal;
+        [ObservableProperty] private string _responsavel = string.Empty;
+        [ObservableProperty] private string _observacoes = string.Empty;
+        [ObservableProperty] private PrestacaoStatus _status = PrestacaoStatus.Rascunho;
+        [ObservableProperty] private string _numeroProcesso = string.Empty;
+        [ObservableProperty] private string _dataPrestacao = DateTime.Now.ToString("dd/MM/yyyy");
+        [ObservableProperty] private string _prestacaoId = string.Empty;
+        [ObservableProperty] private Conta? _prestacaoSelecionada;
 
-        [ObservableProperty]
-        private Conta? _contaSelecionada;
+        [ObservableProperty] private string _dataInicio = string.Empty;
+        [ObservableProperty] private string _dataFim = string.Empty;
+        [ObservableProperty] private string _destino = string.Empty;
+        [ObservableProperty] private string _justificativa = string.Empty;
+        [ObservableProperty] private decimal _valorPorDia;
 
-        [ObservableProperty]
-        private Conta _edicaoConta = new();
+        [ObservableProperty] private string _numeroDocumentoFiscal = string.Empty;
+        [ObservableProperty] private string _dataDocumento = string.Empty;
+        [ObservableProperty] private string _cnpjFornecedor = string.Empty;
+        [ObservableProperty] private string _descricaoServico = string.Empty;
+        [ObservableProperty] private decimal _valorDocumento;
 
-        [ObservableProperty]
-        private string _terapiaManual = string.Empty;
+        [ObservableProperty] private string _numeroConvenio = string.Empty;
+        [ObservableProperty] private string _orgaoRepassador = string.Empty;
+        [ObservableProperty] private string _periodoExecucao = string.Empty;
+        [ObservableProperty] private string _relatorioDetalhado = string.Empty;
+        [ObservableProperty] private string _detalhesOutroTipo = string.Empty;
+        [ObservableProperty] private string _novoAnexo = string.Empty;
 
-        [ObservableProperty]
-        private string _tipoLancamentoSelecionado = "Alvará";
+        public ObservableCollection<string> Anexos { get; } = new();
+        public ObservableCollection<HistoricoPrestacao> Historico { get; } = new();
+        public ObservableCollection<Conta> PrestacoesRealizadas { get; } = new();
+        public Array TiposPrestacaoDisponiveis => Enum.GetValues(typeof(TipoPrestacao));
 
-        [ObservableProperty]
-        private string _modoMovimentoConta = "Anexo";
-
-        [ObservableProperty]
-        private string _movimentoContaDigitado = string.Empty;
-
-        [ObservableProperty]
-        private string _nomeDespesaGeral = string.Empty;
-
-        public bool PodeCadastrar => _appState.PodeCadastrarContas;
-        public bool PodeEditar => _appState.PodeEditarContas;
-        public bool PodeExcluir => _appState.PodeExcluirContas;
-        public bool IsAlvara => string.Equals(EdicaoConta.TipoLancamento, "Alvará", StringComparison.OrdinalIgnoreCase);
-        public bool IsTratamento => string.Equals(EdicaoConta.TipoLancamento, "Tratamento", StringComparison.OrdinalIgnoreCase);
-        public bool IsDespesaGeral => string.Equals(EdicaoConta.TipoLancamento, "Despesa Geral", StringComparison.OrdinalIgnoreCase);
-        public bool IsValorContaHabilitado => !IsAlvara;
-        /// <summary>Indica os campos complementares exibidos para tipos não Alvará.</summary>
-        public bool IsMovProcessoComboVisivel => IsTratamento || IsDespesaGeral;
-        public bool ExibirCampoResponsavel => !IsAlvara;
-        public bool ExibirCampoTerapia => IsTratamento;
-        public bool ExibirCamposReferenciaTratamento => IsTratamento;
-        public string RotuloDataLancamento => IsAlvara ? "Data do Alvará *" : "Data da NF *";
-        public string RotuloNumeroDocumento => IsAlvara ? "Nº Alvará *" : "Nº da NF *";
-        public string RotuloValorConta => IsTratamento ? "Valor do tratamento *" : "Valor da NF *";
-        public bool ExibirCampoTerapiaManual => IsTratamento && string.Equals(EdicaoConta.TerapiaMedicamentoNome, "OUTRO", StringComparison.OrdinalIgnoreCase);
-        public bool ExibirFormularioContas => PodeCadastrar;
-        /// <summary>Exibe campo de texto para digitar número do movimento quando modo = Digitar (somente Tratamento).</summary>
-        public bool ExibirCampoMovimentoDigitado => ExibirCamposReferenciaTratamento && string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase);
-
-        public ContasViewModel() : this(string.Empty)
+        public bool ExibirCampos => TipoSelecionado.HasValue;
+        public bool IsDiaria => TipoSelecionado == TipoPrestacao.Diaria;
+        public bool IsReembolso => TipoSelecionado == TipoPrestacao.Reembolso;
+        public bool IsConvenio => TipoSelecionado == TipoPrestacao.Convenio;
+        public bool IsOutro => TipoSelecionado == TipoPrestacao.Outro;
+        public bool GerarPdfHabilitado => Status == PrestacaoStatus.Finalizada && !string.IsNullOrWhiteSpace(PrestacaoId);
+        public string StatusDescricao => Status.ToString();
+        public string StatusCor => Status switch
         {
-        }
+            PrestacaoStatus.Rascunho => "#F59E0B",
+            PrestacaoStatus.Finalizada => "#16A34A",
+            PrestacaoStatus.Rejeitada => "#DC2626",
+            _ => "#2563EB"
+        };
+
+        public ContasViewModel() : this(string.Empty) { }
 
         public ContasViewModel(string processoId)
         {
             _processoId = processoId;
-            _appState = AppStateViewModel.Instance;
-            _appState.DefinirContexto(App.Session.UsuarioAtual, _appState.ProcessoSelecionado);
+            _databaseService = new DatabaseService();
+            _contaService = new ContaService(_databaseService);
+            NumeroProcesso = processoId;
+            Responsavel = App.Session.UsuarioAtual?.Nome ?? "Sistema";
 
-            var db = new DatabaseService();
-            _service = new ContaService(db);
-            _verificacaoService = new VerificacaoService(db);
-            _auditService = new AuditService(db);
-            _historicoService = new HistoricoService(db);
-
-            Carregar();
-            CarregarRascunhos();
-            NovaConta();
+            CarregarPrestacoes();
+            InicializarNovaPrestacao();
         }
 
-        partial void OnEdicaoContaChanged(Conta value)
+        partial void OnTipoSelecionadoChanged(TipoPrestacao? value)
         {
-            OnPropertyChanged(nameof(IsAlvara));
-            OnPropertyChanged(nameof(IsTratamento));
-            OnPropertyChanged(nameof(IsDespesaGeral));
-            OnPropertyChanged(nameof(IsValorContaHabilitado));
-            OnPropertyChanged(nameof(IsMovProcessoComboVisivel));
-            OnPropertyChanged(nameof(ExibirCampoResponsavel));
-            OnPropertyChanged(nameof(ExibirCampoTerapia));
-            OnPropertyChanged(nameof(ExibirCamposReferenciaTratamento));
-            OnPropertyChanged(nameof(RotuloDataLancamento));
-            OnPropertyChanged(nameof(RotuloNumeroDocumento));
-            OnPropertyChanged(nameof(RotuloValorConta));
-            OnPropertyChanged(nameof(ExibirCampoTerapiaManual));
-            OnPropertyChanged(nameof(ExibirFormularioContas));
-            OnPropertyChanged(nameof(ExibirCampoMovimentoDigitado));
-        }
-
-
-        partial void OnModoMovimentoContaChanged(string value)
-        {
-            if (ExibirCamposReferenciaTratamento)
-                EdicaoConta.MovProcesso = string.Equals(value, "Digitar", StringComparison.OrdinalIgnoreCase)
-                    ? MovimentoContaDigitado
-                    : "Anexo";
-            else
-                EdicaoConta.MovProcesso = "Anexo";
-
-            OnPropertyChanged(nameof(ExibirCampoMovimentoDigitado));
-        }
-
-        partial void OnMovimentoContaDigitadoChanged(string value)
-        {
-            if (ExibirCamposReferenciaTratamento && string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase))
-                EdicaoConta.MovProcesso = value;
-        }
-        partial void OnTipoLancamentoSelecionadoChanged(string value)
-        {
-            EdicaoConta.TipoLancamento = value;
-            AplicarRegraTipoLancamento(EdicaoConta);
-            OnPropertyChanged(nameof(IsAlvara));
-            OnPropertyChanged(nameof(IsTratamento));
-            OnPropertyChanged(nameof(IsDespesaGeral));
-            OnPropertyChanged(nameof(IsValorContaHabilitado));
-            OnPropertyChanged(nameof(IsMovProcessoComboVisivel));
-            OnPropertyChanged(nameof(ExibirCampoResponsavel));
-            OnPropertyChanged(nameof(ExibirCampoTerapia));
-            OnPropertyChanged(nameof(ExibirCamposReferenciaTratamento));
-            OnPropertyChanged(nameof(RotuloDataLancamento));
-            OnPropertyChanged(nameof(RotuloNumeroDocumento));
-            OnPropertyChanged(nameof(RotuloValorConta));
-            OnPropertyChanged(nameof(ExibirCampoTerapiaManual));
-            OnPropertyChanged(nameof(ExibirCampoMovimentoDigitado));
-            OnPropertyChanged(nameof(ValorAlvaraTexto));
-            OnPropertyChanged(nameof(ValorContaTexto));
-        }
-
-        [RelayCommand]
-        private void Carregar()
-        {
-            Contas.Clear();
-            HistoricoContas.Clear();
-
-            if (string.IsNullOrWhiteSpace(_processoId))
-                return;
-
-            var contasOrdenadas = _service.ListarPorProcesso(_processoId)
-                .OrderBy(c => ParseData(c.DataMovimentacao) ?? DateTime.MinValue)
-                .ToList();
-
-            foreach (var c in contasOrdenadas)
-                Contas.Add(c);
-
-            _appState.AtualizarContas(contasOrdenadas);
-
-            var verificacoes = _verificacaoService.ListarPorProcesso(_processoId);
-            _appState.AtualizarVerificacoes(verificacoes);
-
-            TerapiasMedicamentosDisponiveis.Clear();
-            foreach (var item in _appState.EstadoAtual.TerapiasEMedicamentos)
-                TerapiasMedicamentosDisponiveis.Add(item);
-            TerapiasMedicamentosDisponiveis.Add("OUTRO");
-
-            TratamentosDisponiveis.Clear();
-            var tratamentos = _appState.EstadoAtual.Terapias.Count > 0
-                ? _appState.EstadoAtual.Terapias
-                : _appState.EstadoAtual.TerapiasEMedicamentos;
-            foreach (var item in tratamentos)
-                TratamentosDisponiveis.Add(item);
-            TratamentosDisponiveis.Add("OUTRO");
-
-            decimal saldo = 0m;
-            foreach (var conta in contasOrdenadas)
+            if (value.HasValue)
             {
-                saldo += conta.ValorAlvara - conta.ValorConta;
-                HistoricoContas.Add(new ContaHistoricoLinha(conta, saldo));
+                InicializarNovaPrestacao();
+                TipoSelecionado = value;
             }
+
+            OnPropertyChanged(nameof(ExibirCampos));
+            OnPropertyChanged(nameof(IsDiaria));
+            OnPropertyChanged(nameof(IsReembolso));
+            OnPropertyChanged(nameof(IsConvenio));
+            RecalcularValorDiaria();
         }
 
-        [RelayCommand]
-        private void NovaConta()
-        {
-            EdicaoConta = new Conta
-            {
-                ProcessoId = _processoId,
-                Responsavel = App.Session.UsuarioAtual?.Nome ?? "Sistema",
-                TipoLancamento = "Alvará"
-            };
-            TipoLancamentoSelecionado = "Alvará";
-            ModoMovimentoConta = "Anexo";
-            MovimentoContaDigitado = string.Empty;
-            TerapiaManual = string.Empty;
-            NomeDespesaGeral = string.Empty;
-        }
+        partial void OnDataInicioChanged(string value) => RecalcularValorDiaria();
+        partial void OnDataFimChanged(string value) => RecalcularValorDiaria();
+        partial void OnValorTotalChanged(decimal value) => RecalcularValorDiaria();
 
         [RelayCommand]
-        private void AdicionarRascunho()
+        private void SalvarRascunho()
         {
-            if (!PodeCadastrar)
+            if (!TipoSelecionado.HasValue)
             {
-                System.Windows.MessageBox.Show("Seu perfil não possui permissão para cadastrar contas.");
+                MessageBox.Show("Selecione o tipo de prestação.");
                 return;
             }
 
-            if (!ValidarConta(EdicaoConta))
-                return;
+            var conta = ConstruirConta(PrestacaoStatus.Rascunho);
+            conta.UltimaModificacao = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
 
-            PrepararContaParaPersistencia(EdicaoConta, definirComoLancado: false);
-
-            if (!string.IsNullOrWhiteSpace(EdicaoConta.Id) && Contas.Any(x => x.Id == EdicaoConta.Id))
-                EdicaoConta.Id = Guid.NewGuid().ToString();
-
-            ContasRascunho.Add(CloneConta(EdicaoConta));
-            PersistirRascunhos();
-            NovaConta();
+            var acao = string.IsNullOrWhiteSpace(PrestacaoId) ? "Criação do rascunho" : "Atualização de rascunho";
+            PersistirPrestacao(conta);
+            RegistrarHistorico(conta.Id, acao, "Prestação salva como rascunho.");
+            CarregarPrestacoes();
+            MessageBox.Show("Rascunho salvo com sucesso.");
         }
 
         [RelayCommand]
-        private void RemoverRascunho(Conta? conta)
+        private void FinalizarPrestacao()
         {
+            if (!ValidarFinalizacao())
+                return;
+
+            var conta = ConstruirConta(PrestacaoStatus.Finalizada);
+            conta.UltimaModificacao = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
+            PersistirPrestacao(conta);
+            RegistrarHistorico(conta.Id, "Finalização", "Prestação finalizada com validação completa.");
+            Status = PrestacaoStatus.Finalizada;
+            CarregarPrestacoes();
+            MessageBox.Show("Prestação finalizada.");
+        }
+
+        [RelayCommand]
+        private void GerarPdf()
+        {
+            if (!GerarPdfHabilitado)
+                return;
+
+            var conta = _contaService.ListarPorProcesso(_processoId).FirstOrDefault(x => x.Id == PrestacaoId);
             if (conta is null)
                 return;
 
-            ContasRascunho.Remove(conta);
-            PersistirRascunhos();
-        }
+            var destino = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), $"prestacao-{conta.Id}.pdf");
+            var campos = JsonSerializer.Deserialize<Dictionary<string, string>>(conta.CamposEspecificosJson ?? "{}") ?? new();
+            var anexos = JsonSerializer.Deserialize<List<string>>(conta.AnexosJson ?? "[]") ?? new();
 
-        [RelayCommand]
-        private void EditarRascunho(Conta? conta)
-        {
-            if (conta is null)
-                return;
-
-            if (!PodeEditar)
+            Document.Create(c =>
             {
-                System.Windows.MessageBox.Show("Seu perfil não possui permissão para editar contas.");
-                return;
-            }
-
-            EdicaoConta = CloneConta(conta);
-            TipoLancamentoSelecionado = EdicaoConta.TipoLancamento;
-
-            if (ExibirCamposReferenciaTratamento)
-            {
-                var mov = EdicaoConta.MovProcesso ?? string.Empty;
-                var isAnexo = string.Equals(mov, "Anexo", StringComparison.OrdinalIgnoreCase);
-                ModoMovimentoConta = isAnexo ? "Anexo" : "Digitar";
-                MovimentoContaDigitado = isAnexo ? string.Empty : mov;
-            }
-            else
-            {
-                ModoMovimentoConta = "Anexo";
-                MovimentoContaDigitado = string.Empty;
-            }
-
-            if (IsDespesaGeral)
-                NomeDespesaGeral = EdicaoConta.TerapiaMedicamentoNome ?? string.Empty;
-        }
-
-        [RelayCommand]
-        private void LimparRascunhos()
-        {
-            ContasRascunho.Clear();
-            PersistirRascunhos();
-        }
-
-        [RelayCommand]
-        private void ConfirmarRascunhos()
-        {
-            if (!PodeCadastrar)
-            {
-                System.Windows.MessageBox.Show("Seu perfil não possui permissão para cadastrar contas.");
-                return;
-            }
-
-            if (ContasRascunho.Count == 0)
-            {
-                System.Windows.MessageBox.Show("Não há lançamentos em rascunho para confirmar.");
-                return;
-            }
-
-            foreach (var conta in ContasRascunho)
-            {
-                conta.ProcessoId = _processoId;
-                conta.StatusConta = "lancado";
-                _service.Inserir(conta);
-                _historicoService.Registrar(_processoId, "Lançamento contábil incluído", MontarResumoConta(conta));
-                _auditService.Registrar(
-                    "Conta.Criada",
-                    "processo",
-                    _processoId,
-                    $"Nova conta {conta.TipoLancamento} em {conta.DataMovimentacao}: +{conta.ValorAlvara} -{conta.ValorConta}");
-            }
-
-            ContasRascunho.Clear();
-            PersistirRascunhos();
-            Carregar();
-        }
-
-        [RelayCommand]
-        private void ConfirmarRascunho(Conta? conta)
-        {
-            if (conta is null)
-                return;
-
-            if (!PodeCadastrar)
-            {
-                System.Windows.MessageBox.Show("Seu perfil não possui permissão para cadastrar contas.");
-                return;
-            }
-
-            conta.ProcessoId = _processoId;
-            conta.StatusConta = "lancado";
-            _service.Inserir(conta);
-
-            _historicoService.Registrar(_processoId, "Lançamento contábil incluído", MontarResumoConta(conta));
-            _auditService.Registrar(
-                "Conta.Criada",
-                "processo",
-                _processoId,
-                $"Nova conta {conta.TipoLancamento} em {conta.DataMovimentacao}: +{conta.ValorAlvara} -{conta.ValorConta}");
-
-            ContasRascunho.Remove(conta);
-            PersistirRascunhos();
-            Carregar();
-        }
-
-        [RelayCommand]
-        private void EditarContaHistorico(ContaHistoricoLinha? linha)
-        {
-            if (linha is null)
-                return;
-
-            ContaSelecionada = linha.Conta;
-            EditarConta();
-        }
-
-        [RelayCommand]
-        private void ExcluirContaHistorico(ContaHistoricoLinha? linha)
-        {
-            if (linha is null)
-                return;
-
-            ContaSelecionada = linha.Conta;
-            ExcluirConta();
-        }
-
-        [RelayCommand]
-        private void LancarContaHistorico(ContaHistoricoLinha? linha)
-        {
-            if (linha is null)
-                return;
-
-            ContaSelecionada = linha.Conta;
-            FecharConta();
-        }
-
-        [RelayCommand]
-        private void EditarConta()
-        {
-            if (ContaSelecionada == null)
-                return;
-
-            if (!PodeEditar)
-            {
-                System.Windows.MessageBox.Show("Seu perfil não possui permissão para editar contas.");
-                return;
-            }
-
-            if (!ContaSelecionada.PodeEditar)
-            {
-                System.Windows.MessageBox.Show("Conta já fechada.");
-                return;
-            }
-
-            EdicaoConta = CloneConta(ContaSelecionada);
-            TipoLancamentoSelecionado = EdicaoConta.TipoLancamento;
-            if (ExibirCamposReferenciaTratamento)
-            {
-                var mov = EdicaoConta.MovProcesso ?? string.Empty;
-                var isAnexo = string.Equals(mov, "Anexo", StringComparison.OrdinalIgnoreCase);
-                ModoMovimentoConta = isAnexo ? "Anexo" : "Digitar";
-                MovimentoContaDigitado = isAnexo ? string.Empty : mov;
-            }
-            else
-            {
-                ModoMovimentoConta = "Anexo";
-                MovimentoContaDigitado = string.Empty;
-            }
-
-            if (IsDespesaGeral)
-                NomeDespesaGeral = EdicaoConta.TerapiaMedicamentoNome ?? string.Empty;
-        }
-
-        [RelayCommand]
-        private void SalvarEdicaoConta()
-        {
-            if (ContaSelecionada == null)
-                return;
-
-            if (!PodeEditar)
-            {
-                System.Windows.MessageBox.Show("Seu perfil não possui permissão para editar contas.");
-                return;
-            }
-
-            if (!ValidarConta(EdicaoConta))
-                return;
-
-            PrepararContaParaPersistencia(EdicaoConta, definirComoLancado: false);
-
-            _service.Atualizar(EdicaoConta);
-            _historicoService.Registrar(_processoId, "Conta individual editada", MontarResumoConta(EdicaoConta));
-            _auditService.Registrar(
-                "Conta.Editada",
-                "processo",
-                _processoId,
-                $"Conta {EdicaoConta.Id} atualizada");
-
-            Carregar();
-            NovaConta();
-        }
-
-        [RelayCommand]
-        private void ExcluirConta()
-        {
-            if (ContaSelecionada == null)
-                return;
-
-            if (!PodeExcluir)
-            {
-                System.Windows.MessageBox.Show("Somente administradores podem excluir contas.");
-                return;
-            }
-
-            if (System.Windows.MessageBox.Show("Excluir conta?", "Confirma", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-            {
-                _historicoService.Registrar(_processoId, "Conta individual excluída", MontarResumoConta(ContaSelecionada));
-                _service.Excluir(ContaSelecionada.Id);
-                _auditService.Registrar(
-                    "Conta.Excluida",
-                    "processo",
-                    _processoId,
-                    $"Conta {ContaSelecionada.Id} removida");
-                Carregar();
-            }
-        }
-
-
-        [RelayCommand]
-        private void ExportarPrestacaoContasPdf()
-        {
-            if (HistoricoContas.Count == 0)
-            {
-                System.Windows.MessageBox.Show("Não há contas para exportar.");
-                return;
-            }
-
-            var dlg = new Microsoft.Win32.SaveFileDialog
-            {
-                Filter = "Arquivo PDF (*.pdf)|*.pdf",
-                FileName = $"prestacao-contas-{DateTime.Now:yyyyMMdd-HHmm}.pdf"
-            };
-
-            if (dlg.ShowDialog() != true)
-                return;
-
-            Document.Create(container =>
-            {
-                container.Page(page =>
+                c.Page(p =>
                 {
-                    var totalCreditos = HistoricoContas.Sum(x => x.Conta.ValorAlvara);
-                    var totalDebitos = HistoricoContas.Sum(x => x.Conta.ValorConta);
-                    var saldoFinal = totalCreditos - totalDebitos;
-
-                    page.Size(PageSizes.A4.Landscape());
-                    page.Margin(28);
-                    page.Header().Column(col =>
+                    p.Margin(20);
+                    p.Header().Column(col =>
                     {
-                        col.Item().Text("Prestação de Contas").Bold().FontSize(18);
-                        col.Item().Text($"Processo: {_processoId}");
-                        col.Item().Text($"Gerado em {DateTime.Now:dd/MM/yyyy HH:mm}");
-                        col.Item().PaddingTop(6).LineHorizontal(1);
+                        col.Item().Text("[Logo da instituição]").Bold();
+                        col.Item().Text("Órgão Responsável");
+                        col.Item().Text($"Processo: {conta.ProcessoId}");
+                        col.Item().Text($"Tipo da prestação: {conta.TipoLancamento}").Bold();
                     });
 
-                    page.Content().Table(table =>
+                    p.Content().Column(col =>
                     {
-                        table.ColumnsDefinition(columns =>
-                        {
-                            columns.RelativeColumn(1.2f);
-                            columns.RelativeColumn(1.4f);
-                            columns.RelativeColumn(2.6f);
-                            columns.RelativeColumn(1.3f);
-                            columns.RelativeColumn(1.3f);
-                            columns.RelativeColumn(1.4f);
-                        });
+                        col.Item().PaddingTop(10).Text("Dados Gerais").Bold();
+                        col.Item().Text($"Responsável: {conta.Responsavel}");
+                        col.Item().Text($"Data: {conta.DataMovimentacao}");
+                        col.Item().Text($"Valor total: {conta.ValorConta.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))}");
+                        col.Item().Text($"Status: {conta.StatusConta}");
+                        col.Item().PaddingTop(10).Text("Dados específicos").Bold();
+                        foreach (var campo in campos)
+                            col.Item().Text($"{campo.Key}: {campo.Value}");
 
-                        table.Header(h =>
-                        {
-                            h.Cell().Text("Data").Bold();
-                            h.Cell().Text("Tipo").Bold();
-                            h.Cell().Text("Histórico").Bold();
-                            h.Cell().AlignRight().Text("Entrada").Bold();
-                            h.Cell().AlignRight().Text("Saída").Bold();
-                            h.Cell().AlignRight().Text("Saldo").Bold();
-                        });
+                        col.Item().PaddingTop(10).Text("Anexos").Bold();
+                        foreach (var anexo in anexos)
+                            col.Item().Text($"- {anexo}");
 
-                        foreach (var linha in HistoricoContas)
-                        {
-                            table.Cell().Text(linha.Conta.DataMovimentacao);
-                            table.Cell().Text(linha.Conta.TipoLancamento);
-                            table.Cell().Text(linha.Conta.Historico);
-                            table.Cell().AlignRight().Text(t =>
-                            {
-                                var cor = linha.Conta.ValorAlvara > 0 ? Colors.Green.Darken1 : Colors.Grey.Medium;
-                                t.Span(linha.Conta.ValorAlvara.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))).FontColor(cor);
-                            });
-                            table.Cell().AlignRight().Text(t =>
-                            {
-                                var cor = linha.Conta.ValorConta > 0 ? Colors.Red.Darken1 : Colors.Grey.Medium;
-                                t.Span(linha.Conta.ValorConta.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))).FontColor(cor);
-                            });
-                            table.Cell().AlignRight().Text(linha.SaldoParcial.ToString("C", CultureInfo.GetCultureInfo("pt-BR")));
-                        }
-                    });
-
-                    page.Footer().PaddingTop(10).Column(col =>
-                    {
-                        col.Item().LineHorizontal(1);
-                        col.Item().PaddingTop(6).Row(r =>
-                        {
-                            r.RelativeItem().Text($"Total de Créditos: {totalCreditos.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))}").FontColor(Colors.Green.Darken2);
-                            r.RelativeItem().AlignCenter().Text($"Total de Débitos: {totalDebitos.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))}").FontColor(Colors.Red.Darken2);
-                            r.RelativeItem().AlignRight().Text($"Saldo Final: {saldoFinal.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))}").Bold();
-                        });
+                        col.Item().PaddingTop(18).Text("Assinaturas: ______________________________");
                     });
                 });
-            }).GeneratePdf(dlg.FileName);
+            }).GeneratePdf(destino);
 
-            System.Windows.MessageBox.Show("PDF de prestação de contas gerado com sucesso.");
+            conta.PdfPath = destino;
+            PersistirPrestacao(conta);
+            RegistrarHistorico(conta.Id, "PDF gerado", "PDF gerado");
+            CarregarHistorico(conta.Id);
+            MessageBox.Show("PDF gerado com sucesso.");
         }
 
         [RelayCommand]
-        private void FecharConta()
+        private void AdicionarAnexo()
         {
-            if (ContaSelecionada == null)
+            if (string.IsNullOrWhiteSpace(NovoAnexo))
                 return;
 
-            _service.FecharConta(ContaSelecionada.Id);
-            _historicoService.Registrar(_processoId, "Conta fechada", $"{MontarResumoConta(ContaSelecionada)}. Status: fechada.");
-            _auditService.Registrar("Conta.Fechada", "processo", _processoId, $"Conta {ContaSelecionada.Id} fechada");
-            Carregar();
+            Anexos.Add(NovoAnexo.Trim());
+            NovoAnexo = string.Empty;
         }
 
-        private bool ValidarConta(Conta conta)
+        [RelayCommand]
+        private void RemoverAnexo(string? anexo)
         {
-            if (string.IsNullOrWhiteSpace(conta.TipoLancamento))
+            if (string.IsNullOrWhiteSpace(anexo))
+                return;
+
+            Anexos.Remove(anexo);
+        }
+
+        [RelayCommand]
+        private void CarregarPrestacaoSelecionada()
+        {
+            if (PrestacaoSelecionada is null)
+                return;
+
+            PrestacaoId = PrestacaoSelecionada.Id;
+            NumeroProcesso = PrestacaoSelecionada.ProcessoId;
+            DataPrestacao = PrestacaoSelecionada.DataMovimentacao;
+            ValorTotal = PrestacaoSelecionada.ValorConta;
+            Responsavel = PrestacaoSelecionada.Responsavel;
+            Observacoes = PrestacaoSelecionada.Observacoes ?? string.Empty;
+            Status = ParseStatus(PrestacaoSelecionada.StatusConta);
+            TipoSelecionado = Enum.TryParse<TipoPrestacao>(PrestacaoSelecionada.TipoLancamento, true, out var tipo) ? tipo : null;
+
+            var campos = JsonSerializer.Deserialize<Dictionary<string, string>>(PrestacaoSelecionada.CamposEspecificosJson ?? "{}") ?? new();
+            DataInicio = campos.GetValueOrDefault("Data Início", string.Empty);
+            DataFim = campos.GetValueOrDefault("Data Fim", string.Empty);
+            Destino = campos.GetValueOrDefault("Destino", string.Empty);
+            Justificativa = campos.GetValueOrDefault("Justificativa", string.Empty);
+            NumeroDocumentoFiscal = campos.GetValueOrDefault("Número Documento Fiscal", string.Empty);
+            DataDocumento = campos.GetValueOrDefault("Data Documento", string.Empty);
+            CnpjFornecedor = campos.GetValueOrDefault("CNPJ Fornecedor", string.Empty);
+            DescricaoServico = campos.GetValueOrDefault("Descrição Serviço", string.Empty);
+            ValorDocumento = decimal.TryParse(campos.GetValueOrDefault("Valor Documento"), out var vd) ? vd : 0;
+            NumeroConvenio = campos.GetValueOrDefault("Número Convênio", string.Empty);
+            OrgaoRepassador = campos.GetValueOrDefault("Órgão Repassador", string.Empty);
+            PeriodoExecucao = campos.GetValueOrDefault("Período Execução", string.Empty);
+            RelatorioDetalhado = campos.GetValueOrDefault("Relatório Detalhado", string.Empty);
+            DetalhesOutroTipo = campos.GetValueOrDefault("Detalhes", string.Empty);
+
+            Anexos.Clear();
+            foreach (var item in JsonSerializer.Deserialize<List<string>>(PrestacaoSelecionada.AnexosJson ?? "[]") ?? new())
+                Anexos.Add(item);
+
+            CarregarHistorico(PrestacaoSelecionada.Id);
+        }
+
+        private void InicializarNovaPrestacao()
+        {
+            PrestacaoId = string.Empty;
+            DataPrestacao = DateTime.Now.ToString("dd/MM/yyyy");
+            ValorTotal = 0;
+            Observacoes = string.Empty;
+            Status = PrestacaoStatus.Rascunho;
+            DataInicio = DataFim = Destino = Justificativa = string.Empty;
+            NumeroDocumentoFiscal = DataDocumento = CnpjFornecedor = DescricaoServico = string.Empty;
+            ValorDocumento = 0;
+            NumeroConvenio = OrgaoRepassador = PeriodoExecucao = RelatorioDetalhado = DetalhesOutroTipo = string.Empty;
+            Anexos.Clear();
+            Historico.Clear();
+        }
+
+        private void CarregarPrestacoes()
+        {
+            PrestacoesRealizadas.Clear();
+            foreach (var item in _contaService.ListarPorProcesso(_processoId).OrderByDescending(x => ParseData(x.UltimaModificacao) ?? DateTime.MinValue))
+                PrestacoesRealizadas.Add(item);
+        }
+
+        private bool ValidarFinalizacao()
+        {
+            if (!TipoSelecionado.HasValue || string.IsNullOrWhiteSpace(NumeroProcesso) || string.IsNullOrWhiteSpace(DataPrestacao)
+                || ValorTotal <= 0 || string.IsNullOrWhiteSpace(Responsavel))
             {
-                System.Windows.MessageBox.Show("Tipo de lançamento obrigatório.");
+                MessageBox.Show("Preencha todos os campos obrigatórios fixos e valor total > 0.");
                 return false;
             }
 
-            if (!DateTime.TryParse(conta.DataMovimentacao, out _))
+            if (!DateTime.TryParse(DataPrestacao, out _))
             {
-                System.Windows.MessageBox.Show("Data da movimentação inválida.");
+                MessageBox.Show("Data da prestação inválida.");
                 return false;
             }
 
-            var tipoLancamento = conta.TipoLancamento ?? string.Empty;
-            var contaEhAlvara = string.Equals(tipoLancamento, "Alvará", StringComparison.OrdinalIgnoreCase);
-            var contaEhTratamento = string.Equals(tipoLancamento, "Tratamento", StringComparison.OrdinalIgnoreCase);
-            var contaEhDespesaGeral = string.Equals(tipoLancamento, "Despesa Geral", StringComparison.OrdinalIgnoreCase);
-
-            if (contaEhAlvara)
+            if (IsDiaria)
             {
-                if (string.IsNullOrWhiteSpace(conta.MovProcesso) || string.Equals(conta.MovProcesso, "Anexo", StringComparison.OrdinalIgnoreCase))
+                if (!DateTime.TryParse(DataInicio, out var ini) || !DateTime.TryParse(DataFim, out var fim) || ini > fim
+                    || string.IsNullOrWhiteSpace(Destino) || string.IsNullOrWhiteSpace(Justificativa))
                 {
-                    System.Windows.MessageBox.Show("Movimento processual é obrigatório para Alvará.");
-                    return false;
-                }
-
-                if (!EhMovimentoValido(conta.MovProcesso))
-                {
-                    System.Windows.MessageBox.Show("Movimento processual deve conter apenas números e pontos.");
-                    return false;
-                }
-
-                if (conta.ValorAlvara <= 0)
-                {
-                    System.Windows.MessageBox.Show("Valor do Alvará deve ser maior que zero.");
-                    return false;
-                }
-
-                if (string.IsNullOrWhiteSpace(conta.NumNfAlvara))
-                {
-                    System.Windows.MessageBox.Show("Número de NF/Alvará é obrigatório para lançamentos do tipo Alvará.");
-                    return false;
-                }
-            }
-            else
-            {
-                if (contaEhTratamento)
-                {
-                    conta.MovProcesso = string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase)
-                        ? MovimentoContaDigitado?.Trim()
-                        : "Anexo";
-
-                    if (string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(conta.MovProcesso))
-                    {
-                        System.Windows.MessageBox.Show("Informe o número do movimento processual quando o modo for Digitar.");
-                        return false;
-                    }
-
-                    if (string.Equals(ModoMovimentoConta, "Digitar", StringComparison.OrdinalIgnoreCase) && !EhMovimentoValido(conta.MovProcesso))
-                    {
-                        System.Windows.MessageBox.Show("Movimento processual deve conter apenas números e pontos.");
-                        return false;
-                    }
-                }
-                else
-                {
-                    conta.MovProcesso = "Anexo";
-                }
-
-                if (conta.ValorConta <= 0)
-                {
-                    System.Windows.MessageBox.Show("Valor da Conta deve ser maior que zero.");
-                    return false;
-                }
-
-                if (contaEhTratamento)
-                {
-                    if (string.IsNullOrWhiteSpace(conta.TerapiaMedicamentoNome))
-                    {
-                        System.Windows.MessageBox.Show("Informe a terapia/medicamento para o tipo Tratamento.");
-                        return false;
-                    }
-
-                    if (string.IsNullOrWhiteSpace(conta.NumNfAlvara))
-                    {
-                        System.Windows.MessageBox.Show("Número da NF é obrigatório para Tratamento.");
-                        return false;
-                    }
-
-                    if (string.IsNullOrWhiteSpace(conta.Quantidade) || !int.TryParse(conta.Quantidade, out var quantidade) || quantidade <= 0)
-                    {
-                        System.Windows.MessageBox.Show("Informe uma quantidade válida para o tratamento.");
-                        return false;
-                    }
-
-                    if (string.IsNullOrWhiteSpace(conta.MesReferencia) || !int.TryParse(conta.MesReferencia, out var mes) || mes < 1 || mes > 12)
-                    {
-                        System.Windows.MessageBox.Show("Informe o mês de referência do tratamento (1 a 12).");
-                        return false;
-                    }
-                }
-
-                if (contaEhDespesaGeral && string.IsNullOrWhiteSpace(NomeDespesaGeral))
-                {
-                    System.Windows.MessageBox.Show("Informe o nome da despesa geral.");
+                    MessageBox.Show("Dados de diária inválidos. Verifique período e campos obrigatórios.");
                     return false;
                 }
             }
 
-            var exigeTerapiaManual = contaEhTratamento
-                && string.Equals(conta.TerapiaMedicamentoNome, "OUTRO", StringComparison.OrdinalIgnoreCase);
-            if (exigeTerapiaManual && string.IsNullOrWhiteSpace(TerapiaManual))
+            if (IsReembolso)
             {
-                System.Windows.MessageBox.Show("Informe a terapia/medicamento manual.");
+                if (string.IsNullOrWhiteSpace(NumeroDocumentoFiscal) || !DateTime.TryParse(DataDocumento, out _)
+                    || string.IsNullOrWhiteSpace(CnpjFornecedor) || string.IsNullOrWhiteSpace(DescricaoServico)
+                    || ValorDocumento <= 0 || Anexos.Count == 0)
+                {
+                    MessageBox.Show("Reembolso exige documento fiscal válido e anexo obrigatório.");
+                    return false;
+                }
+            }
+
+            if (IsConvenio && (string.IsNullOrWhiteSpace(NumeroConvenio) || string.IsNullOrWhiteSpace(OrgaoRepassador)
+                || string.IsNullOrWhiteSpace(PeriodoExecucao) || string.IsNullOrWhiteSpace(RelatorioDetalhado)))
+            {
+                MessageBox.Show("Convênio exige relatório detalhado e dados obrigatórios.");
+                return false;
+            }
+
+            if (IsOutro && string.IsNullOrWhiteSpace(DetalhesOutroTipo))
+            {
+                MessageBox.Show("Informe a descrição detalhada para o tipo Outro.");
                 return false;
             }
 
             return true;
         }
 
-        private void AplicarRegraTipoLancamento(Conta conta)
+        private Conta ConstruirConta(PrestacaoStatus status)
         {
-            if (string.Equals(conta.TipoLancamento, "Alvará", StringComparison.OrdinalIgnoreCase))
-            {
-                conta.ValorConta = 0m;
-                conta.TerapiaMedicamentoNome = null;
-                conta.Quantidade = null;
-                conta.MesReferencia = null;
-                conta.AnoReferencia = null;
-            }
-            else if (string.Equals(conta.TipoLancamento, "Tratamento", StringComparison.OrdinalIgnoreCase))
-            {
-                conta.ValorAlvara = 0m;
-            }
-            else if (string.Equals(conta.TipoLancamento, "Despesa Geral", StringComparison.OrdinalIgnoreCase))
-            {
-                conta.ValorAlvara = 0m;
-                conta.Quantidade = null;
-                conta.MesReferencia = null;
-                conta.AnoReferencia = null;
-            }
-        }
+            var id = string.IsNullOrWhiteSpace(PrestacaoId) ? Guid.NewGuid().ToString() : PrestacaoId;
+            PrestacaoId = id;
+            Status = status;
 
-        private void PrepararContaParaPersistencia(Conta conta, bool definirComoLancado)
-        {
-            AplicarRegraTipoLancamento(conta);
-
-            var contaEhTratamento = string.Equals(conta.TipoLancamento, "Tratamento", StringComparison.OrdinalIgnoreCase);
-            var contaEhDespesaGeral = string.Equals(conta.TipoLancamento, "Despesa Geral", StringComparison.OrdinalIgnoreCase);
-            var terapiaOutroSelecionada = contaEhTratamento
-                && string.Equals(conta.TerapiaMedicamentoNome, "OUTRO", StringComparison.OrdinalIgnoreCase);
-
-            if (terapiaOutroSelecionada)
-                conta.TerapiaMedicamentoNome = TerapiaManual.Trim();
-
-            // Para Despesa Geral, armazena o nome da despesa no campo TerapiaMedicamentoNome (usado pelo histórico)
-            if (contaEhDespesaGeral && !string.IsNullOrWhiteSpace(NomeDespesaGeral))
-                conta.TerapiaMedicamentoNome = NomeDespesaGeral.Trim();
-
-            conta.Historico = MontarHistoricoConta(conta);
-            conta.Responsavel = string.IsNullOrWhiteSpace(conta.Responsavel)
-                ? App.Session.UsuarioAtual?.Nome ?? "Sistema"
-                : conta.Responsavel.Trim();
-
-            conta.StatusConta = definirComoLancado ? "lancado" : "rascunho";
-        }
-
-        private static bool EhMovimentoValido(string? valor)
-        {
-            if (string.IsNullOrWhiteSpace(valor))
-                return false;
-
-            return valor.All(c => char.IsDigit(c) || c == '.');
-        }
-
-        private static string MontarHistoricoConta(Conta conta)
-        {
-            if (string.Equals(conta.TipoLancamento, "Alvará", StringComparison.OrdinalIgnoreCase))
-                return $"Recebimento de Alvará {(string.IsNullOrWhiteSpace(conta.NumNfAlvara) ? string.Empty : $"(NF/Alvará: {conta.NumNfAlvara})")}".Trim();
-
-            if (string.Equals(conta.TipoLancamento, "Tratamento", StringComparison.OrdinalIgnoreCase))
-            {
-                var historico = conta.TerapiaMedicamentoNome?.Trim() ?? string.Empty;
-                if (!string.IsNullOrWhiteSpace(conta.Quantidade))
-                    historico += $" - {conta.Quantidade} un.";
-                if (!string.IsNullOrWhiteSpace(conta.MesReferencia) && !string.IsNullOrWhiteSpace(conta.AnoReferencia))
-                    historico += $" - Ref: {conta.MesReferencia}/{conta.AnoReferencia}";
-                if (!string.IsNullOrWhiteSpace(conta.Observacoes))
-                    historico += $" ({conta.Observacoes.Trim()})";
-                return historico.Trim();
-            }
-
-            if (string.Equals(conta.TipoLancamento, "Despesa Geral", StringComparison.OrdinalIgnoreCase))
-                return $"Despesa Geral: {conta.TerapiaMedicamentoNome ?? string.Empty} {(string.IsNullOrWhiteSpace(conta.NumNfAlvara) ? string.Empty : $"(NF/Alvará: {conta.NumNfAlvara})")}".Trim();
-
-            return conta.Historico?.Trim() ?? string.Empty;
-        }
-
-        public void AtualizarValorAlvaraTexto(string texto)
-        {
-            EdicaoConta.ValorAlvara = ParseMoeda(texto);
-            OnPropertyChanged(nameof(ValorAlvaraTexto));
-        }
-
-        public void AtualizarValorContaTexto(string texto)
-        {
-            EdicaoConta.ValorConta = ParseMoeda(texto);
-            OnPropertyChanged(nameof(ValorContaTexto));
-        }
-
-        public string ValorAlvaraTexto => FormatarMoeda(EdicaoConta.ValorAlvara);
-        public string ValorContaTexto => FormatarMoeda(EdicaoConta.ValorConta);
-
-        private static decimal ParseMoeda(string? texto)
-        {
-            if (string.IsNullOrWhiteSpace(texto))
-                return 0m;
-
-            var limpo = new string(texto.Where(c => char.IsDigit(c) || c == ',' || c == '.').ToArray());
-            if (decimal.TryParse(limpo, NumberStyles.Any, CultureInfo.GetCultureInfo("pt-BR"), out var valor))
-                return valor;
-
-            return 0m;
-        }
-
-        private static string FormatarMoeda(decimal valor)
-        {
-            if (valor <= 0m)
-                return string.Empty;
-
-            return valor.ToString("C", CultureInfo.GetCultureInfo("pt-BR"));
-        }
-
-        private static DateTime? ParseData(string? valor)
-        {
-            if (DateTime.TryParse(valor, out var parsed))
-                return parsed;
-
-            return null;
-        }
-
-        private static Conta CloneConta(Conta origem)
-        {
             return new Conta
             {
-                Id = origem.Id,
-                ProcessoId = origem.ProcessoId,
-                TipoLancamento = origem.TipoLancamento,
-                Historico = origem.Historico,
-                DataMovimentacao = origem.DataMovimentacao,
-                MovProcesso = origem.MovProcesso,
-                NumNfAlvara = origem.NumNfAlvara,
-                ValorAlvara = origem.ValorAlvara,
-                ValorConta = origem.ValorConta,
-                TerapiaMedicamentoNome = origem.TerapiaMedicamentoNome,
-                Quantidade = origem.Quantidade,
-                MesReferencia = origem.MesReferencia,
-                AnoReferencia = origem.AnoReferencia,
-                StatusConta = origem.StatusConta,
-                Responsavel = origem.Responsavel,
-                Observacoes = origem.Observacoes
+                Id = id,
+                ProcessoId = NumeroProcesso,
+                TipoLancamento = TipoSelecionado?.ToString() ?? string.Empty,
+                DataMovimentacao = DataPrestacao,
+                ValorConta = ValorTotal,
+                Responsavel = Responsavel,
+                Observacoes = Observacoes,
+                Historico = "Prestação de contas",
+                StatusConta = status.ToString(),
+                CamposEspecificosJson = JsonSerializer.Serialize(ObterCamposEspecificos()),
+                AnexosJson = JsonSerializer.Serialize(Anexos.ToList())
             };
         }
 
-        private void CarregarRascunhos()
+        private Dictionary<string, string> ObterCamposEspecificos()
         {
-            ContasRascunho.Clear();
+            var campos = new Dictionary<string, string>();
+            if (IsDiaria)
+            {
+                campos["Data Início"] = DataInicio;
+                campos["Data Fim"] = DataFim;
+                campos["Destino"] = Destino;
+                campos["Justificativa"] = Justificativa;
+                campos["Valor por Dia"] = ValorPorDia.ToString("N2");
+            }
+            else if (IsReembolso)
+            {
+                campos["Número Documento Fiscal"] = NumeroDocumentoFiscal;
+                campos["Data Documento"] = DataDocumento;
+                campos["CNPJ Fornecedor"] = CnpjFornecedor;
+                campos["Descrição Serviço"] = DescricaoServico;
+                campos["Valor Documento"] = ValorDocumento.ToString("N2");
+            }
+            else if (IsConvenio)
+            {
+                campos["Número Convênio"] = NumeroConvenio;
+                campos["Órgão Repassador"] = OrgaoRepassador;
+                campos["Período Execução"] = PeriodoExecucao;
+                campos["Relatório Detalhado"] = RelatorioDetalhado;
+            }
+            else if (IsOutro)
+            {
+                campos["Detalhes"] = DetalhesOutroTipo;
+            }
+            return campos;
+        }
 
-            var caminho = ObterCaminhoRascunho();
-            if (!File.Exists(caminho))
+        private void PersistirPrestacao(Conta conta)
+        {
+            var existente = _contaService.ListarPorProcesso(_processoId).Any(x => x.Id == conta.Id);
+            if (existente)
+                _contaService.Atualizar(conta);
+            else
+                _contaService.Inserir(conta);
+
+            CarregarHistorico(conta.Id);
+            OnPropertyChanged(nameof(GerarPdfHabilitado));
+            OnPropertyChanged(nameof(StatusCor));
+            OnPropertyChanged(nameof(StatusDescricao));
+        }
+
+        private void RegistrarHistorico(string prestacaoId, string acao, string observacao)
+        {
+            using var conn = _databaseService.GetConnection();
+            conn.Execute(@"INSERT INTO prestacao_historico (id, processo_id, prestacao_id, data, usuario, acao, observacao)
+VALUES (@Id,@ProcessoId,@PrestacaoId,@Data,@Usuario,@Acao,@Observacao)", new
+            {
+                Id = Guid.NewGuid().ToString(),
+                ProcessoId = _processoId,
+                PrestacaoId = prestacaoId,
+                Data = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                Usuario = App.Session.UsuarioAtual?.Nome ?? "Sistema",
+                Acao = acao,
+                Observacao = observacao
+            });
+        }
+
+        private void CarregarHistorico(string prestacaoId)
+        {
+            Historico.Clear();
+            using var conn = _databaseService.GetConnection();
+            var itens = conn.Query<HistoricoPrestacaoLinha>(@"SELECT data as Data, usuario as Usuario, acao as Acao, observacao as Observacao
+FROM prestacao_historico WHERE prestacao_id=@PrestacaoId ORDER BY data DESC", new { PrestacaoId = prestacaoId }).ToList();
+
+            foreach (var item in itens)
+            {
+                Historico.Add(new HistoricoPrestacao
+                {
+                    Data = DateTime.TryParse(item.Data, out var data) ? data : DateTime.Now,
+                    Usuario = item.Usuario,
+                    Acao = item.Acao,
+                    Observacao = item.Observacao
+                });
+            }
+        }
+
+        private void RecalcularValorDiaria()
+        {
+            if (!IsDiaria || !DateTime.TryParse(DataInicio, out var ini) || !DateTime.TryParse(DataFim, out var fim) || fim < ini)
+            {
+                ValorPorDia = 0;
                 return;
-
-            try
-            {
-                var conteudo = File.ReadAllText(caminho);
-                var itens = JsonSerializer.Deserialize<List<Conta>>(conteudo) ?? new List<Conta>();
-                foreach (var item in itens)
-                    ContasRascunho.Add(item);
             }
-            catch
-            {
-                File.Delete(caminho);
-            }
+
+            var dias = (fim - ini).Days + 1;
+            ValorPorDia = dias > 0 ? ValorTotal / dias : 0;
         }
 
-        private void PersistirRascunhos()
+        private static DateTime? ParseData(string? valor)
+            => DateTime.TryParse(valor, out var data) ? data : null;
+
+        private static PrestacaoStatus ParseStatus(string? status)
+            => Enum.TryParse<PrestacaoStatus>(status, true, out var parsed) ? parsed : PrestacaoStatus.Rascunho;
+
+        private class HistoricoPrestacaoLinha
         {
-            var caminho = ObterCaminhoRascunho();
-            var pasta = Path.GetDirectoryName(caminho);
-            if (!string.IsNullOrWhiteSpace(pasta))
-                Directory.CreateDirectory(pasta);
-
-            var json = JsonSerializer.Serialize(ContasRascunho.ToList());
-            File.WriteAllText(caminho, json);
+            public string Data { get; set; } = string.Empty;
+            public string Usuario { get; set; } = string.Empty;
+            public string Acao { get; set; } = string.Empty;
+            public string Observacao { get; set; } = string.Empty;
         }
-
-        private string ObterCaminhoRascunho()
-        {
-            var basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SistemaJuridico", "contas-rascunho");
-            var usuario = App.Session.UsuarioAtual?.Id ?? "anonimo";
-            var processo = string.IsNullOrWhiteSpace(_processoId) ? "sem-processo" : _processoId;
-            return Path.Combine(basePath, $"{usuario}-{processo}.json");
-        }
-
-        private static string MontarResumoConta(Conta conta)
-        {
-            return $"Data {conta.DataMovimentacao}, tipo {conta.TipoLancamento}, mov. {conta.MovProcesso ?? "N/A"}, " +
-                   $"entrada {conta.ValorAlvara.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))}, " +
-                   $"saída {conta.ValorConta.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))}, histórico: {conta.Historico}";
-        }
-    }
-
-    public class ContaHistoricoLinha
-    {
-        public ContaHistoricoLinha(Conta conta, decimal saldoParcial)
-        {
-            Conta = conta;
-            SaldoParcial = saldoParcial;
-        }
-
-        public Conta Conta { get; }
-        public decimal SaldoParcial { get; }
     }
 }

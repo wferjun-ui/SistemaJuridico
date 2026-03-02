@@ -18,7 +18,11 @@ namespace SistemaJuridico.Models
         public string StatusConta { get; set; } = "rascunho";
         public string Responsavel { get; set; } = "";
         public string? Observacoes { get; set; }
-        public bool PodeEditar => StatusConta == "rascunho";
+        public string? CamposEspecificosJson { get; set; }
+        public string? AnexosJson { get; set; }
+        public string? PdfPath { get; set; }
+        public string? UltimaModificacao { get; set; }
+        public bool PodeEditar => !string.Equals(StatusConta, "finalizada", StringComparison.OrdinalIgnoreCase);
 
         public string Status { get => StatusConta; set => StatusConta = value; }
         public string DataLancamento { get => DataMovimentacao; set => DataMovimentacao = value; }

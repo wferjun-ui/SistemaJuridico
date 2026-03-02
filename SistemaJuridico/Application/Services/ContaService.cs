@@ -33,7 +33,11 @@ namespace SistemaJuridico.Services
                     ano_referencia as AnoReferencia,
                     status_conta as StatusConta,
                     responsavel as Responsavel,
-                    observacoes as Observacoes
+                    observacoes as Observacoes,
+                    campos_especificos_json as CamposEspecificosJson,
+                    anexos_json as AnexosJson,
+                    pdf_path as PdfPath,
+                    ultima_modificacao as UltimaModificacao
                 FROM contas
                 WHERE processo_id=@id
                 ORDER BY data_movimentacao
@@ -60,7 +64,11 @@ SELECT
     ano_referencia as AnoReferencia,
     status_conta as StatusConta,
     responsavel as Responsavel,
-    observacoes as Observacoes
+    observacoes as Observacoes,
+    campos_especificos_json as CamposEspecificosJson,
+    anexos_json as AnexosJson,
+    pdf_path as PdfPath,
+    ultima_modificacao as UltimaModificacao
 FROM contas").ToList();
         }
 
@@ -76,7 +84,7 @@ FROM contas").ToList();
                     mov_processo, num_nf_alvara,
                     valor_alvara, valor_conta,
                     terapia_medicamento_nome, quantidade, mes_referencia, ano_referencia,
-                    status_conta, responsavel, observacoes
+                    status_conta, responsavel, observacoes, campos_especificos_json, anexos_json, pdf_path, ultima_modificacao
                 )
                 VALUES (
                     @Id, @ProcessoId, @TipoLancamento,
@@ -84,7 +92,7 @@ FROM contas").ToList();
                     @MovProcesso, @NumNfAlvara,
                     @ValorAlvara, @ValorConta,
                     @TerapiaMedicamentoNome, @Quantidade, @MesReferencia, @AnoReferencia,
-                    @StatusConta, @Responsavel, @Observacoes
+                    @StatusConta, @Responsavel, @Observacoes, @CamposEspecificosJson, @AnexosJson, @PdfPath, @UltimaModificacao
                 )
             ", conta);
         }
@@ -106,7 +114,12 @@ FROM contas").ToList();
                     quantidade=@Quantidade,
                     mes_referencia=@MesReferencia,
                     ano_referencia=@AnoReferencia,
-                    observacoes=@Observacoes
+                    observacoes=@Observacoes,
+                    campos_especificos_json=@CamposEspecificosJson,
+                    anexos_json=@AnexosJson,
+                    pdf_path=@PdfPath,
+                    ultima_modificacao=@UltimaModificacao,
+                    status_conta=@StatusConta
                 WHERE id=@Id
             ", conta);
         }
