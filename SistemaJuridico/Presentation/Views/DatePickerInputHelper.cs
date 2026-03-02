@@ -3,6 +3,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using WpfButton = System.Windows.Controls.Button;
+using WpfDataObject = System.Windows.DataObject;
+using WpfHorizontalAlignment = System.Windows.HorizontalAlignment;
 
 namespace SistemaJuridico.Views
 {
@@ -12,7 +15,7 @@ namespace SistemaJuridico.Views
         {
             datePicker.ApplyTemplate();
 
-            var button = datePicker.Template.FindName("PART_Button", datePicker) as Button;
+            var button = datePicker.Template.FindName("PART_Button", datePicker) as WpfButton;
             if (button != null)
                 button.Visibility = Visibility.Collapsed;
 
@@ -20,7 +23,7 @@ namespace SistemaJuridico.Views
             if (textBox == null)
                 return;
 
-            textBox.HorizontalAlignment = HorizontalAlignment.Stretch;
+            textBox.HorizontalAlignment = WpfHorizontalAlignment.Stretch;
 
             textBox.PreviewMouseLeftButtonDown -= OnPreviewMouseLeftButtonDown;
             textBox.PreviewMouseLeftButtonDown += OnPreviewMouseLeftButtonDown;
@@ -28,8 +31,8 @@ namespace SistemaJuridico.Views
             textBox.PreviewTextInput -= OnPreviewTextInput;
             textBox.PreviewTextInput += OnPreviewTextInput;
 
-            DataObject.RemovePastingHandler(textBox, OnPaste);
-            DataObject.AddPastingHandler(textBox, OnPaste);
+            WpfDataObject.RemovePastingHandler(textBox, OnPaste);
+            WpfDataObject.AddPastingHandler(textBox, OnPaste);
 
             textBox.TextChanged -= OnTextChanged;
             textBox.TextChanged += OnTextChanged;
