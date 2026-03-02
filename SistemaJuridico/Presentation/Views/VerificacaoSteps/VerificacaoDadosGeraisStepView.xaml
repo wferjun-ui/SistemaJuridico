@@ -1,0 +1,22 @@
+<UserControl x:Class="SistemaJuridico.Views.VerificacaoSteps.VerificacaoDadosGeraisStepView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <GroupBox Header="Status do Processo" Margin="0,0,0,10">
+        <Grid Margin="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                <TextBlock Text="Status" Margin="0,0,0,4"/>
+                <TextBox Text="{Binding Parent.StatusProcesso, UpdateSourceTrigger=PropertyChanged}"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1">
+                <TextBlock Text="Responsável" Margin="0,0,0,4"/>
+                <TextBox Text="{Binding Parent.Responsavel, UpdateSourceTrigger=PropertyChanged}"/>
+            </StackPanel>
+        </Grid>
+    </GroupBox>
+</UserControl>
