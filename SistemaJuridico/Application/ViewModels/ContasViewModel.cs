@@ -59,6 +59,7 @@ namespace SistemaJuridico.ViewModels
         public bool IsMovProcessoComboVisivel => IsTratamento || IsDespesaGeral;
         public bool ExibirCampoResponsavel => !IsAlvara;
         public bool ExibirCampoTerapia => IsTratamento;
+        public bool ExibirCamposReferenciaTratamento => IsTratamento;
         public string RotuloDataLancamento => IsAlvara ? "Data do Alvará *" : "Data da NF *";
         public string RotuloNumeroDocumento => IsAlvara ? "Nº Alvará *" : "Nº da NF *";
         public bool ExibirCampoTerapiaManual => IsTratamento && string.Equals(EdicaoConta.TerapiaMedicamentoNome, "OUTRO", StringComparison.OrdinalIgnoreCase);
@@ -96,6 +97,7 @@ namespace SistemaJuridico.ViewModels
             OnPropertyChanged(nameof(IsMovProcessoComboVisivel));
             OnPropertyChanged(nameof(ExibirCampoResponsavel));
             OnPropertyChanged(nameof(ExibirCampoTerapia));
+            OnPropertyChanged(nameof(ExibirCamposReferenciaTratamento));
             OnPropertyChanged(nameof(RotuloDataLancamento));
             OnPropertyChanged(nameof(RotuloNumeroDocumento));
             OnPropertyChanged(nameof(ExibirCampoTerapiaManual));
@@ -130,6 +132,7 @@ namespace SistemaJuridico.ViewModels
             OnPropertyChanged(nameof(IsMovProcessoComboVisivel));
             OnPropertyChanged(nameof(ExibirCampoResponsavel));
             OnPropertyChanged(nameof(ExibirCampoTerapia));
+            OnPropertyChanged(nameof(ExibirCamposReferenciaTratamento));
             OnPropertyChanged(nameof(RotuloDataLancamento));
             OnPropertyChanged(nameof(RotuloNumeroDocumento));
             OnPropertyChanged(nameof(ExibirCampoTerapiaManual));
@@ -650,6 +653,9 @@ namespace SistemaJuridico.ViewModels
             else if (string.Equals(conta.TipoLancamento, "Despesa Geral", StringComparison.OrdinalIgnoreCase))
             {
                 conta.ValorAlvara = 0m;
+                conta.Quantidade = null;
+                conta.MesReferencia = null;
+                conta.AnoReferencia = null;
             }
         }
 

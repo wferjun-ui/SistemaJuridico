@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Windows.Data;
 using System.Windows;
 using Button = System.Windows.Controls.Button;
+using DatePicker = System.Windows.Controls.DatePicker;
 using ScrollViewer = System.Windows.Controls.ScrollViewer;
 using TextBox = System.Windows.Controls.TextBox;
 using UserControl = System.Windows.Controls.UserControl;
@@ -33,6 +34,14 @@ namespace SistemaJuridico.Views
             var novoValor = Math.Max(0, valorAtual + delta);
             textBox.Text = novoValor.ToString();
             BindingOperations.GetBindingExpression(textBox, TextBox.TextProperty)?.UpdateSource();
+        }
+
+        private void DatePicker_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is not DatePicker datePicker)
+                return;
+
+            DatePickerInputHelper.Configure(datePicker);
         }
 
         private void VerificacaoScrollViewer_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)

@@ -15,6 +15,14 @@
             <Setter Property="Foreground" Value="#B91C1C"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
+        <Style x:Key="QuantidadeSpinnerButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="12"/>
+            <Setter Property="Height" Value="11"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="FontSize" Value="7"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
     </UserControl.Resources>
 
     <Grid Margin="10">
@@ -83,7 +91,7 @@
                 </StackPanel>
 
                 <!-- ===== ROW 1 (Tratamento/Despesa Geral): Mov. NF (Anexo/Digitar) | Mov digitado | Nº NF ===== -->
-                <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,8,6" Visibility="{Binding IsMovProcessoComboVisivel, Converter={StaticResource BoolToVis}}">
+                <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,8,6" Visibility="{Binding ExibirCamposReferenciaTratamento, Converter={StaticResource BoolToVis}}">
                     <TextBlock Text="Mov. processo *" FontWeight="SemiBold"/>
                     <ComboBox SelectedValue="{Binding ModoMovimentoConta, UpdateSourceTrigger=PropertyChanged}" SelectedValuePath="Content">
                         <ComboBoxItem Content="Anexo"/>
@@ -125,8 +133,8 @@
                     <TextBox Text="{Binding TerapiaManual, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
 
-                <!-- ===== ROW 3 (Tratamento + Despesa Geral): Quantidade (com ▲▼) | Mês Ref | Ano Ref ===== -->
-                <Grid Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,6" Visibility="{Binding IsMovProcessoComboVisivel, Converter={StaticResource BoolToVis}}">
+                <!-- ===== ROW 3 (Tratamento): Quantidade (com ▲▼) | Mês Ref | Ano Ref ===== -->
+                <Grid Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,6" Visibility="{Binding ExibirCamposReferenciaTratamento, Converter={StaticResource BoolToVis}}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
@@ -141,8 +149,8 @@
                             </Grid.ColumnDefinitions>
                             <TextBox x:Name="QtdContaTextBox" Grid.Column="0" Text="{Binding EdicaoConta.Quantidade, UpdateSourceTrigger=PropertyChanged}" MaxLength="12" VerticalContentAlignment="Center"/>
                             <StackPanel Grid.Column="1" Margin="1,0,0,0">
-                                <Button Content="▲" Width="14" Height="10" Padding="0" FontSize="7" Click="IncrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdContaTextBox}"/>
-                                <Button Content="▼" Width="14" Height="10" Padding="0" FontSize="7" Click="DecrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdContaTextBox}"/>
+                                <Button Content="▲" Style="{StaticResource QuantidadeSpinnerButtonStyle}" Click="IncrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdContaTextBox}"/>
+                                <Button Content="▼" Style="{StaticResource QuantidadeSpinnerButtonStyle}" Click="DecrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdContaTextBox}"/>
                             </StackPanel>
                         </Grid>
                     </StackPanel>

@@ -25,6 +25,14 @@
 
         <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
         <local:QuantidadeFaltanteConverter x:Key="QuantidadeFaltanteConverter"/>
+        <Style x:Key="QuantidadeSpinnerButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="12"/>
+            <Setter Property="Height" Value="11"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="FontSize" Value="7"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
     </UserControl.Resources>
 
     <Grid Margin="0,8,0,0">
@@ -127,11 +135,11 @@
                             <WrapPanel Margin="0,0,0,12">
                                 <StackPanel Margin="0,0,12,0">
                                     <TextBlock Text="Prazo da diligência" FontWeight="SemiBold"/>
-                                    <DatePicker Width="150" SelectedDateFormat="Short" Text="{Binding PrazoDiligencia, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
+                                    <DatePicker Width="150" SelectedDateFormat="Short" Text="{Binding PrazoDiligencia, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}" Loaded="DatePicker_Loaded"/>
                                 </StackPanel>
                                 <StackPanel>
                                     <TextBlock Text="Próxima verificação" FontWeight="SemiBold"/>
-                                    <DatePicker Width="150" SelectedDateFormat="Short" Text="{Binding ProximaVerificacao, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}"/>
+                                    <DatePicker Width="150" SelectedDateFormat="Short" Text="{Binding ProximaVerificacao, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding PodeAcessarAbaVerificacao}" Loaded="DatePicker_Loaded"/>
                                 </StackPanel>
                             </WrapPanel>
 
@@ -158,8 +166,8 @@
                                                         <DockPanel LastChildFill="False">
                                                             <TextBox x:Name="QtdTotalTextBox" Width="44" Height="22" HorizontalContentAlignment="Center" Padding="2,0" Text="{Binding Qtd, UpdateSourceTrigger=PropertyChanged}"/>
                                                             <StackPanel Margin="0,0,0,0">
-                                                                <Button Content="▲" Width="12" Height="9" Padding="0" FontSize="8" Click="IncrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdTotalTextBox}"/>
-                                                                <Button Content="▼" Width="12" Height="9" Padding="0" FontSize="8" Click="DecrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdTotalTextBox}"/>
+                                                                <Button Content="▲" Style="{StaticResource QuantidadeSpinnerButtonStyle}" Click="IncrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdTotalTextBox}"/>
+                                                                <Button Content="▼" Style="{StaticResource QuantidadeSpinnerButtonStyle}" Click="DecrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdTotalTextBox}"/>
                                                             </StackPanel>
                                                         </DockPanel>
                                                     </StackPanel>
@@ -169,8 +177,8 @@
                                                         <DockPanel LastChildFill="False">
                                                             <TextBox x:Name="QtdSusTextBox" Width="44" Height="22" HorizontalContentAlignment="Center" Padding="2,0" Text="{Binding QtdSus, UpdateSourceTrigger=PropertyChanged}"/>
                                                             <StackPanel Margin="0,0,0,0">
-                                                                <Button Content="▲" Width="12" Height="9" Padding="0" FontSize="8" Click="IncrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdSusTextBox}"/>
-                                                                <Button Content="▼" Width="12" Height="9" Padding="0" FontSize="8" Click="DecrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdSusTextBox}"/>
+                                                                <Button Content="▲" Style="{StaticResource QuantidadeSpinnerButtonStyle}" Click="IncrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdSusTextBox}"/>
+                                                                <Button Content="▼" Style="{StaticResource QuantidadeSpinnerButtonStyle}" Click="DecrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdSusTextBox}"/>
                                                             </StackPanel>
                                                         </DockPanel>
                                                     </StackPanel>
@@ -180,8 +188,8 @@
                                                         <DockPanel LastChildFill="False">
                                                             <TextBox x:Name="QtdParticularTextBox" Width="44" Height="22" HorizontalContentAlignment="Center" Padding="2,0" Text="{Binding QtdParticular, UpdateSourceTrigger=PropertyChanged}"/>
                                                             <StackPanel Margin="0,0,0,0">
-                                                                <Button Content="▲" Width="12" Height="9" Padding="0" FontSize="8" Click="IncrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdParticularTextBox}"/>
-                                                                <Button Content="▼" Width="12" Height="9" Padding="0" FontSize="8" Click="DecrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdParticularTextBox}"/>
+                                                                <Button Content="▲" Style="{StaticResource QuantidadeSpinnerButtonStyle}" Click="IncrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdParticularTextBox}"/>
+                                                                <Button Content="▼" Style="{StaticResource QuantidadeSpinnerButtonStyle}" Click="DecrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdParticularTextBox}"/>
                                                             </StackPanel>
                                                         </DockPanel>
                                                     </StackPanel>
@@ -204,7 +212,7 @@
 
                                                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                                                     <TextBlock Text="Data última prescrição:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                                    <DatePicker Width="160" SelectedDateFormat="Short" Text="{Binding DataPrescricao, UpdateSourceTrigger=PropertyChanged}"/>
+                                                    <DatePicker Width="160" SelectedDateFormat="Short" Text="{Binding DataPrescricao, UpdateSourceTrigger=PropertyChanged}" Loaded="DatePicker_Loaded"/>
                                                 </StackPanel>
                                             </StackPanel>
                                         </Border>
