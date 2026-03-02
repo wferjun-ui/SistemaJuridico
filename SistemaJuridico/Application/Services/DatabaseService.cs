@@ -205,6 +205,16 @@ CREATE TABLE IF NOT EXISTS active_sessions(
     last_process_paciente TEXT
 );
 
+CREATE TABLE IF NOT EXISTS prestacao_historico(
+    id TEXT PRIMARY KEY,
+    processo_id TEXT,
+    prestacao_id TEXT,
+    data TEXT,
+    usuario TEXT,
+    acao TEXT,
+    observacao TEXT
+);
+
 CREATE TABLE IF NOT EXISTS schema_version(
     versao INTEGER
 );
@@ -222,6 +232,11 @@ CREATE TABLE IF NOT EXISTS schema_version(
             AdicionarColunaSeNaoExistir(conn, "contas", "quantidade", "TEXT");
             AdicionarColunaSeNaoExistir(conn, "contas", "mes_referencia", "TEXT");
             AdicionarColunaSeNaoExistir(conn, "contas", "ano_referencia", "TEXT");
+
+            AdicionarColunaSeNaoExistir(conn, "contas", "campos_especificos_json", "TEXT");
+            AdicionarColunaSeNaoExistir(conn, "contas", "anexos_json", "TEXT");
+            AdicionarColunaSeNaoExistir(conn, "contas", "pdf_path", "TEXT");
+            AdicionarColunaSeNaoExistir(conn, "contas", "ultima_modificacao", "TEXT");
 
             AdicionarColunaSeNaoExistir(conn, "verificacoes", "diligencia_status", "TEXT");
             AdicionarColunaSeNaoExistir(conn, "verificacoes", "proxima_verificacao", "TEXT");
