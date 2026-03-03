@@ -26,12 +26,13 @@
         <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
         <local:QuantidadeFaltanteConverter x:Key="QuantidadeFaltanteConverter"/>
         <Style x:Key="QuantidadeSpinnerButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="12"/>
-            <Setter Property="Height" Value="11"/>
+            <Setter Property="Width" Value="16"/>
+            <Setter Property="Height" Value="12"/>
             <Setter Property="Padding" Value="0"/>
-            <Setter Property="FontSize" Value="7"/>
+            <Setter Property="FontSize" Value="8"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="2,0,0,0"/>
         </Style>
     </UserControl.Resources>
 
@@ -68,7 +69,7 @@
                     <ItemsControl ItemsSource="{Binding ItensSaude}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Margin="0,0,0,8" Padding="8" BorderThickness="1" BorderBrush="#E5E7EB" CornerRadius="8">
+                                <Border Margin="0,0,0,10" Padding="10" BorderThickness="1" BorderBrush="#E5E7EB" CornerRadius="8">
                                     <StackPanel>
                                         <TextBlock FontWeight="SemiBold" Text="{Binding Tipo, StringFormat={}{0}: }"/>
                                         <TextBlock Text="{Binding Nome}"/>
@@ -89,7 +90,7 @@
                 <TabItem Header="Verificação">
                     <ScrollViewer VerticalScrollBarVisibility="Auto"
                                   PreviewMouseWheel="VerificacaoScrollViewer_PreviewMouseWheel">
-                        <StackPanel Margin="4">
+                        <StackPanel Margin="0">
                             <Grid Margin="0,0,0,10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="2*"/>
@@ -147,11 +148,11 @@
                             <ItemsControl ItemsSource="{Binding ItensSaude}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Margin="0,0,0,8" Padding="8" BorderThickness="1" BorderBrush="#E5E7EB" CornerRadius="8">
+                                        <Border Margin="0,0,0,10" Padding="10" BorderThickness="1" BorderBrush="#E5E7EB" CornerRadius="8">
                                             <StackPanel>
                                                     <Grid>
                                                         <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="2*"/>
                                                         <ColumnDefinition Width="Auto"/>
                                                         <ColumnDefinition Width="Auto"/>
                                                         <ColumnDefinition Width="Auto"/>
@@ -164,40 +165,40 @@
                                                         <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" Margin="0,4,0,0"/>
                                                     </StackPanel>
 
-                                                    <StackPanel Grid.Column="1" Margin="0,0,8,0">
+                                                    <StackPanel Grid.Column="1" Margin="0,0,10,0">
                                                         <TextBlock Text="Qtd. total" FontSize="11"/>
-                                                        <DockPanel LastChildFill="False">
-                                                            <TextBox x:Name="QtdTotalTextBox" Width="44" Height="22" HorizontalContentAlignment="Center" Padding="2,0" Text="{Binding Qtd, UpdateSourceTrigger=PropertyChanged}"/>
-                                                            <StackPanel Margin="0,0,0,0">
+                                                        <DockPanel LastChildFill="False" Margin="0,4,0,0">
+                                                            <TextBox x:Name="QtdTotalTextBox" Width="52" Height="24" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="2,0" Text="{Binding Qtd, UpdateSourceTrigger=PropertyChanged}"/>
+                                                            <StackPanel VerticalAlignment="Center">
                                                                 <Button Content="▲" Style="{StaticResource QuantidadeSpinnerButtonStyle}" Click="IncrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdTotalTextBox}"/>
                                                                 <Button Content="▼" Style="{StaticResource QuantidadeSpinnerButtonStyle}" Click="DecrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdTotalTextBox}"/>
                                                             </StackPanel>
                                                         </DockPanel>
                                                     </StackPanel>
 
-                                                    <StackPanel Grid.Column="2" Margin="0,0,8,0">
+                                                    <StackPanel Grid.Column="2" Margin="0,0,10,0">
                                                         <TextBlock Text="Qtd. SUS" FontSize="11"/>
-                                                        <DockPanel LastChildFill="False">
-                                                            <TextBox x:Name="QtdSusTextBox" Width="44" Height="22" HorizontalContentAlignment="Center" Padding="2,0" Text="{Binding QtdSus, UpdateSourceTrigger=PropertyChanged}"/>
-                                                            <StackPanel Margin="0,0,0,0">
+                                                        <DockPanel LastChildFill="False" Margin="0,4,0,0">
+                                                            <TextBox x:Name="QtdSusTextBox" Width="52" Height="24" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="2,0" Text="{Binding QtdSus, UpdateSourceTrigger=PropertyChanged}"/>
+                                                            <StackPanel VerticalAlignment="Center">
                                                                 <Button Content="▲" Style="{StaticResource QuantidadeSpinnerButtonStyle}" Click="IncrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdSusTextBox}"/>
                                                                 <Button Content="▼" Style="{StaticResource QuantidadeSpinnerButtonStyle}" Click="DecrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdSusTextBox}"/>
                                                             </StackPanel>
                                                         </DockPanel>
                                                     </StackPanel>
 
-                                                    <StackPanel Grid.Column="3" Margin="0,0,8,0">
+                                                    <StackPanel Grid.Column="3" Margin="0,0,10,0">
                                                         <TextBlock Text="Qtd. particular" FontSize="11"/>
-                                                        <DockPanel LastChildFill="False">
-                                                            <TextBox x:Name="QtdParticularTextBox" Width="44" Height="22" HorizontalContentAlignment="Center" Padding="2,0" Text="{Binding QtdParticular, UpdateSourceTrigger=PropertyChanged}"/>
-                                                            <StackPanel Margin="0,0,0,0">
+                                                        <DockPanel LastChildFill="False" Margin="0,4,0,0">
+                                                            <TextBox x:Name="QtdParticularTextBox" Width="52" Height="24" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="2,0" Text="{Binding QtdParticular, UpdateSourceTrigger=PropertyChanged}"/>
+                                                            <StackPanel VerticalAlignment="Center">
                                                                 <Button Content="▲" Style="{StaticResource QuantidadeSpinnerButtonStyle}" Click="IncrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdParticularTextBox}"/>
                                                                 <Button Content="▼" Style="{StaticResource QuantidadeSpinnerButtonStyle}" Click="DecrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdParticularTextBox}"/>
                                                             </StackPanel>
                                                         </DockPanel>
                                                     </StackPanel>
 
-                                                    <StackPanel Grid.Column="4" Margin="0,0,8,0">
+                                                    <StackPanel Grid.Column="4" Margin="0,0,10,0" VerticalAlignment="Top">
                                                         <TextBlock Text="Faltam" FontSize="11"/>
                                                         <TextBlock FontWeight="SemiBold" Margin="0,4,0,0">
                                                             <TextBlock.Text>

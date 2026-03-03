@@ -2,7 +2,6 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Input;
 using WpfButton = System.Windows.Controls.Button;
 using WpfDataObject = System.Windows.DataObject;
 using WpfHorizontalAlignment = System.Windows.HorizontalAlignment;
@@ -17,16 +16,13 @@ namespace SistemaJuridico.Views
 
             var button = datePicker.Template.FindName("PART_Button", datePicker) as WpfButton;
             if (button != null)
-                button.Visibility = Visibility.Collapsed;
+                button.Visibility = Visibility.Visible;
 
             var textBox = datePicker.Template.FindName("PART_TextBox", datePicker) as DatePickerTextBox;
             if (textBox == null)
                 return;
 
             textBox.HorizontalAlignment = WpfHorizontalAlignment.Stretch;
-
-            textBox.PreviewMouseLeftButtonDown -= OnPreviewMouseLeftButtonDown;
-            textBox.PreviewMouseLeftButtonDown += OnPreviewMouseLeftButtonDown;
 
             textBox.PreviewTextInput -= OnPreviewTextInput;
             textBox.PreviewTextInput += OnPreviewTextInput;
@@ -36,21 +32,6 @@ namespace SistemaJuridico.Views
 
             textBox.TextChanged -= OnTextChanged;
             textBox.TextChanged += OnTextChanged;
-        }
-
-        private static void OnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (sender is not DatePickerTextBox textBox || textBox.TemplatedParent is not DatePicker datePicker)
-                return;
-
-            if (!datePicker.IsKeyboardFocusWithin)
-            {
-                e.Handled = true;
-                textBox.Focus();
-            }
-
-            if (!datePicker.IsDropDownOpen)
-                datePicker.IsDropDownOpen = true;
         }
 
         private static void OnPreviewTextInput(object sender, TextCompositionEventArgs e)
