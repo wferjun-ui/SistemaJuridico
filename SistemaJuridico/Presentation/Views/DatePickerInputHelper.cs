@@ -2,6 +2,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using WpfButton = System.Windows.Controls.Button;
 using WpfDataObject = System.Windows.DataObject;
 using WpfHorizontalAlignment = System.Windows.HorizontalAlignment;
