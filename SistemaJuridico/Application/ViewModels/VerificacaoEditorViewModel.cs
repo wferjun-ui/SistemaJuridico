@@ -45,10 +45,10 @@ namespace SistemaJuridico.ViewModels
 
         public Brush CorEtapa => Estado switch
         {
-            VerificacaoStepState.Atual => Brushes.DodgerBlue,
-            VerificacaoStepState.Concluida => Brushes.SeaGreen,
-            VerificacaoStepState.Rejeitada => Brushes.Firebrick,
-            _ => Brushes.Gray
+            VerificacaoStepState.Atual => System.Windows.Media.Brushes.DodgerBlue,
+            VerificacaoStepState.Concluida => System.Windows.Media.Brushes.SeaGreen,
+            VerificacaoStepState.Rejeitada => System.Windows.Media.Brushes.Firebrick,
+            _ => System.Windows.Media.Brushes.Gray
         };
 
         public string Simbolo => Estado switch
@@ -217,7 +217,7 @@ namespace SistemaJuridico.ViewModels
 
             StatusGeral = StatusVerificacao.Aprovado;
             RegistrarHistorico("Aprovação", Steps[CurrentStepIndex].Nome, "Verificação aprovada");
-            MessageBox.Show("Verificação aprovada e registrada.");
+            System.Windows.MessageBox.Show("Verificação aprovada e registrada.");
             FecharSolicitado?.Invoke();
         }
 
@@ -229,7 +229,7 @@ namespace SistemaJuridico.ViewModels
             var motivo = Interaction.InputBox("Informe o motivo da rejeição:", "Rejeitar verificação", "");
             if (string.IsNullOrWhiteSpace(motivo))
             {
-                MessageBox.Show("A rejeição exige justificativa obrigatória.");
+                System.Windows.MessageBox.Show("A rejeição exige justificativa obrigatória.");
                 return;
             }
 
@@ -257,20 +257,20 @@ namespace SistemaJuridico.ViewModels
             var terapiasAtivasSemQuantidade = itens.Where(i => string.Equals(i.Tipo, "Terapia", StringComparison.OrdinalIgnoreCase)).Where(i => !i.IsDesnecessario).Where(i => string.IsNullOrWhiteSpace(i.Qtd)).Select(i => i.Nome).ToList();
             if (terapiasAtivasSemQuantidade.Count > 0)
             {
-                MessageBox.Show($"Informe a quantidade das terapias ativas: {string.Join(", ", terapiasAtivasSemQuantidade)}");
+                System.Windows.MessageBox.Show($"Informe a quantidade das terapias ativas: {string.Join(", ", terapiasAtivasSemQuantidade)}");
                 return false;
             }
 
             var terapiasAtivasSemLocal = itens.Where(i => string.Equals(i.Tipo, "Terapia", StringComparison.OrdinalIgnoreCase)).Where(i => !i.IsDesnecessario).Where(i => string.IsNullOrWhiteSpace(i.Local)).Select(i => i.Nome).ToList();
             if (terapiasAtivasSemLocal.Count > 0)
             {
-                MessageBox.Show($"Informe o local das terapias ativas: {string.Join(", ", terapiasAtivasSemLocal)}");
+                System.Windows.MessageBox.Show($"Informe o local das terapias ativas: {string.Join(", ", terapiasAtivasSemLocal)}");
                 return false;
             }
 
             if (itensSemPrescricao.Count > 0)
             {
-                MessageBox.Show($"Atualize a prescrição dos itens ativos: {string.Join(", ", itensSemPrescricao)}");
+                System.Windows.MessageBox.Show($"Atualize a prescrição dos itens ativos: {string.Join(", ", itensSemPrescricao)}");
                 return false;
             }
 
@@ -299,20 +299,20 @@ namespace SistemaJuridico.ViewModels
             {
                 if (string.IsNullOrWhiteSpace(StatusProcesso))
                 {
-                    MessageBox.Show("Informe o status do processo.");
+                    System.Windows.MessageBox.Show("Informe o status do processo.");
                     return false;
                 }
 
                 if (string.IsNullOrWhiteSpace(Responsavel))
                 {
-                    MessageBox.Show("Informe o responsável da verificação.");
+                    System.Windows.MessageBox.Show("Informe o responsável da verificação.");
                     return false;
                 }
             }
 
             if (indice == 1 && string.IsNullOrWhiteSpace(Descricao))
             {
-                MessageBox.Show("Descreva o que foi realizado na verificação.");
+                System.Windows.MessageBox.Show("Descreva o que foi realizado na verificação.");
                 return false;
             }
 
@@ -320,13 +320,13 @@ namespace SistemaJuridico.ViewModels
             {
                 if (DiligenciaRealizada && string.IsNullOrWhiteSpace(DescricaoDiligencia))
                 {
-                    MessageBox.Show("Informe a descrição da diligência realizada.");
+                    System.Windows.MessageBox.Show("Informe a descrição da diligência realizada.");
                     return false;
                 }
 
                 if (PossuiPendencias && string.IsNullOrWhiteSpace(DescricaoPendencias))
                 {
-                    MessageBox.Show("Informe as pendências encontradas.");
+                    System.Windows.MessageBox.Show("Informe as pendências encontradas.");
                     return false;
                 }
             }

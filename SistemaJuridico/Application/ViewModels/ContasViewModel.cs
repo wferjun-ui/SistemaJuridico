@@ -119,7 +119,7 @@ namespace SistemaJuridico.ViewModels
         {
             if (!TipoSelecionado.HasValue)
             {
-                MessageBox.Show("Selecione o tipo de prestação.");
+                System.Windows.MessageBox.Show("Selecione o tipo de prestação.");
                 return;
             }
 
@@ -130,7 +130,7 @@ namespace SistemaJuridico.ViewModels
             PersistirPrestacao(conta);
             RegistrarHistorico(conta.Id, acao, "Prestação salva como rascunho.");
             CarregarPrestacoes();
-            MessageBox.Show("Rascunho salvo com sucesso.");
+            System.Windows.MessageBox.Show("Rascunho salvo com sucesso.");
         }
 
         [RelayCommand]
@@ -145,7 +145,7 @@ namespace SistemaJuridico.ViewModels
             RegistrarHistorico(conta.Id, "Finalização", "Prestação finalizada com validação completa.");
             Status = PrestacaoStatus.Finalizada;
             CarregarPrestacoes();
-            MessageBox.Show("Prestação finalizada.");
+            System.Windows.MessageBox.Show("Prestação finalizada.");
         }
 
         [RelayCommand]
@@ -199,7 +199,7 @@ namespace SistemaJuridico.ViewModels
             PersistirPrestacao(conta);
             RegistrarHistorico(conta.Id, "PDF gerado", "PDF gerado");
             CarregarHistorico(conta.Id);
-            MessageBox.Show("PDF gerado com sucesso.");
+            System.Windows.MessageBox.Show("PDF gerado com sucesso.");
         }
 
         [RelayCommand]
@@ -286,13 +286,13 @@ namespace SistemaJuridico.ViewModels
             if (!TipoSelecionado.HasValue || string.IsNullOrWhiteSpace(NumeroProcesso) || string.IsNullOrWhiteSpace(DataPrestacao)
                 || ValorTotal <= 0 || string.IsNullOrWhiteSpace(Responsavel))
             {
-                MessageBox.Show("Preencha todos os campos obrigatórios fixos e valor total > 0.");
+                System.Windows.MessageBox.Show("Preencha todos os campos obrigatórios fixos e valor total > 0.");
                 return false;
             }
 
             if (!DateTime.TryParse(DataPrestacao, out _))
             {
-                MessageBox.Show("Data da prestação inválida.");
+                System.Windows.MessageBox.Show("Data da prestação inválida.");
                 return false;
             }
 
@@ -301,7 +301,7 @@ namespace SistemaJuridico.ViewModels
                 if (!DateTime.TryParse(DataInicio, out var ini) || !DateTime.TryParse(DataFim, out var fim) || ini > fim
                     || string.IsNullOrWhiteSpace(Destino) || string.IsNullOrWhiteSpace(Justificativa))
                 {
-                    MessageBox.Show("Dados de diária inválidos. Verifique período e campos obrigatórios.");
+                    System.Windows.MessageBox.Show("Dados de diária inválidos. Verifique período e campos obrigatórios.");
                     return false;
                 }
             }
@@ -312,7 +312,7 @@ namespace SistemaJuridico.ViewModels
                     || string.IsNullOrWhiteSpace(CnpjFornecedor) || string.IsNullOrWhiteSpace(DescricaoServico)
                     || ValorDocumento <= 0 || Anexos.Count == 0)
                 {
-                    MessageBox.Show("Reembolso exige documento fiscal válido e anexo obrigatório.");
+                    System.Windows.MessageBox.Show("Reembolso exige documento fiscal válido e anexo obrigatório.");
                     return false;
                 }
             }
@@ -320,13 +320,13 @@ namespace SistemaJuridico.ViewModels
             if (IsConvenio && (string.IsNullOrWhiteSpace(NumeroConvenio) || string.IsNullOrWhiteSpace(OrgaoRepassador)
                 || string.IsNullOrWhiteSpace(PeriodoExecucao) || string.IsNullOrWhiteSpace(RelatorioDetalhado)))
             {
-                MessageBox.Show("Convênio exige relatório detalhado e dados obrigatórios.");
+                System.Windows.MessageBox.Show("Convênio exige relatório detalhado e dados obrigatórios.");
                 return false;
             }
 
             if (IsOutro && string.IsNullOrWhiteSpace(DetalhesOutroTipo))
             {
-                MessageBox.Show("Informe a descrição detalhada para o tipo Outro.");
+                System.Windows.MessageBox.Show("Informe a descrição detalhada para o tipo Outro.");
                 return false;
             }
 
