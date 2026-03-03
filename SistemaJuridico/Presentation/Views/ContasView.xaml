@@ -49,13 +49,15 @@
                             </Border>
 
                             <Border Visibility="{Binding IsConvenio, Converter={StaticResource BoolToVis}}">
-                                <WrapPanel>
-                                    <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Número do Convênio *"/><TextBox Text="{Binding NumeroConvenio}"/></StackPanel>
-                                    <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Órgão Repassador *"/><TextBox Text="{Binding OrgaoRepassador}"/></StackPanel>
-                                    <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Período de Execução *"/><TextBox Text="{Binding PeriodoExecucao}"/></StackPanel>
-                                </WrapPanel>
-                                <TextBlock Text="Relatório detalhado *"/>
-                                <TextBox Text="{Binding RelatorioDetalhado}" AcceptsReturn="True" Height="70"/>
+                                <StackPanel>
+                                    <WrapPanel>
+                                        <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Número do Convênio *"/><TextBox Text="{Binding NumeroConvenio}"/></StackPanel>
+                                        <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Órgão Repassador *"/><TextBox Text="{Binding OrgaoRepassador}"/></StackPanel>
+                                        <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Período de Execução *"/><TextBox Text="{Binding PeriodoExecucao}"/></StackPanel>
+                                    </WrapPanel>
+                                    <TextBlock Text="Relatório detalhado *"/>
+                                    <TextBox Text="{Binding RelatorioDetalhado}" AcceptsReturn="True" Height="70"/>
+                                </StackPanel>
                             </Border>
 
                             <Border Visibility="{Binding IsOutro, Converter={StaticResource BoolToVis}}">
