@@ -32,12 +32,14 @@ namespace SistemaJuridico.ViewModels
 
         public int Indice { get; }
         public string Nome { get; }
+        public bool TemProximaEtapa { get; }
 
-        public VerificacaoStep(int indice, string nome, VerificacaoStepState estado)
+        public VerificacaoStep(int indice, string nome, VerificacaoStepState estado, bool temProximaEtapa)
         {
             Indice = indice;
             Nome = nome;
             _estado = estado;
+            TemProximaEtapa = temProximaEtapa;
         }
 
         public Brush CorEtapa => Estado switch
@@ -118,10 +120,10 @@ namespace SistemaJuridico.ViewModels
             _processoId = processoId;
             _facade = facade;
 
-            Steps.Add(new VerificacaoStep(0, "Dados Gerais", VerificacaoStepState.Atual));
-            Steps.Add(new VerificacaoStep(1, "Análise Técnica", VerificacaoStepState.Pendente));
-            Steps.Add(new VerificacaoStep(2, "Conferência Financeira", VerificacaoStepState.Pendente));
-            Steps.Add(new VerificacaoStep(3, "Aprovação Final", VerificacaoStepState.Pendente));
+            Steps.Add(new VerificacaoStep(0, "Dados Gerais", VerificacaoStepState.Atual, temProximaEtapa: true));
+            Steps.Add(new VerificacaoStep(1, "Análise Técnica", VerificacaoStepState.Pendente, temProximaEtapa: true));
+            Steps.Add(new VerificacaoStep(2, "Conferência Financeira", VerificacaoStepState.Pendente, temProximaEtapa: true));
+            Steps.Add(new VerificacaoStep(3, "Aprovação Final", VerificacaoStepState.Pendente, temProximaEtapa: false));
 
             _stepViews = new VerificacaoStepViewModelBase[]
             {
@@ -146,6 +148,7 @@ namespace SistemaJuridico.ViewModels
             AvancarCommand.NotifyCanExecuteChanged();
             VoltarCommand.NotifyCanExecuteChanged();
             AprovarCommand.NotifyCanExecuteChanged();
+            RejeitarCommand.NotifyCanExecuteChanged();
         }
 
         partial void OnFluxoTravadoChanged(bool value)
@@ -242,8 +245,11 @@ namespace SistemaJuridico.ViewModels
 
         private bool TrySalvarVerificacao()
         {
-            if (!ValidarEtapa(0) || !ValidarEtapa(1) || !ValidarEtapa(2) || !ValidarEtapa(3))
-                return false;
+            for (var indice = 0; indice < Steps.Count; indice++)
+            {
+                if (!ValidarEtapa(indice))
+                    return false;
+            }
 
             var itens = ItensSaude.Select(i => i.ToModel()).ToList();
             var itensSemPrescricao = itens.Where(i => !i.IsDesnecessario).Where(i => string.IsNullOrWhiteSpace(i.DataPrescricao)).Select(i => i.Nome).ToList();
