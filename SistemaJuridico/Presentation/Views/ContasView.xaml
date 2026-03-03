@@ -28,7 +28,7 @@
                             </WrapPanel>
                             <StackPanel Margin="0,0,0,8"><TextBlock Text="Observações"/><TextBox Text="{Binding Observacoes}"/></StackPanel>
 
-                            <Border Visibility="{Binding IsDiaria, Converter={StaticResource BoolToVis}}">
+                            <Border Visibility="{Binding IsAlvara, Converter={StaticResource BoolToVis}}">
                                 <WrapPanel>
                                     <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Data Início *"/><TextBox Text="{Binding DataInicio}"/></StackPanel>
                                     <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Data Fim *"/><TextBox Text="{Binding DataFim}"/></StackPanel>
@@ -38,7 +38,7 @@
                                 </WrapPanel>
                             </Border>
 
-                            <Border Visibility="{Binding IsReembolso, Converter={StaticResource BoolToVis}}">
+                            <Border Visibility="{Binding IsTratamento, Converter={StaticResource BoolToVis}}">
                                 <WrapPanel>
                                     <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Nº Documento Fiscal *"/><TextBox Text="{Binding NumeroDocumentoFiscal}"/></StackPanel>
                                     <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Data Documento *"/><TextBox Text="{Binding DataDocumento}"/></StackPanel>
@@ -48,19 +48,7 @@
                                 </WrapPanel>
                             </Border>
 
-                            <Border Visibility="{Binding IsConvenio, Converter={StaticResource BoolToVis}}">
-                                <StackPanel>
-                                    <WrapPanel>
-                                        <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Número do Convênio *"/><TextBox Text="{Binding NumeroConvenio}"/></StackPanel>
-                                        <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Órgão Repassador *"/><TextBox Text="{Binding OrgaoRepassador}"/></StackPanel>
-                                        <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Período de Execução *"/><TextBox Text="{Binding PeriodoExecucao}"/></StackPanel>
-                                    </WrapPanel>
-                                    <TextBlock Text="Relatório detalhado *"/>
-                                    <TextBox Text="{Binding RelatorioDetalhado}" AcceptsReturn="True" Height="70"/>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Visibility="{Binding IsOutro, Converter={StaticResource BoolToVis}}">
+                            <Border Visibility="{Binding IsOutrasDespesas, Converter={StaticResource BoolToVis}}">
                                 <StackPanel><TextBlock Text="Descrição detalhada *"/><TextBox Text="{Binding DetalhesOutroTipo}"/></StackPanel>
                             </Border>
 

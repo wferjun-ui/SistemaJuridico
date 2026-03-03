@@ -14,7 +14,7 @@ using System.Windows;
 
 namespace SistemaJuridico.ViewModels
 {
-    public enum TipoPrestacao { Diaria, Adiantamento, Reembolso, Convenio, Outro }
+    public enum TipoPrestacao { Alvara, Tratamento, OutrasDespesas }
     public enum PrestacaoStatus { Rascunho, Finalizada, Reaberta, Rejeitada }
 
     public class HistoricoPrestacao
@@ -67,10 +67,9 @@ namespace SistemaJuridico.ViewModels
         public Array TiposPrestacaoDisponiveis => Enum.GetValues(typeof(TipoPrestacao));
 
         public bool ExibirCampos => TipoSelecionado.HasValue;
-        public bool IsDiaria => TipoSelecionado == TipoPrestacao.Diaria;
-        public bool IsReembolso => TipoSelecionado == TipoPrestacao.Reembolso;
-        public bool IsConvenio => TipoSelecionado == TipoPrestacao.Convenio;
-        public bool IsOutro => TipoSelecionado == TipoPrestacao.Outro;
+        public bool IsAlvara => TipoSelecionado == TipoPrestacao.Alvara;
+        public bool IsTratamento => TipoSelecionado == TipoPrestacao.Tratamento;
+        public bool IsOutrasDespesas => TipoSelecionado == TipoPrestacao.OutrasDespesas;
         public bool GerarPdfHabilitado => Status == PrestacaoStatus.Finalizada && !string.IsNullOrWhiteSpace(PrestacaoId);
         public string StatusDescricao => Status.ToString();
         public string StatusCor => Status switch
@@ -104,9 +103,9 @@ namespace SistemaJuridico.ViewModels
             }
 
             OnPropertyChanged(nameof(ExibirCampos));
-            OnPropertyChanged(nameof(IsDiaria));
-            OnPropertyChanged(nameof(IsReembolso));
-            OnPropertyChanged(nameof(IsConvenio));
+            OnPropertyChanged(nameof(IsAlvara));
+            OnPropertyChanged(nameof(IsTratamento));
+            OnPropertyChanged(nameof(IsOutrasDespesas));
             RecalcularValorDiaria();
         }
 
@@ -296,37 +295,30 @@ namespace SistemaJuridico.ViewModels
                 return false;
             }
 
-            if (IsDiaria)
+            if (IsAlvara)
             {
                 if (!DateTime.TryParse(DataInicio, out var ini) || !DateTime.TryParse(DataFim, out var fim) || ini > fim
                     || string.IsNullOrWhiteSpace(Destino) || string.IsNullOrWhiteSpace(Justificativa))
                 {
-                    System.Windows.MessageBox.Show("Dados de diária inválidos. Verifique período e campos obrigatórios.");
+                    System.Windows.MessageBox.Show("Dados de alvará inválidos. Verifique período e campos obrigatórios.");
                     return false;
                 }
             }
 
-            if (IsReembolso)
+            if (IsTratamento)
             {
                 if (string.IsNullOrWhiteSpace(NumeroDocumentoFiscal) || !DateTime.TryParse(DataDocumento, out _)
                     || string.IsNullOrWhiteSpace(CnpjFornecedor) || string.IsNullOrWhiteSpace(DescricaoServico)
                     || ValorDocumento <= 0 || Anexos.Count == 0)
                 {
-                    System.Windows.MessageBox.Show("Reembolso exige documento fiscal válido e anexo obrigatório.");
+                    System.Windows.MessageBox.Show("Tratamento exige documento fiscal válido e anexo obrigatório.");
                     return false;
                 }
             }
 
-            if (IsConvenio && (string.IsNullOrWhiteSpace(NumeroConvenio) || string.IsNullOrWhiteSpace(OrgaoRepassador)
-                || string.IsNullOrWhiteSpace(PeriodoExecucao) || string.IsNullOrWhiteSpace(RelatorioDetalhado)))
+            if (IsOutrasDespesas && string.IsNullOrWhiteSpace(DetalhesOutroTipo))
             {
-                System.Windows.MessageBox.Show("Convênio exige relatório detalhado e dados obrigatórios.");
-                return false;
-            }
-
-            if (IsOutro && string.IsNullOrWhiteSpace(DetalhesOutroTipo))
-            {
-                System.Windows.MessageBox.Show("Informe a descrição detalhada para o tipo Outro.");
+                System.Windows.MessageBox.Show("Informe a descrição detalhada para o tipo Outras despesas.");
                 return false;
             }
 
@@ -358,7 +350,7 @@ namespace SistemaJuridico.ViewModels
         private Dictionary<string, string> ObterCamposEspecificos()
         {
             var campos = new Dictionary<string, string>();
-            if (IsDiaria)
+            if (IsAlvara)
             {
                 campos["Data Início"] = DataInicio;
                 campos["Data Fim"] = DataFim;
@@ -366,7 +358,7 @@ namespace SistemaJuridico.ViewModels
                 campos["Justificativa"] = Justificativa;
                 campos["Valor por Dia"] = ValorPorDia.ToString("N2");
             }
-            else if (IsReembolso)
+            else if (IsTratamento)
             {
                 campos["Número Documento Fiscal"] = NumeroDocumentoFiscal;
                 campos["Data Documento"] = DataDocumento;
@@ -374,14 +366,7 @@ namespace SistemaJuridico.ViewModels
                 campos["Descrição Serviço"] = DescricaoServico;
                 campos["Valor Documento"] = ValorDocumento.ToString("N2");
             }
-            else if (IsConvenio)
-            {
-                campos["Número Convênio"] = NumeroConvenio;
-                campos["Órgão Repassador"] = OrgaoRepassador;
-                campos["Período Execução"] = PeriodoExecucao;
-                campos["Relatório Detalhado"] = RelatorioDetalhado;
-            }
-            else if (IsOutro)
+            else if (IsOutrasDespesas)
             {
                 campos["Detalhes"] = DetalhesOutroTipo;
             }
@@ -439,7 +424,7 @@ FROM prestacao_historico WHERE prestacao_id=@PrestacaoId ORDER BY data DESC", ne
 
         private void RecalcularValorDiaria()
         {
-            if (!IsDiaria || !DateTime.TryParse(DataInicio, out var ini) || !DateTime.TryParse(DataFim, out var fim) || fim < ini)
+            if (!IsAlvara || !DateTime.TryParse(DataInicio, out var ini) || !DateTime.TryParse(DataFim, out var fim) || fim < ini)
             {
                 ValorPorDia = 0;
                 return;
