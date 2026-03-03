@@ -12,7 +12,7 @@ namespace SistemaJuridico.Views
                 "ProcessoId",
                 typeof(string),
                 typeof(ContasView),
-                new PropertyMetadata(OnProcessoIdChanged));
+                new PropertyMetadata(string.Empty, OnProcessoIdChanged));
 
         public string ProcessoId
         {
@@ -23,6 +23,7 @@ namespace SistemaJuridico.Views
         public ContasView()
         {
             InitializeComponent();
+            DataContext = new ContasViewModel();
         }
 
         private static void OnProcessoIdChanged(
