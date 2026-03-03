@@ -33,6 +33,7 @@
             <Button Content="Avançar" Padding="12,6" Margin="0,0,8,0" Command="{Binding AvancarCommand}"/>
             <Button Content="Aprovar" Padding="12,6" Margin="0,0,8,0" FontWeight="Bold" Command="{Binding AprovarCommand}"/>
             <Button Content="Rejeitar" Padding="12,6" Margin="0,0,8,0" Command="{Binding RejeitarCommand}"/>
+            <Button Content="Salvar" Padding="12,6" Margin="0,0,8,0" Command="{Binding SalvarCommand}"/>
             <Button Content="Cancelar" Padding="12,6" Click="Cancelar_Click"/>
         </StackPanel>
 
@@ -59,7 +60,7 @@
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Visibility" Value="Visible"/>
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Indice}" Value="3">
+                                                    <DataTrigger Binding="{Binding TemProximaEtapa}" Value="False">
                                                         <Setter Property="Visibility" Value="Collapsed"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
