@@ -11,45 +11,57 @@
                 <StackPanel>
                     <TextBlock Text="Prestação de Contas" FontSize="18" FontWeight="SemiBold"/>
 
-                    <StackPanel Margin="0,10,0,0">
-                        <TextBlock Text="Tipo de Prestação de Contas" FontWeight="SemiBold"/>
-                        <ComboBox x:Name="TipoPrestacaoComboBox"
-                                  ItemsSource="{Binding TiposPrestacaoDisponiveis}"
-                                  SelectedItem="{Binding TipoSelecionado, UpdateSourceTrigger=PropertyChanged}"/>
-                    </StackPanel>
+                    <UniformGrid Margin="0,10,0,0" Columns="3">
+                        <StackPanel Margin="0,0,8,8">
+                            <TextBlock Text="Tipo de Prestação de Contas" FontWeight="SemiBold"/>
+                            <ComboBox x:Name="TipoPrestacaoComboBox"
+                                      ItemsSource="{Binding TiposPrestacaoDisponiveis}"
+                                      SelectedItem="{Binding TipoSelecionado, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,8,8">
+                            <TextBlock Text="Data da Prestação *"/>
+                            <DatePicker SelectedDateFormat="Short"
+                                        Text="{Binding DataPrestacao, UpdateSourceTrigger=PropertyChanged}"
+                                        Loaded="DatePicker_Loaded"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,8,8">
+                            <TextBlock Text="Responsável *"/>
+                            <TextBox Text="{Binding Responsavel}"/>
+                        </StackPanel>
+                    </UniformGrid>
 
                     <Border Margin="0,12,0,0" Visibility="{Binding ExibirCampos, Converter={StaticResource BoolToVis}}">
                         <StackPanel>
-                            <WrapPanel>
-                                <StackPanel Width="240" Margin="0,0,8,8"><TextBlock Text="Número do Processo *"/><TextBox Text="{Binding NumeroProcesso}"/></StackPanel>
-                                <StackPanel Width="240" Margin="0,0,8,8"><TextBlock Text="Data da Prestação *"/><TextBox Text="{Binding DataPrestacao}"/></StackPanel>
-                                <StackPanel Width="240" Margin="0,0,8,8"><TextBlock Text="Valor Total *"/><TextBox Text="{Binding ValorTotal}"/></StackPanel>
-                                <StackPanel Width="240" Margin="0,0,8,8"><TextBlock Text="Responsável *"/><TextBox Text="{Binding Responsavel}"/></StackPanel>
-                            </WrapPanel>
                             <StackPanel Margin="0,0,0,8"><TextBlock Text="Observações"/><TextBox Text="{Binding Observacoes}"/></StackPanel>
 
                             <Border Visibility="{Binding IsAlvara, Converter={StaticResource BoolToVis}}">
-                                <WrapPanel>
-                                    <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Data Início *"/><TextBox Text="{Binding DataInicio}"/></StackPanel>
-                                    <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Data Fim *"/><TextBox Text="{Binding DataFim}"/></StackPanel>
-                                    <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Destino *"/><TextBox Text="{Binding Destino}"/></StackPanel>
-                                    <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Justificativa *"/><TextBox Text="{Binding Justificativa}"/></StackPanel>
-                                    <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Valor por Dia"/><TextBox Text="{Binding ValorPorDia, StringFormat=N2}" IsReadOnly="True"/></StackPanel>
-                                </WrapPanel>
+                                <UniformGrid Columns="3">
+                                    <StackPanel Margin="0,0,8,8"><TextBlock Text="Destino *"/><TextBox Text="{Binding Destino}"/></StackPanel>
+                                    <StackPanel Margin="0,0,8,8"><TextBlock Text="Data Levantamento *"/><DatePicker SelectedDateFormat="Short" Text="{Binding DataLevantamento, UpdateSourceTrigger=PropertyChanged}" Loaded="DatePicker_Loaded"/></StackPanel>
+                                    <StackPanel Margin="0,0,8,8"><TextBlock Text="Número do Alvará *"/><TextBox Text="{Binding NumeroAlvara}"/></StackPanel>
+                                    <StackPanel Margin="0,0,8,8"><TextBlock Text="Valor do Alvará *"/><TextBox Text="{Binding ValorAlvara}"/></StackPanel>
+                                </UniformGrid>
                             </Border>
 
                             <Border Visibility="{Binding IsTratamento, Converter={StaticResource BoolToVis}}">
-                                <WrapPanel>
-                                    <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Nº Documento Fiscal *"/><TextBox Text="{Binding NumeroDocumentoFiscal}"/></StackPanel>
-                                    <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Data Documento *"/><TextBox Text="{Binding DataDocumento}"/></StackPanel>
-                                    <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="CNPJ Fornecedor *"/><TextBox Text="{Binding CnpjFornecedor}"/></StackPanel>
-                                    <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Descrição Serviço *"/><TextBox Text="{Binding DescricaoServico}"/></StackPanel>
-                                    <StackPanel Width="230" Margin="0,0,8,8"><TextBlock Text="Valor Documento *"/><TextBox Text="{Binding ValorDocumento}"/></StackPanel>
-                                </WrapPanel>
+                                <UniformGrid Columns="3">
+                                    <StackPanel Margin="0,0,8,8"><TextBlock Text="Tratamento *"/><ComboBox ItemsSource="{Binding TratamentosDisponiveis}" SelectedItem="{Binding TratamentoSelecionado, UpdateSourceTrigger=PropertyChanged}"/></StackPanel>
+                                    <StackPanel Margin="0,0,8,8"><TextBlock Text="Número da NF"/><TextBox Text="{Binding NumeroDocumentoFiscal}"/></StackPanel>
+                                    <StackPanel Margin="0,0,8,8"><TextBlock Text="Recibo"/><CheckBox Content="Sem NF (usar recibo)" IsChecked="{Binding IsRecibo}" Margin="0,6,0,0"/></StackPanel>
+                                    <StackPanel Margin="0,0,8,8"><TextBlock Text="Data da NF *"/><DatePicker SelectedDateFormat="Short" Text="{Binding DataDocumento, UpdateSourceTrigger=PropertyChanged}" Loaded="DatePicker_Loaded"/></StackPanel>
+                                    <StackPanel Margin="0,0,8,8"><TextBlock Text="Valor da NF *"/><TextBox Text="{Binding ValorDocumento}"/></StackPanel>
+                                    <StackPanel Margin="0,0,8,8"><TextBlock Text="CNPJ do Fornecedor *"/><TextBox Text="{Binding CnpjFornecedor}"/></StackPanel>
+                                </UniformGrid>
                             </Border>
 
                             <Border Visibility="{Binding IsOutrasDespesas, Converter={StaticResource BoolToVis}}">
-                                <StackPanel><TextBlock Text="Descrição detalhada *"/><TextBox Text="{Binding DetalhesOutroTipo}"/></StackPanel>
+                                <UniformGrid Columns="3">
+                                    <StackPanel Margin="0,0,8,8"><TextBlock Text="Do que se trata *"/><TextBox Text="{Binding DetalhesOutroTipo}"/></StackPanel>
+                                    <StackPanel Margin="0,0,8,8"><TextBlock Text="Número da NF"/><TextBox Text="{Binding NumeroDocumentoFiscal}"/></StackPanel>
+                                    <StackPanel Margin="0,0,8,8"><TextBlock Text="Recibo"/><CheckBox Content="Sem NF (usar recibo)" IsChecked="{Binding IsRecibo}" Margin="0,6,0,0"/></StackPanel>
+                                    <StackPanel Margin="0,0,8,8"><TextBlock Text="Data da NF *"/><DatePicker SelectedDateFormat="Short" Text="{Binding DataDocumento, UpdateSourceTrigger=PropertyChanged}" Loaded="DatePicker_Loaded"/></StackPanel>
+                                    <StackPanel Margin="0,0,8,8"><TextBlock Text="Valor da NF *"/><TextBox Text="{Binding ValorDocumento}"/></StackPanel>
+                                </UniformGrid>
                             </Border>
 
                             <TextBlock Text="Anexos" Margin="0,8,0,0" FontWeight="SemiBold"/>

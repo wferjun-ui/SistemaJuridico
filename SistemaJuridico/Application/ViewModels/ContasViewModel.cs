@@ -9,6 +9,7 @@ using SistemaJuridico.Services;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Windows;
 
@@ -31,6 +32,7 @@ namespace SistemaJuridico.ViewModels
         private readonly string _processoId;
         private readonly ContaService _contaService;
         private readonly DatabaseService _databaseService;
+        private readonly ItemSaudeService _itemSaudeService;
 
         [ObservableProperty] private TipoPrestacao? _tipoSelecionado;
         [ObservableProperty] private decimal _valorTotal;
@@ -42,28 +44,26 @@ namespace SistemaJuridico.ViewModels
         [ObservableProperty] private string _prestacaoId = string.Empty;
         [ObservableProperty] private Conta? _prestacaoSelecionada;
 
-        [ObservableProperty] private string _dataInicio = string.Empty;
-        [ObservableProperty] private string _dataFim = string.Empty;
         [ObservableProperty] private string _destino = string.Empty;
-        [ObservableProperty] private string _justificativa = string.Empty;
-        [ObservableProperty] private decimal _valorPorDia;
+        [ObservableProperty] private string _numeroAlvara = string.Empty;
+        [ObservableProperty] private string _dataLevantamento = string.Empty;
+        [ObservableProperty] private decimal _valorAlvara;
+
+        [ObservableProperty] private string _tratamentoSelecionado = string.Empty;
 
         [ObservableProperty] private string _numeroDocumentoFiscal = string.Empty;
+        [ObservableProperty] private bool _isRecibo;
         [ObservableProperty] private string _dataDocumento = string.Empty;
         [ObservableProperty] private string _cnpjFornecedor = string.Empty;
-        [ObservableProperty] private string _descricaoServico = string.Empty;
         [ObservableProperty] private decimal _valorDocumento;
 
-        [ObservableProperty] private string _numeroConvenio = string.Empty;
-        [ObservableProperty] private string _orgaoRepassador = string.Empty;
-        [ObservableProperty] private string _periodoExecucao = string.Empty;
-        [ObservableProperty] private string _relatorioDetalhado = string.Empty;
         [ObservableProperty] private string _detalhesOutroTipo = string.Empty;
         [ObservableProperty] private string _novoAnexo = string.Empty;
 
         public ObservableCollection<string> Anexos { get; } = new();
         public ObservableCollection<HistoricoPrestacao> Historico { get; } = new();
         public ObservableCollection<Conta> PrestacoesRealizadas { get; } = new();
+        public ObservableCollection<string> TratamentosDisponiveis { get; } = new();
         public Array TiposPrestacaoDisponiveis => Enum.GetValues(typeof(TipoPrestacao));
 
         public bool ExibirCampos => TipoSelecionado.HasValue;
@@ -87,9 +87,11 @@ namespace SistemaJuridico.ViewModels
             _processoId = processoId;
             _databaseService = new DatabaseService();
             _contaService = new ContaService(_databaseService);
+            _itemSaudeService = new ItemSaudeService(_databaseService);
             NumeroProcesso = processoId;
             Responsavel = App.Session.UsuarioAtual?.Nome ?? "Sistema";
 
+            CarregarTratamentosDisponiveis();
             CarregarPrestacoes();
             InicializarNovaPrestacao();
         }
@@ -106,12 +108,13 @@ namespace SistemaJuridico.ViewModels
             OnPropertyChanged(nameof(IsAlvara));
             OnPropertyChanged(nameof(IsTratamento));
             OnPropertyChanged(nameof(IsOutrasDespesas));
-            RecalcularValorDiaria();
         }
 
-        partial void OnDataInicioChanged(string value) => RecalcularValorDiaria();
-        partial void OnDataFimChanged(string value) => RecalcularValorDiaria();
-        partial void OnValorTotalChanged(decimal value) => RecalcularValorDiaria();
+        partial void OnIsReciboChanged(bool value)
+        {
+            if (value)
+                NumeroDocumentoFiscal = string.Empty;
+        }
 
         [RelayCommand]
         private void SalvarRascunho()
@@ -236,20 +239,18 @@ namespace SistemaJuridico.ViewModels
             TipoSelecionado = Enum.TryParse<TipoPrestacao>(PrestacaoSelecionada.TipoLancamento, true, out var tipo) ? tipo : null;
 
             var campos = JsonSerializer.Deserialize<Dictionary<string, string>>(PrestacaoSelecionada.CamposEspecificosJson ?? "{}") ?? new();
-            DataInicio = campos.GetValueOrDefault("Data Início", string.Empty);
-            DataFim = campos.GetValueOrDefault("Data Fim", string.Empty);
             Destino = campos.GetValueOrDefault("Destino", string.Empty);
-            Justificativa = campos.GetValueOrDefault("Justificativa", string.Empty);
-            NumeroDocumentoFiscal = campos.GetValueOrDefault("Número Documento Fiscal", string.Empty);
-            DataDocumento = campos.GetValueOrDefault("Data Documento", string.Empty);
+            NumeroAlvara = campos.GetValueOrDefault("Número do Alvará", campos.GetValueOrDefault("Número Documento Fiscal", string.Empty));
+            DataLevantamento = campos.GetValueOrDefault("Data Levantamento", campos.GetValueOrDefault("Data Documento", string.Empty));
+            ValorAlvara = decimal.TryParse(campos.GetValueOrDefault("Valor do Alvará"), out var va) ? va : 0;
+
+            TratamentoSelecionado = campos.GetValueOrDefault("Tratamento", campos.GetValueOrDefault("Descrição Serviço", string.Empty));
+            NumeroDocumentoFiscal = campos.GetValueOrDefault("Número da NF", campos.GetValueOrDefault("Número Documento Fiscal", string.Empty));
+            IsRecibo = bool.TryParse(campos.GetValueOrDefault("Recibo"), out var recibo) && recibo;
+            DataDocumento = campos.GetValueOrDefault("Data da NF", campos.GetValueOrDefault("Data Documento", string.Empty));
             CnpjFornecedor = campos.GetValueOrDefault("CNPJ Fornecedor", string.Empty);
-            DescricaoServico = campos.GetValueOrDefault("Descrição Serviço", string.Empty);
-            ValorDocumento = decimal.TryParse(campos.GetValueOrDefault("Valor Documento"), out var vd) ? vd : 0;
-            NumeroConvenio = campos.GetValueOrDefault("Número Convênio", string.Empty);
-            OrgaoRepassador = campos.GetValueOrDefault("Órgão Repassador", string.Empty);
-            PeriodoExecucao = campos.GetValueOrDefault("Período Execução", string.Empty);
-            RelatorioDetalhado = campos.GetValueOrDefault("Relatório Detalhado", string.Empty);
-            DetalhesOutroTipo = campos.GetValueOrDefault("Detalhes", string.Empty);
+            ValorDocumento = decimal.TryParse(campos.GetValueOrDefault("Valor da NF", campos.GetValueOrDefault("Valor Documento")), out var vd) ? vd : 0;
+            DetalhesOutroTipo = campos.GetValueOrDefault("Do que se trata", campos.GetValueOrDefault("Detalhes", string.Empty));
 
             Anexos.Clear();
             foreach (var item in JsonSerializer.Deserialize<List<string>>(PrestacaoSelecionada.AnexosJson ?? "[]") ?? new())
@@ -265,12 +266,32 @@ namespace SistemaJuridico.ViewModels
             ValorTotal = 0;
             Observacoes = string.Empty;
             Status = PrestacaoStatus.Rascunho;
-            DataInicio = DataFim = Destino = Justificativa = string.Empty;
-            NumeroDocumentoFiscal = DataDocumento = CnpjFornecedor = DescricaoServico = string.Empty;
+            Destino = NumeroAlvara = DataLevantamento = string.Empty;
+            ValorAlvara = 0;
+            TratamentoSelecionado = string.Empty;
+            NumeroDocumentoFiscal = DataDocumento = CnpjFornecedor = string.Empty;
+            IsRecibo = false;
             ValorDocumento = 0;
-            NumeroConvenio = OrgaoRepassador = PeriodoExecucao = RelatorioDetalhado = DetalhesOutroTipo = string.Empty;
+            DetalhesOutroTipo = string.Empty;
             Anexos.Clear();
             Historico.Clear();
+        }
+
+        private void CarregarTratamentosDisponiveis()
+        {
+            TratamentosDisponiveis.Clear();
+            if (string.IsNullOrWhiteSpace(_processoId))
+                return;
+
+            var tratamentos = _itemSaudeService
+                .ListarPorProcesso(_processoId)
+                .Where(x => !x.IsDesnecessario && !string.IsNullOrWhiteSpace(x.Nome))
+                .Select(x => x.Nome.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(x => x);
+
+            foreach (var tratamento in tratamentos)
+                TratamentosDisponiveis.Add(tratamento);
         }
 
         private void CarregarPrestacoes()
@@ -282,10 +303,9 @@ namespace SistemaJuridico.ViewModels
 
         private bool ValidarFinalizacao()
         {
-            if (!TipoSelecionado.HasValue || string.IsNullOrWhiteSpace(NumeroProcesso) || string.IsNullOrWhiteSpace(DataPrestacao)
-                || ValorTotal <= 0 || string.IsNullOrWhiteSpace(Responsavel))
+            if (!TipoSelecionado.HasValue || string.IsNullOrWhiteSpace(DataPrestacao) || string.IsNullOrWhiteSpace(Responsavel))
             {
-                System.Windows.MessageBox.Show("Preencha todos os campos obrigatórios fixos e valor total > 0.");
+                System.Windows.MessageBox.Show("Preencha os campos obrigatórios da prestação.");
                 return false;
             }
 
@@ -297,28 +317,35 @@ namespace SistemaJuridico.ViewModels
 
             if (IsAlvara)
             {
-                if (!DateTime.TryParse(DataInicio, out var ini) || !DateTime.TryParse(DataFim, out var fim) || ini > fim
-                    || string.IsNullOrWhiteSpace(Destino) || string.IsNullOrWhiteSpace(Justificativa))
+                if (string.IsNullOrWhiteSpace(Destino)
+                    || string.IsNullOrWhiteSpace(NumeroAlvara)
+                    || !DateTime.TryParse(DataLevantamento, out _)
+                    || ValorAlvara <= 0)
                 {
-                    System.Windows.MessageBox.Show("Dados de alvará inválidos. Verifique período e campos obrigatórios.");
+                    System.Windows.MessageBox.Show("Para alvará, informe destino, número, data de levantamento e valor do alvará.");
                     return false;
                 }
             }
 
             if (IsTratamento)
             {
-                if (string.IsNullOrWhiteSpace(NumeroDocumentoFiscal) || !DateTime.TryParse(DataDocumento, out _)
-                    || string.IsNullOrWhiteSpace(CnpjFornecedor) || string.IsNullOrWhiteSpace(DescricaoServico)
-                    || ValorDocumento <= 0 || Anexos.Count == 0)
+                if (string.IsNullOrWhiteSpace(TratamentoSelecionado)
+                    || (!IsRecibo && string.IsNullOrWhiteSpace(NumeroDocumentoFiscal))
+                    || !DateTime.TryParse(DataDocumento, out _)
+                    || ValorDocumento <= 0
+                    || string.IsNullOrWhiteSpace(CnpjFornecedor))
                 {
-                    System.Windows.MessageBox.Show("Tratamento exige documento fiscal válido e anexo obrigatório.");
+                    System.Windows.MessageBox.Show("Tratamento exige tratamento selecionado, NF/recibo, data, valor e CNPJ.");
                     return false;
                 }
             }
 
-            if (IsOutrasDespesas && string.IsNullOrWhiteSpace(DetalhesOutroTipo))
+            if (IsOutrasDespesas && (string.IsNullOrWhiteSpace(DetalhesOutroTipo)
+                || (!IsRecibo && string.IsNullOrWhiteSpace(NumeroDocumentoFiscal))
+                || !DateTime.TryParse(DataDocumento, out _)
+                || ValorDocumento <= 0))
             {
-                System.Windows.MessageBox.Show("Informe a descrição detalhada para o tipo Outras despesas.");
+                System.Windows.MessageBox.Show("Outras despesas exige descrição, NF/recibo, data da NF e valor da NF.");
                 return false;
             }
 
@@ -330,6 +357,11 @@ namespace SistemaJuridico.ViewModels
             var id = string.IsNullOrWhiteSpace(PrestacaoId) ? Guid.NewGuid().ToString() : PrestacaoId;
             PrestacaoId = id;
             Status = status;
+
+            if (IsAlvara)
+                ValorTotal = ValorAlvara;
+            else if (IsTratamento || IsOutrasDespesas)
+                ValorTotal = ValorDocumento;
 
             return new Conta
             {
@@ -352,23 +384,27 @@ namespace SistemaJuridico.ViewModels
             var campos = new Dictionary<string, string>();
             if (IsAlvara)
             {
-                campos["Data Início"] = DataInicio;
-                campos["Data Fim"] = DataFim;
                 campos["Destino"] = Destino;
-                campos["Justificativa"] = Justificativa;
-                campos["Valor por Dia"] = ValorPorDia.ToString("N2");
+                campos["Número do Alvará"] = NumeroAlvara;
+                campos["Data Levantamento"] = DataLevantamento;
+                campos["Valor do Alvará"] = ValorAlvara.ToString("N2");
             }
             else if (IsTratamento)
             {
-                campos["Número Documento Fiscal"] = NumeroDocumentoFiscal;
-                campos["Data Documento"] = DataDocumento;
+                campos["Tratamento"] = TratamentoSelecionado;
+                campos["Número da NF"] = NumeroDocumentoFiscal;
+                campos["Recibo"] = IsRecibo.ToString();
+                campos["Data da NF"] = DataDocumento;
                 campos["CNPJ Fornecedor"] = CnpjFornecedor;
-                campos["Descrição Serviço"] = DescricaoServico;
-                campos["Valor Documento"] = ValorDocumento.ToString("N2");
+                campos["Valor da NF"] = ValorDocumento.ToString("N2");
             }
             else if (IsOutrasDespesas)
             {
-                campos["Detalhes"] = DetalhesOutroTipo;
+                campos["Do que se trata"] = DetalhesOutroTipo;
+                campos["Número da NF"] = NumeroDocumentoFiscal;
+                campos["Recibo"] = IsRecibo.ToString();
+                campos["Data da NF"] = DataDocumento;
+                campos["Valor da NF"] = ValorDocumento.ToString("N2");
             }
             return campos;
         }
@@ -420,18 +456,6 @@ FROM prestacao_historico WHERE prestacao_id=@PrestacaoId ORDER BY data DESC", ne
                     Observacao = item.Observacao
                 });
             }
-        }
-
-        private void RecalcularValorDiaria()
-        {
-            if (!IsAlvara || !DateTime.TryParse(DataInicio, out var ini) || !DateTime.TryParse(DataFim, out var fim) || fim < ini)
-            {
-                ValorPorDia = 0;
-                return;
-            }
-
-            var dias = (fim - ini).Days + 1;
-            ValorPorDia = dias > 0 ? ValorTotal / dias : 0;
         }
 
         private static DateTime? ParseData(string? valor)

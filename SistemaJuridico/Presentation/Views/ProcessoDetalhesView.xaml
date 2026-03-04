@@ -153,11 +153,11 @@
                                                     <Grid>
                                                         <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="2*"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="190"/>
+                                                        <ColumnDefinition Width="190"/>
+                                                        <ColumnDefinition Width="190"/>
+                                                        <ColumnDefinition Width="90"/>
+                                                        <ColumnDefinition Width="140"/>
                                                     </Grid.ColumnDefinitions>
 
                                                     <StackPanel Grid.Column="0" Margin="0,0,10,0" VerticalAlignment="Top">
@@ -168,7 +168,7 @@
                                                     <StackPanel Grid.Column="1" Margin="0,0,10,0">
                                                         <TextBlock Text="Qtd. total" FontSize="11"/>
                                                         <DockPanel LastChildFill="False" Margin="0,4,0,0">
-                                                            <TextBox x:Name="QtdTotalTextBox" Width="52" Height="24" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="2,0" Text="{Binding Qtd, UpdateSourceTrigger=PropertyChanged}"/>
+                                                            <TextBox x:Name="QtdTotalTextBox" Width="150" Height="28" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="2,0" Text="{Binding Qtd, UpdateSourceTrigger=PropertyChanged}"/>
                                                             <StackPanel VerticalAlignment="Center">
                                                                 <Button Content="▲" Style="{StaticResource QuantidadeSpinnerButtonStyle}" Click="IncrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdTotalTextBox}"/>
                                                                 <Button Content="▼" Style="{StaticResource QuantidadeSpinnerButtonStyle}" Click="DecrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdTotalTextBox}"/>
@@ -179,7 +179,7 @@
                                                     <StackPanel Grid.Column="2" Margin="0,0,10,0">
                                                         <TextBlock Text="Qtd. SUS" FontSize="11"/>
                                                         <DockPanel LastChildFill="False" Margin="0,4,0,0">
-                                                            <TextBox x:Name="QtdSusTextBox" Width="52" Height="24" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="2,0" Text="{Binding QtdSus, UpdateSourceTrigger=PropertyChanged}"/>
+                                                            <TextBox x:Name="QtdSusTextBox" Width="150" Height="28" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="2,0" Text="{Binding QtdSus, UpdateSourceTrigger=PropertyChanged}"/>
                                                             <StackPanel VerticalAlignment="Center">
                                                                 <Button Content="▲" Style="{StaticResource QuantidadeSpinnerButtonStyle}" Click="IncrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdSusTextBox}"/>
                                                                 <Button Content="▼" Style="{StaticResource QuantidadeSpinnerButtonStyle}" Click="DecrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdSusTextBox}"/>
@@ -190,7 +190,7 @@
                                                     <StackPanel Grid.Column="3" Margin="0,0,10,0">
                                                         <TextBlock Text="Qtd. particular" FontSize="11"/>
                                                         <DockPanel LastChildFill="False" Margin="0,4,0,0">
-                                                            <TextBox x:Name="QtdParticularTextBox" Width="52" Height="24" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="2,0" Text="{Binding QtdParticular, UpdateSourceTrigger=PropertyChanged}"/>
+                                                            <TextBox x:Name="QtdParticularTextBox" Width="150" Height="28" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="2,0" Text="{Binding QtdParticular, UpdateSourceTrigger=PropertyChanged}"/>
                                                             <StackPanel VerticalAlignment="Center">
                                                                 <Button Content="▲" Style="{StaticResource QuantidadeSpinnerButtonStyle}" Click="IncrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdParticularTextBox}"/>
                                                                 <Button Content="▼" Style="{StaticResource QuantidadeSpinnerButtonStyle}" Click="DecrementarQuantidade_Click" CommandParameter="{Binding ElementName=QtdParticularTextBox}"/>

@@ -17,7 +17,7 @@ namespace SistemaJuridico.Views
 
             var button = datePicker.Template.FindName("PART_Button", datePicker) as WpfButton;
             if (button != null)
-                button.Visibility = Visibility.Visible;
+                button.Visibility = Visibility.Collapsed;
 
             var textBox = datePicker.Template.FindName("PART_TextBox", datePicker) as DatePickerTextBox;
             if (textBox == null)
@@ -33,6 +33,35 @@ namespace SistemaJuridico.Views
 
             textBox.TextChanged -= OnTextChanged;
             textBox.TextChanged += OnTextChanged;
+
+            textBox.GotKeyboardFocus -= OnGotKeyboardFocus;
+            textBox.GotKeyboardFocus += OnGotKeyboardFocus;
+
+            textBox.PreviewMouseLeftButtonDown -= OnPreviewMouseLeftButtonDown;
+            textBox.PreviewMouseLeftButtonDown += OnPreviewMouseLeftButtonDown;
+        }
+
+
+        private static void OnGotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+        {
+            if (sender is not DatePickerTextBox textBox || textBox.TemplatedParent is not DatePicker datePicker)
+                return;
+
+            datePicker.IsDropDownOpen = true;
+        }
+
+        private static void OnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is not DatePickerTextBox textBox || textBox.TemplatedParent is not DatePicker datePicker)
+                return;
+
+            if (!textBox.IsKeyboardFocusWithin)
+            {
+                e.Handled = true;
+                textBox.Focus();
+            }
+
+            datePicker.IsDropDownOpen = true;
         }
 
         private static void OnPreviewTextInput(object sender, TextCompositionEventArgs e)
