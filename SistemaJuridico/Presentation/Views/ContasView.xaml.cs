@@ -1,6 +1,7 @@
 using SistemaJuridico.ViewModels;
 using System.Windows;
 using System.Windows.Controls;
+using DatePicker = System.Windows.Controls.DatePicker;
 using UserControl = System.Windows.Controls.UserControl;
 
 namespace SistemaJuridico.Views
@@ -24,6 +25,15 @@ namespace SistemaJuridico.Views
         {
             InitializeComponent();
             DataContext = new ContasViewModel();
+        }
+
+
+        private void DatePicker_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is not DatePicker datePicker)
+                return;
+
+            DatePickerInputHelper.Configure(datePicker);
         }
 
         private static void OnProcessoIdChanged(
