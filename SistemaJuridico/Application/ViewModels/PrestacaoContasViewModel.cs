@@ -16,9 +16,9 @@ namespace SistemaJuridico.ViewModels
         private readonly string _processoId;
         private readonly List<string> _eventosRascunho = new();
 
-        private ContaRegistro _contaSelecionada;
-        private AlvaraRegistro _alvaraEmEdicao;
-        private TratamentoRegistro _tratamentoEmEdicao;
+        private ContaRegistro _contaSelecionada = new();
+        private AlvaraRegistro _alvaraEmEdicao = new();
+        private TratamentoRegistro _tratamentoEmEdicao = new();
         private bool _podeSalvar;
         private bool _podeEditar;
         private bool _podeExcluir;
