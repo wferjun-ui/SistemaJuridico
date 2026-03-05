@@ -71,6 +71,9 @@ namespace SistemaJuridico.ViewModels
             get => _contaSelecionada;
             set
             {
+                if (_contaSelecionada != null)
+                    _contaSelecionada.PropertyChanged -= ContaSelecionada_PropertyChanged;
+
                 if (!SetProperty(ref _contaSelecionada, value))
                     return;
 
@@ -84,16 +87,13 @@ namespace SistemaJuridico.ViewModels
             get => _alvaraEmEdicao;
             set
             {
+                if (_alvaraEmEdicao != null)
+                    _alvaraEmEdicao.PropertyChanged -= AlvaraEmEdicao_PropertyChanged;
+
                 if (!SetProperty(ref _alvaraEmEdicao, value))
                     return;
 
-                _alvaraEmEdicao.PropertyChanged += (_, e) =>
-                {
-                    if (e.PropertyName == nameof(AlvaraRegistro.SaldoDisponivel))
-                    {
-                        RegistrarEventoRascunho($"Saldo de alvará atualizado para {_alvaraEmEdicao.SaldoDisponivel:C2}.");
-                    }
-                };
+                _alvaraEmEdicao.PropertyChanged += AlvaraEmEdicao_PropertyChanged;
             }
         }
 
@@ -262,10 +262,16 @@ namespace SistemaJuridico.ViewModels
 
         private void HookContaEvents()
         {
-            if (ContaSelecionada == null)
+            ContaSelecionada.PropertyChanged += ContaSelecionada_PropertyChanged;
+        }
+
+        private void AlvaraEmEdicao_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (sender is not AlvaraRegistro alvara)
                 return;
 
-            ContaSelecionada.PropertyChanged += ContaSelecionada_PropertyChanged;
+            if (e.PropertyName == nameof(AlvaraRegistro.SaldoDisponivel))
+                RegistrarEventoRascunho($"Saldo de alvará atualizado para {alvara.SaldoDisponivel:C2}.");
         }
 
         private void ContaSelecionada_PropertyChanged(object? sender, PropertyChangedEventArgs e)
