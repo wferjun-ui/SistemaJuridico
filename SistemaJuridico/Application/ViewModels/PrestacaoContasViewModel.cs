@@ -93,7 +93,8 @@ namespace SistemaJuridico.ViewModels
                 if (!SetProperty(ref _alvaraEmEdicao, value))
                     return;
 
-                _alvaraEmEdicao.PropertyChanged += AlvaraEmEdicao_PropertyChanged;
+                if (_alvaraEmEdicao != null)
+                    _alvaraEmEdicao.PropertyChanged += AlvaraEmEdicao_PropertyChanged;
             }
         }
 
@@ -262,7 +263,8 @@ namespace SistemaJuridico.ViewModels
 
         private void HookContaEvents()
         {
-            ContaSelecionada.PropertyChanged += ContaSelecionada_PropertyChanged;
+            if (ContaSelecionada != null)
+                ContaSelecionada.PropertyChanged += ContaSelecionada_PropertyChanged;
         }
 
         private void AlvaraEmEdicao_PropertyChanged(object? sender, PropertyChangedEventArgs e)
