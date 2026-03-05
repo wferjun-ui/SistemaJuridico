@@ -230,7 +230,7 @@
                     </TabItem>
 
                     <TabItem Header="Prestação de Contas">
-                        <views:ContasView ProcessoId="{Binding Processo.Id}" />
+                        <views:PrestacaoContasView ProcessoId="{Binding Processo.Id}" />
                     </TabItem>
 
                     <TabItem Header="Histórico">
