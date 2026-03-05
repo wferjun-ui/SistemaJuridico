@@ -2,6 +2,7 @@ using SistemaJuridico.ViewModels;
 using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Input;
+using UserControl = System.Windows.Controls.UserControl;
 
 namespace SistemaJuridico.Views
 {
