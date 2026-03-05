@@ -238,7 +238,7 @@ namespace SistemaJuridico.ViewModels
             Status = ParseStatus(PrestacaoSelecionada.StatusConta);
             TipoSelecionado = Enum.TryParse<TipoPrestacao>(PrestacaoSelecionada.TipoLancamento, true, out var tipo) ? tipo : null;
 
-            var campos = JsonSerializer.Deserialize<Dictionary<string, string>>(PrestacaoSelecionada.CamposEspecificosJson ?? "{}") ?? new();
+            var campos = JsonSerializer.Deserialize<Dictionary<string, string?>>(PrestacaoSelecionada.CamposEspecificosJson ?? "{}") ?? new();
             Destino = campos.GetValueOrDefault("Destino", string.Empty);
             NumeroAlvara = campos.GetValueOrDefault("Número do Alvará", campos.GetValueOrDefault("Número Documento Fiscal", string.Empty));
             DataLevantamento = campos.GetValueOrDefault("Data Levantamento", campos.GetValueOrDefault("Data Documento", string.Empty));
