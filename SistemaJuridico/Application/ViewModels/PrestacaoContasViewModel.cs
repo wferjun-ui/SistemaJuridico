@@ -71,10 +71,12 @@ namespace SistemaJuridico.ViewModels
             get => _contaSelecionada;
             set
             {
+                var conta = value ?? NovaConta();
+
                 if (_contaSelecionada != null)
                     _contaSelecionada.PropertyChanged -= ContaSelecionada_PropertyChanged;
 
-                if (!SetProperty(ref _contaSelecionada, value))
+                if (!SetProperty(ref _contaSelecionada, conta))
                     return;
 
                 HookContaEvents();
@@ -87,10 +89,12 @@ namespace SistemaJuridico.ViewModels
             get => _alvaraEmEdicao;
             set
             {
+                var alvara = value ?? new AlvaraRegistro();
+
                 if (_alvaraEmEdicao != null)
                     _alvaraEmEdicao.PropertyChanged -= AlvaraEmEdicao_PropertyChanged;
 
-                if (!SetProperty(ref _alvaraEmEdicao, value))
+                if (!SetProperty(ref _alvaraEmEdicao, alvara))
                     return;
 
                 if (_alvaraEmEdicao != null)

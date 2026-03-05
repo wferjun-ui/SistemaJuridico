@@ -239,18 +239,18 @@ namespace SistemaJuridico.ViewModels
             TipoSelecionado = Enum.TryParse<TipoPrestacao>(PrestacaoSelecionada.TipoLancamento, true, out var tipo) ? tipo : null;
 
             var campos = JsonSerializer.Deserialize<Dictionary<string, string?>>(PrestacaoSelecionada.CamposEspecificosJson ?? "{}") ?? new();
-            Destino = campos.GetValueOrDefault("Destino", string.Empty);
-            NumeroAlvara = campos.GetValueOrDefault("Número do Alvará", campos.GetValueOrDefault("Número Documento Fiscal", string.Empty));
-            DataLevantamento = campos.GetValueOrDefault("Data Levantamento", campos.GetValueOrDefault("Data Documento", string.Empty));
+            Destino = campos.GetValueOrDefault("Destino", string.Empty) ?? string.Empty;
+            NumeroAlvara = campos.GetValueOrDefault("Número do Alvará", campos.GetValueOrDefault("Número Documento Fiscal", string.Empty)) ?? string.Empty;
+            DataLevantamento = campos.GetValueOrDefault("Data Levantamento", campos.GetValueOrDefault("Data Documento", string.Empty)) ?? string.Empty;
             ValorAlvara = decimal.TryParse(campos.GetValueOrDefault("Valor do Alvará"), out var va) ? va : 0;
 
-            TratamentoSelecionado = campos.GetValueOrDefault("Tratamento", campos.GetValueOrDefault("Descrição Serviço", string.Empty));
-            NumeroDocumentoFiscal = campos.GetValueOrDefault("Número da NF", campos.GetValueOrDefault("Número Documento Fiscal", string.Empty));
+            TratamentoSelecionado = campos.GetValueOrDefault("Tratamento", campos.GetValueOrDefault("Descrição Serviço", string.Empty)) ?? string.Empty;
+            NumeroDocumentoFiscal = campos.GetValueOrDefault("Número da NF", campos.GetValueOrDefault("Número Documento Fiscal", string.Empty)) ?? string.Empty;
             IsRecibo = bool.TryParse(campos.GetValueOrDefault("Recibo"), out var recibo) && recibo;
-            DataDocumento = campos.GetValueOrDefault("Data da NF", campos.GetValueOrDefault("Data Documento", string.Empty));
-            CnpjFornecedor = campos.GetValueOrDefault("CNPJ Fornecedor", string.Empty);
+            DataDocumento = campos.GetValueOrDefault("Data da NF", campos.GetValueOrDefault("Data Documento", string.Empty)) ?? string.Empty;
+            CnpjFornecedor = campos.GetValueOrDefault("CNPJ Fornecedor", string.Empty) ?? string.Empty;
             ValorDocumento = decimal.TryParse(campos.GetValueOrDefault("Valor da NF", campos.GetValueOrDefault("Valor Documento")), out var vd) ? vd : 0;
-            DetalhesOutroTipo = campos.GetValueOrDefault("Do que se trata", campos.GetValueOrDefault("Detalhes", string.Empty));
+            DetalhesOutroTipo = campos.GetValueOrDefault("Do que se trata", campos.GetValueOrDefault("Detalhes", string.Empty)) ?? string.Empty;
 
             Anexos.Clear();
             foreach (var item in JsonSerializer.Deserialize<List<string>>(PrestacaoSelecionada.AnexosJson ?? "[]") ?? new())
