@@ -23,8 +23,6 @@
                 <Setter Property="SnapsToDevicePixels" Value="True"/>
             </Style>
 
-            <Style TargetType="RepeatButton" BasedOn="{StaticResource {x:Type RepeatButton}}"/>
-
             <Style TargetType="Button">
                 <Setter Property="Margin" Value="6,4"/>
                 <Setter Property="Padding" Value="14,8"/>
