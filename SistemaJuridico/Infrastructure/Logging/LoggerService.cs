@@ -8,7 +8,8 @@ namespace SistemaJuridico.Infrastructure
     {
         private static readonly object _lock = new();
         private const LogLevel NivelMinimo = LogLevel.DEBUG;
-        private const int TamanhoMaximoMensagem = 4000;
+        private const int TamanhoMaximoMensagem = 12000;
+        private const int TamanhoMaximoStackPorExcecao = 1200;
 
         private readonly string _pastaLogs;
 
@@ -78,25 +79,56 @@ namespace SistemaJuridico.Infrastructure
 
         private static string CompactarExcecao(Exception ex)
         {
+            var raiz = ObterExcecaoRaiz(ex);
             var sb = new StringBuilder();
+            sb.Append($"ROOT -> {DescreverExcecao(raiz)}");
+
             var atual = ex;
             var nivel = 0;
 
             while (atual != null && nivel < 5)
             {
-                if (nivel > 0)
-                    sb.Append(" | INNER -> ");
-
-                sb.Append($"{atual.GetType().FullName}: {NormalizarMensagem(atual.Message)}");
-
-                if (!string.IsNullOrWhiteSpace(atual.StackTrace))
-                    sb.Append($" | STACK: {NormalizarMensagem(atual.StackTrace)}");
+                sb.Append($" | CHAIN[{nivel}] -> {DescreverExcecao(atual)}");
 
                 atual = atual.InnerException;
                 nivel++;
             }
 
             return sb.ToString();
+        }
+
+        private static Exception ObterExcecaoRaiz(Exception ex)
+        {
+            var atual = ex;
+            while (atual.InnerException != null)
+                atual = atual.InnerException;
+
+            return atual;
+        }
+
+        private static string DescreverExcecao(Exception ex)
+        {
+            var stack = NormalizarStack(ex.StackTrace);
+            var origem = string.IsNullOrWhiteSpace(ex.Source) ? "(sem origem)" : ex.Source;
+            var metodo = ex.TargetSite?.ToString() ?? "(método indisponível)";
+
+            return $"{ex.GetType().FullName}: {NormalizarMensagem(ex.Message)} | SOURCE: {origem} | TARGET: {NormalizarMensagem(metodo)} | STACK: {stack}";
+        }
+
+        private static string NormalizarStack(string? stack)
+        {
+            if (string.IsNullOrWhiteSpace(stack))
+                return "(sem stacktrace)";
+
+            var stackNormalizada = stack
+                .Replace("\r", " ")
+                .Replace("\n", " > ")
+                .Trim();
+
+            if (stackNormalizada.Length <= TamanhoMaximoStackPorExcecao)
+                return stackNormalizada;
+
+            return $"{stackNormalizada[..TamanhoMaximoStackPorExcecao]}...";
         }
     }
 }
