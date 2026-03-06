@@ -99,6 +99,23 @@ namespace SistemaJuridico
                 }
             }
 
+            var pastaPadrao = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "SistemaJuridico",
+                "Data");
+
+            try
+            {
+                Directory.CreateDirectory(pastaPadrao);
+                var caminhoPadrao = Path.Combine(pastaPadrao, "juridico.db");
+                ConfigService.SalvarCaminhoBanco(caminhoPadrao);
+                return pastaPadrao;
+            }
+            catch
+            {
+                // Fallback para seleção manual quando não for possível criar a pasta padrão.
+            }
+
             using var dialog = new Forms.FolderBrowserDialog
             {
                 Description = "Selecione a pasta do SQL (arquivo juridico.db).",
