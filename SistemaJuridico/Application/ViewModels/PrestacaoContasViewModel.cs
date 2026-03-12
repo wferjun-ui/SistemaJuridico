@@ -32,10 +32,6 @@ namespace SistemaJuridico.ViewModels
             _processoId = processoId;
             _usuarioAtual = string.IsNullOrWhiteSpace(usuarioAtual) ? "Sistema" : usuarioAtual;
 
-            ContaSelecionada = NovaConta();
-            AlvaraEmEdicao = new AlvaraRegistro();
-            TratamentoEmEdicao = new TratamentoRegistro();
-
             Contas = new ObservableCollection<ContaRegistro>();
             Alvaras = new ObservableCollection<AlvaraRegistro>();
             Tratamentos = new ObservableCollection<TratamentoRegistro>();
@@ -54,6 +50,10 @@ namespace SistemaJuridico.ViewModels
 
             HistoricoView = CollectionViewSource.GetDefaultView(Historico);
             HistoricoView.SortDescriptions.Add(new SortDescription(nameof(HistoricoConta.DataEvento), ListSortDirection.Descending));
+
+            ContaSelecionada = NovaConta();
+            AlvaraEmEdicao = new AlvaraRegistro();
+            TratamentoEmEdicao = new TratamentoRegistro();
 
             HookContaEvents();
             AtualizarEstadoBotoes();
