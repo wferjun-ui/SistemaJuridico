@@ -53,6 +53,7 @@ namespace SistemaJuridico
             }
             catch (Exception ex)
             {
+                _logger.Error("Falha ao inicializar aplicação", ex);
                 System.Windows.MessageBox.Show(
                     $"Erro ao iniciar sistema:\n{ex.Message}",
                     "Erro",

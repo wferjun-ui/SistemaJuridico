@@ -55,7 +55,6 @@ namespace SistemaJuridico.ViewModels
             AlvaraEmEdicao = new AlvaraRegistro();
             TratamentoEmEdicao = new TratamentoRegistro();
 
-            HookContaEvents();
             AtualizarEstadoBotoes();
         }
 
@@ -223,7 +222,7 @@ namespace SistemaJuridico.ViewModels
                && AlvaraEmEdicao.ValorAutorizado >= 0
                && AlvaraEmEdicao.ValorRecebido >= 0;
 
-        private bool ContaValida(ContaRegistro conta)
+        private bool ContaValida(ContaRegistro? conta)
             => conta != null
                && !string.IsNullOrWhiteSpace(conta.Descricao)
                && conta.Valor > 0
