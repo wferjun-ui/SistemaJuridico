@@ -161,6 +161,7 @@ namespace SistemaJuridico
             }
             catch (Exception ex)
             {
+                _logger.Error("Falha ao abrir shell principal após login", ex);
                 System.Windows.MessageBox.Show(
                     $"Erro ao abrir shell principal:\n{ex.Message}",
                     "Erro",

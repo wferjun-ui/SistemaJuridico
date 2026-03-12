@@ -249,8 +249,11 @@ namespace SistemaJuridico.ViewModels
 
         private void AtualizarEstadoBotoes()
         {
-            PodeSalvar = ContaValida(ContaSelecionada);
-            PodeEditar = Contas.Contains(ContaSelecionada);
+            var contaAtual = ContaSelecionada;
+            var contasInicializadas = Contas != null;
+
+            PodeSalvar = ContaValida(contaAtual);
+            PodeEditar = contasInicializadas && contaAtual != null && Contas.Contains(contaAtual);
             PodeExcluir = PodeEditar;
             RaiseCommands();
         }
